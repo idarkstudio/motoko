@@ -2,20 +2,36 @@
 sidebar_position: 12
 ---
 
-# Inter-canister calls
+# Llamadas entre canisters
 
-One of the most important features of ICP for developers is the ability to call functions in one canister from another canister. This capability to make calls between canisters, also sometimes referred to as **inter-canister calls**, enables you to reuse and share functionality in multiple dapps.
+Una de las características más importantes de ICP para los desarrolladores es la
+capacidad de llamar a funciones en un canister desde otro canister. Esta
+capacidad de hacer llamadas entre canisters, a veces denominada **llamadas
+inter-canisters**, te permite reutilizar y compartir funcionalidad en múltiples
+dapps.
 
-For example, you might want to create a dapp for professional networking, organizing community events, or hosting fundraising activities. Each of these dapps might have a social component that enables users to identify social relationships based on some criteria or shared interest, such as friends and family or current and former colleagues.
+Por ejemplo, es posible que desees crear una dapp para redes profesionales,
+organizar eventos comunitarios o albergar actividades de recaudación de fondos.
+Cada una de estas dapps podría tener un componente social que permita a los
+usuarios identificar relaciones sociales basadas en algún criterio o interés
+compartido, como amigos y familiares o colegas actuales y anteriores.
 
-To address this social component, you might want to create a single canister for storing user relationships then write your professional networking, community organizing, or fundraising application to import and call functions that are defined in the canister for social connections. You could then build additional applications to use the social connections canister or extend the features provided by the social connections canister to make it useful to an even broader community of other developers.
+Para abordar este componente social, podrías crear un solo canister para
+almacenar relaciones de usuarios y luego escribir tu aplicación de redes
+profesionales, organización comunitaria o recaudación de fondos para importar y
+llamar a funciones que están definidas en el canister para conexiones sociales.
+Luego, podrías construir aplicaciones adicionales para usar el canister de
+conexiones sociales o extender las características proporcionadas por el
+canister de conexiones sociales para que sea útil para una comunidad aún más
+amplia de otros desarrolladores.
 
-## Basic usage
+## Uso básico
 
-A simple way to set up inter-canister calls is through your project's `dfx.json` file.
+Una forma sencilla de configurar llamadas entre canisters es a través del
+archivo `dfx.json` de tu proyecto.
 
-For example, let's say that you want to build a canister named `foo` which calls the canister `bar`.
-Here is the `dfx.json` file:
+Por ejemplo, supongamos que deseas construir un canister llamado `foo` que llama
+al canister `bar`. Aquí está el archivo `dfx.json`:
 
 ```json
 {
@@ -33,9 +49,10 @@ Here is the `dfx.json` file:
 }
 ```
 
-Notice that `foo` includes `bar` as a canister dependency.
+Observa que `foo` incluye `bar` como una dependencia de canister.
 
-Below is an example implementation of `foo` (`src/Foo.mo`) which calls the `bar` canister:
+A continuación se muestra un ejemplo de implementación de `foo` (`src/Foo.mo`)
+que llama al canister `bar`:
 
 ```motoko no-repl
 import Bar "canister:bar";
@@ -50,7 +67,7 @@ persistent actor Foo {
 };
 ```
 
-Below is an implementation for `bar` (`src/Bar.mo`):
+A continuación se muestra una implementación para `bar` (`src/Bar.mo`):
 
 ```motoko
 import Debug "mo:base/Debug";
@@ -65,20 +82,22 @@ persistent actor Bar {
 };
 ```
 
-To run this example, you can use the `dfx canister call` subcommand (after deploying the canisters with `dfx deploy`):
+Para ejecutar este ejemplo, puedes usar el subcomando `dfx canister call`
+(después de implementar los canisters con `dfx deploy`):
 
 ```bash
 dfx canister call foo main
 ```
 
-The output should resemble the following:
+La salida debería parecerse a lo siguiente:
 
 ```bash
 2025-02-21 15:53:39.567801 UTC: [Canister ajuq4-ruaaa-aaaaa-qaaga-cai] Hello from the `bar` canister!
 (123 : nat)
 ```
 
-You can also use a canister ID to access a previously deployed canister as shown in this alternate implementation of `foo`:
+Puedes usar también un ID de canister para acceder a un canister previamente
+desplegado, como se muestra en esta implementación alternativa de `foo`:
 
 ```motoko
 persistent actor Foo {
@@ -93,17 +112,20 @@ persistent actor Foo {
 };
 ```
 
-Then, use the following call, replacing `canister-id` with the ID of a previously deployed canister:
+Luego, usa la siguiente llamada, reemplazando `canister-id` con el ID de un
+canister implementado previamente:
 
 ```bash
 dfx canister call foo main "canister-id"
 ```
 
-## Advanced usage
+## Uso avanzado
 
-If the method name or input types are unknown at compile time, it's possible to call arbitrary canister methods using the `ExperimentalInternetComputer` module.
+Si el nombre del método o los tipos de entrada son desconocidos en tiempo de
+compilación, es posible llamar a métodos arbitrarios de canisters utilizando el
+módulo `ExperimentalInternetComputer`.
 
-Here is an example which you can modify for your specific use case:
+Aquí tienes un ejemplo que puedes modificar para tu caso de uso específico:
 
 ```motoko
 import IC "mo:base/ExperimentalInternetComputer";
@@ -141,14 +163,19 @@ persistent actor AdvancedCanister2 {
 };
 ```
 
-In some situations, it may be useful to reference a canister by ID. This is possible with the following import syntax:
+En algunas situaciones, puede ser útil hacer referencia a un canister por su ID.
+Esto es posible con la siguiente sintaxis de importación:
 
 ```motoko
 import Canister "ic:7hfb6-caaaa-aaaar-qadga-cai";
 ```
 
-If you do this, double check that the referenced canister is available and has the same canister ID in all intended runtime environments (usually the local replica and ICP mainnet).
+Si haces esto, verifica que el canister referenciado esté disponible y tenga el
+mismo ID de canister en todos los entornos de ejecución previstos (por lo
+general, la réplica local y la red principal de ICP).
 
-In addition, a corresponding `.did` file with name `7hfb6-caaaa-aaaar-qadga-cai.did`, containing the Candid interface of the imported canister, must be available on the `moc` compiler's `actor-idl` path.
+Además, debe estar disponible un archivo `.did` correspondiente con el nombre
+`7hfb6-caaaa-aaaar-qadga-cai.did`, que contenga la interfaz Candid del canister
+importado, en la ruta `actor-idl` del compilador `moc`.
 
 <img src="https://github.com/user-attachments/assets/844ca364-4d71-42b3-aaec-4a6c3509ee2e" alt="Logo" width="150" height="150" />

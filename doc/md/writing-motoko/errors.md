@@ -2,156 +2,247 @@
 sidebar_position: 9
 ---
 
-# Error handling
+# Manejo de errores
 
+Existen tres formas principales de representar y manejar valores de errores en
+Motoko:
 
+- Valores de opción con un valor `null` no informativo que indica algún error.
 
-There are three primary ways to represent and handle errors values in Motoko:
+- Variantes de `Result` con un `#err value` descriptivo que proporciona más
+  información sobre el error.
 
--   Option values with a non-informative `null` value that indicates some error.
+- Valores de [`Error`](../base/Error.md) que, en un contexto asíncrono, se
+  pueden lanzar y capturar de manera similar a las excepciones y contienen un
+  código numérico y un mensaje.
 
--   `Result` variants with a descriptive `#err value` providing more information about the error.
+## Ejemplo
 
--   [`Error`](../base/Error.md) values that, in an asynchronous context, can be thrown and caught similar to exceptions and contain a numeric code and message.
+Considera construir una API para una aplicación de lista de tareas que desea
+exponer una función que permita a los usuarios marcar una de sus tareas como
+"Hecha". Este ejemplo simple aceptará un objeto `TodoId` y devolverá un
+[`Int`](../base/Int.md) que representa cuántos segundos ha estado abierta la
+tarea. Este ejemplo asume que se está ejecutando en un actor, que devuelve un
+valor asíncrono:
 
-## Example
-
-Consider building an API for a to-do application that wants to expose a function allowing users to mark one of their tasks’s as "Done". This simple example will accept a `TodoId` object and return an [`Int`](../base/Int.md) that represents how many seconds the to-do has been open. This example assumes that it is running in an actor, which returns an async value:
-
-``` motoko no-repl
+```motoko no-repl
 func markDone(id : TodoId) : async Int
 ```
 
-The full application example can be found below:
+El ejemplo completo de la aplicación se puede encontrar a continuación:
 
-``` motoko no-repl file=../examples/todo-error.mo#L1-L6
+```motoko no-repl file=../examples/todo-error.mo#L1-L6
+
 ```
 
-``` motoko no-repl file=../examples/todo-error.mo#L10-L37
+```motoko no-repl file=../examples/todo-error.mo#L10-L37
+
 ```
 
-In this example, there are conditions under which marking a to-do as "Done" fails:
+En este ejemplo, existen condiciones bajo las cuales marcar una tarea como
+"Hecha" falla:
 
--   The `id` could reference a non-existing to-do.
+- El `id` podría hacer referencia a una tarea que no existe.
 
--   The to-do might already be marked as done.
+- La tarea podría estar marcada como hecha.
 
-Let's look at the different ways to communicate these errors in Motoko and slowly improve the example API.
+Veamos las diferentes formas de comunicar estos errores en Motoko y mejorar
+gradualmente la API de ejemplo.
 
 ## Option/result
 
-Using `Option` or `Result` is the preferred way of signaling errors in Motoko. They work in both synchronous and asynchronous contexts and make your APIs safer to use by encouraging clients to consider the error cases as well as the success cases. Exceptions should only be used to signal unexpected error states.
+Usar `Option` o `Result` es la forma preferida de señalar errores en Motoko.
+Funcionan tanto en contextos síncronos como asíncronos y hacen que tus APIs sean
+más seguras al alentar a los clientes a considerar los casos de error, así como
+los casos de éxito. Las excepciones solo deben usarse para señalar estados de
+error inesperados.
 
-### Error reporting with `Option` types
+### Reportando errores con tipos `Option`
 
-A function that wants to return a value of type `A` or signal an error can return a value of option type `?A` and use the `null` value to designate the error. In the above example this means the `markDone` function returns an `async ?Seconds`:
+Una función que desea devolver un valor de tipo `A` o señalar un error puede
+devolver un valor de tipo opción `?A` y usar el valor `null` para designar el
+error. En el ejemplo anterior, esto significa que la función `markDone` devuelve
+un `async ?Seconds`:
 
-Definition:
+Definición:
 
-``` motoko no-repl file=../examples/todo-error.mo#L49-L58
+```motoko no-repl file=../examples/todo-error.mo#L49-L58
+
 ```
 
-Callsite:
+Llamado:
 
-``` motoko no-repl file=../examples/todo-error.mo#L117-L126
+```motoko no-repl file=../examples/todo-error.mo#L117-L126
+
 ```
 
-The main drawback of this approach is that it conflates all possible errors with a single, non-informative `null` value. The callsite might be interested in why marking a `Todo` as done has failed, but that information is lost by then, which means we can only tell the user that `"Something went wrong."`.
+La principal desventaja de este enfoque es que mezcla todos los posibles errores
+con un único valor `null` no informativo. El lugar desde donde se llama podría
+estar interesado en saber por qué falló al marcar un `Todo` como hecho, pero esa
+información se pierde en ese momento, lo que significa que solo podemos decirle
+al usuario que "Algo salió mal".
 
-Returning option values to signal errors should only be used if there just one possible reason for the failure and that reason can be easily determined at the callsite. One example of a good use case for this is a HashMap lookup failing.
+Devolver valores de opción para señalar errores solo debe usarse si hay una
+única razón posible para el fallo y esa razón se puede determinar fácilmente en
+el lugar desde donde se llama. Un ejemplo de un caso de uso adecuado para esto
+es cuando falla una búsqueda en un HashMap.
 
-### Error reporting with `Result` types
+### Reportando errores con tipos `Result`
 
-While options are a built-in type, the `Result` is defined as a variant type like so:
+Mientras que las opciones son un tipo incorporado, el `Result` se define como un
+tipo variante de la siguiente manera:
 
-``` motoko no-repl
+```motoko no-repl
 type Result<Ok, Err> = { #ok : Ok; #err : Err }
 ```
 
-Because of the second type parameter, `Err`, the `Result` type lets you select the type used to describe errors. Define a `TodoError` type that the `markDone` function will use to signal errors:
+Debido al segundo parámetro de tipo, `Err`, el tipo `Result` te permite
+seleccionar el tipo utilizado para describir errores. Define un tipo `TodoError`
+que la función `markDone` utilizará para señalar errores:
 
-``` motoko no-repl file=../examples/todo-error.mo#L60-L60
+```motoko no-repl file=../examples/todo-error.mo#L60-L60
+
 ```
 
-The original example is now revised as:
+La definición original ahora se ha revisado como:
 
-Definition:
+Definición:
 
-``` motoko no-repl file=../examples/todo-error.mo#L62-L76
+```motoko no-repl file=../examples/todo-error.mo#L62-L76
+
 ```
 
-Callsite:
+Llamado:
 
-``` motoko no-repl file=../examples/todo-error.mo#L128-L141
+```motoko no-repl file=../examples/todo-error.mo#L128-L141
+
 ```
 
-### Pattern matching
+### Coincidencia de patrones (Pattern matching)
 
-The first and most common way of working with `Option` and `Result` is to use pattern matching. If you have a value of type `?Text`, you can use the `switch` keyword to access the potential [`Text`](../base/Text.md) contents:
+La primera y más común forma de trabajar con `Option` y `Result` es utilizar la
+coincidencia de patrones. Si tienes un valor de tipo `?Text`, puedes usar la
+palabra clave `switch` para acceder al contenido potencial de
+[`Text`](../base/Text.md):
 
-``` motoko no-repl file=../examples/error-examples.mo#L3-L10
+```motoko no-repl file=../examples/error-examples.mo#L3-L10
+
 ```
 
-Motoko does not let you access the optional value without also considering the case that it is missing.
+Motoko no te permite acceder al valor opcional sin considerar también el caso de
+que esté ausente.
 
-In the case of a `Result`, you can also use pattern matching with the difference that you also get an informative value, not just `null`, in the `#err` case:
+En el caso de un `Result`, también puedes utilizar la coincidencia de patrones
+con la diferencia de que obtienes un valor informativo, no solo `null`, en el
+caso de `#err`:
 
-``` motoko no-repl file=../examples/error-examples.mo#L12-L19
+```motoko no-repl file=../examples/error-examples.mo#L12-L19
+
 ```
 
-### Higher-order functions
+### Funciones de orden superior
 
-Pattern matching can become tedious and verbose, especially when dealing with multiple optional values. The [base](https://github.com/dfinity/motoko-base) library exposes a collection of higher-order functions from the `Option` and `Result` modules to improve the ergonomics of error handling.
+El emparejamiento de patrones puede volverse tedioso y verboso, especialmente
+cuando se trata de múltiples valores opcionales. La biblioteca
+[base](https://github.com/dfinity/motoko-base) expone una colección de funciones
+de orden superior de los módulos `Option` y `Result` para mejorar la ergonomía
+del manejo de errores.
 
-Sometimes you’ll want to move between `Option` and `Result`. A Hashmap lookup returns `null` on failure, but maybe the caller has more context and can turn that lookup failure into a meaningful `Result`. Other times you don’t need the additional information a `Result` provides and just want to convert all `#err` cases into `null`. For these situations [base](https://github.com/dfinity/motoko-base) provides the `fromOption` and `toOption` functions in the `Result` module.
+A veces querrás moverte entre `Option` y `Result`. Una búsqueda en un Hashmap
+devuelve `null` en caso de fallo, pero tal vez el llamador tenga más contexto y
+pueda convertir ese fallo de búsqueda en un `Result` significativo. Otras veces
+no necesitas la información adicional que proporciona un `Result` y simplemente
+quieres convertir todos los casos `#err` en `null`. Para estas situaciones,
+[base](https://github.com/dfinity/motoko-base) proporciona las funciones
+`fromOption` y `toOption` en el módulo `Result`.
 
-## Asynchronous errors
+## Errores asíncronos
 
-The last way of dealing with errors in Motoko is to use asynchronous [`Error`](../base/Error.md) handling, a restricted form of the exception handling familiar from other languages. Motoko error values can only be thrown and caught in asynchronous contexts, typically the body of a `shared` function or `async` expression. Non-`shared` functions cannot employ structured error handling. This means you can exit a shared function by `throw`ing an [`Error`](../base/Error.md) value and `try` some code calling a shared function on another actor. In this workflow, you can `catch` the failure as a result of type [`Error`](../base/Error.md), but you can’t use these error handling constructs outside of an asynchronous context.
+La última forma de manejar errores en Motoko es utilizar el manejo asíncrono de
+[`Error`](../base/Error.md), una forma restringida del manejo de excepciones
+familiar en otros lenguajes. Los valores de error de Motoko solo pueden lanzarse
+y capturarse en contextos asíncronos, típicamente el cuerpo de una función
+`shared` o una expresión `async`. Las funciones no `shared` no pueden emplear el
+manejo estructurado de errores. Esto significa que puedes salir de una función
+`shared` lanzando (`throw`) un valor de [`Error`](../base/Error.md) y `try`
+(intentar) algún código que llame a una función `shared` en otro actor. En este
+flujo de trabajo, puedes `catch` (capturar) el fallo como un resultado de tipo
+[`Error`](../base/Error.md), pero no puedes usar estas construcciones de manejo
+de errores fuera de un contexto asíncrono.
 
-Asynchronous [`Error`](../base/Error.md)s should generally only be used to signal unexpected failures that you cannot recover from and that you don’t expect many consumers of your API to handle. If a failure should be handled by your caller, you should make it explicit in your signature by returning a `Result` instead. For completeness, here is the `markDone` example with exceptions:
+Los errores asíncronos de [`Error`](../base/Error.md) generalmente solo deben
+usarse para señalar fallos inesperados de los que no puedes recuperarte y que no
+esperas que muchos consumidores de tu API manejen. Si un fallo debe ser manejado
+por tu llamante, debes hacerlo explícito en tu firma devolviendo un `Result` en
+su lugar. Para completar, aquí está el ejemplo de `markDone` con excepciones:
 
-Definition:
+Definición:
 
-``` motoko no-repl file=../examples/todo-error.mo#L78-L92
+```motoko no-repl file=../examples/todo-error.mo#L78-L92
+
 ```
 
-Callsite:
+Llamado:
 
-``` motoko no-repl file=../examples/todo-error.mo#L143-L150
+```motoko no-repl file=../examples/todo-error.mo#L143-L150
+
 ```
 
-## Using try/finally
+## Usando try/finally
 
-A `finally` clause can be used within a `try/catch` error handling expression that facilitates control-flow expression cleanups, resource deallocation, or rolling back temporary state changes. The `finally` clause is optional, and when used, the `catch` clause may be omitted. Any uncaught error from the `try` block will be propagated after the `finally` block has executed.
+Una cláusula `finally` se puede utilizar dentro de una expresión de manejo de
+errores `try/catch` que facilita la limpieza de expresiones de control de flujo,
+la liberación de recursos o la reversión de cambios de estado temporales. La
+cláusula `finally` es opcional y, cuando se utiliza, la cláusula `catch` puede
+omitirse. Cualquier error no capturado del bloque `try` se propagará después de
+que se haya ejecutado el bloque `finally`.
 
 :::info
 
-`try/finally` is supported in `moc` `v0.12.0` and newer, and `dfx` `v0.24.0` and newer.
+`try/finally` es compatible con `moc` `v0.12.0` y versiones más recientes, y
+`dfx` `v0.24.0` y versiones más recientes.
 
 :::
 
-`try/finally` must be used within an async expression or in the body of a shared function. Before using `try/finally`, please review the [security best practices](https://internetcomputer.org/docs/current/developer-docs/security/security-best-practices/inter-canister-calls#recommendation) for using this syntax.
+`try/finally` debe ser utilizado dentro de una expresión asíncrona o en el
+cuerpo de una función compartida. Antes de usar `try/finally`, por favor revisa
+las
+[mejores prácticas de seguridad](https://internetcomputer.org/docs/current/developer-docs/security/security-best-practices/inter-canister-calls#recommendation)
+para utilizar esta sintaxis.
 
-``` motoko no-repl file=../examples/try-finally.mo
+```motoko no-repl file=../examples/try-finally.mo
+
 ```
 
-Inside the `try` block, include code that may throw an error. In the `finally` block, include code that should be executed whether an error was thrown or not. Code within the `finally` block should not trap and should terminate promptly. If a `finally` block were to trap, it may prevent a future upgrade to the canister.
+Dentro del bloque `try`, incluye código que pueda lanzar un error. En el bloque
+`finally`, incluye código que se debe ejecutar tanto si se lanzó un error como
+si no. El código dentro del bloque `finally` no debe atrapar y debe finalizar
+rápidamente. Si un bloque `finally` llegara a atrapar, podría impedir una futura
+actualización del canister.
 
-Learn more about [`try/finally`](https://internetcomputer.org/docs/current/motoko/main/reference/language-manual#try).
+Aprende más sobre
+[`try/finally`](https://internetcomputer.org/docs/current/motoko/main/reference/language-manual#try).
 
-### How not to handle errors
+### Cómo no manejar errores
 
-A generally poor way of reporting errors is through the use of a sentinel value. For example, for your `markDone` function, you might decide to use the value `-1` to signal that something failed. The callsite then has to check the return value against this special value and report the error. It's easy to not check for that error condition and continue to work with that value in the code. This can lead to delayed or even missing error detection and is strongly discouraged.
+Una forma generalmente deficiente de informar errores es a través del uso de un
+valor centinela. Por ejemplo, para tu función `markDone`, podrías decidir usar
+el valor `-1` para indicar que algo falló. Luego, el lugar desde donde se llama
+debe verificar el valor de retorno contra este valor especial y reportar el
+error. Es fácil no verificar esa condición de error y continuar trabajando con
+ese valor en el código. Esto puede llevar a una detección de errores retrasada o
+incluso a la falta de detección de errores, y se desaconseja enérgicamente.
 
-Definition:
+Definición:
 
-``` motoko no-repl file=../examples/todo-error.mo#L38-L47
+```motoko no-repl file=../examples/todo-error.mo#L38-L47
+
 ```
 
-Callsite:
+Llamado:
 
-``` motoko no-repl file=../examples/todo-error.mo#L108-L115
+```motoko no-repl file=../examples/todo-error.mo#L108-L115
+
 ```
 
 <img src="https://github.com/user-attachments/assets/844ca364-4d71-42b3-aaec-4a6c3509ee2e" alt="Logo" width="150" height="150" />

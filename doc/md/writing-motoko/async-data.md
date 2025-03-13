@@ -2,114 +2,188 @@
 sidebar_position: 5
 ---
 
-# Async data
+# Datos asíncronos
 
+En ICP, la comunicación entre canisters es asíncrona. Enviar un mensaje junto
+con una devolución de llamada (callback) desde un canister a otro programa una
+solicitud en el receptor. La finalización de la solicitud activa la devolución
+de llamada al remitente, permitiendo que el remitente procese el resultado.
 
+En Motoko, enviar un mensaje asíncrono de ICP se abstrae como una llamada a una
+función compartida que devuelve un resultado asíncrono. Al igual que varios
+otros lenguajes, Motoko ofrece `async` y `await` para facilitar la programación
+con funciones y cálculos asíncronos.
 
-On ICP, communication between canisters is asynchronous. Sending a message together with a callback from one canister to another schedules a request in the receiver. Completion of the request triggers the callback to the sender, allowing the sender to process the result.
+En Motoko, ejecutar una expresión asíncrona, ya sea una llamada a una función
+compartida o simplemente una expresión local `async`, produce un futuro, un
+objeto de tipo `async T`, para algún tipo de resultado `T`. En lugar de bloquear
+al llamante hasta que la llamada haya regresado, el mensaje se pone en cola en
+el destinatario y el futuro que representa esa solicitud pendiente se devuelve
+inmediatamente al llamante. El futuro es un marcador de posición para el
+resultado eventual de la solicitud que el llamante puede consultar más tarde.
 
-In Motoko, sending an ICP asynchronous message is abstracted as calling a shared function that returns an asynchronous result.
-Like several other languages, Motoko offers `async` and `await` to support convenient programming with asynchronous functions and computations.
+Cada operación que resulta en un futuro (es decir, envíos a otros
+`actor`s/canisters o autoenvíos con `async` o mediante llamadas a funciones)
+puede ir precedida de un _paréntesis_ de la forma
+`(base with attr₁ = v₁; attr₂ = v₂; …)` donde `base` es un registro opcional que
+contiene (por ejemplo, valores predeterminados) atributos. Los atributos
+aceptados actualmente son `cycles : Nat`, que especifica la cantidad de ciclos
+que se enviarán junto con el mensaje, y `timeout : Nat32` para modificar el
+plazo y restringir el período de tiempo durante el cual el receptor puede
+responder.
 
-In Motoko, executing an asynchronous expression, whether a call to a shared function, or just a local `async` expression, produces a future, an object of type `async T`, for some result type `T`.
-Instead of blocking the caller until the call has returned, the message is enqueued on the callee and the future representing that pending request is immediately returned to the caller. The future is a placeholder for the eventual result of the request that the caller can later query.
+La sintaxis `await` sincroniza un futuro y suspende el cálculo hasta que el
+futuro se complete por su productor.
 
-Every operation resulting in a future (i.e. sends to other `actor`s/canisters or self sends with `async` or by function calls) can be prefixed by a _parenthetical_ of the form `(base with attr₁ = v₁; attr₂ = v₂; …)` where `base` is an optional record containing (e.g. default) attributes. Accepted attributes are currently `cycles : Nat`, specifying the amount of cycles to be sent along with the message, and `timeout : Nat32` to modify the deadline and restrict the time span while the receiver can reply.
+Entre la emisión de la solicitud y la decisión de esperar el resultado, el
+llamante es libre de hacer otro trabajo. Una vez que el destinatario ha
+procesado la solicitud, el futuro se completa y su resultado se pone a
+disposición del llamante. Si el llamante está esperando el futuro, su ejecución
+puede reanudarse con el resultado; de lo contrario, el resultado simplemente se
+almacena en el futuro para su uso posterior.
 
-The syntax `await` synchronizes on a future, and suspends computation until the future is completed by its producer.
+La combinación de las construcciones `async`/`await` simplifica la programación
+asíncrona al permitir que los `await` se incrusten dentro de código secuencial
+ordinario, sin requerir un manejo complicado de devoluciones de llamada
+asíncronas.
 
-Between issuing the request and deciding to wait for the result, the caller is free to do other work. Once the callee has processed the request, the future is completed and its result made available to the caller. If the caller is waiting on the future, its execution can resume with the result, otherwise the result is simply stored in the future for later use.
+## Funciones asíncronas
 
-The combination of `async`/`await` constructs simplifies asynchronous programming  by allowing `await`s to be embedded within ordinary sequential code, without requiring tricky management of asynchronous callbacks.
+Aquí hay un programa de ejemplo que utiliza funciones asíncronas:
 
-## Async functions
+```motoko file=../examples/counter-actor.mo
 
-Here is an example program that uses async functions:
-
-``` motoko file=../examples/counter-actor.mo
 ```
 
-The `Counter` actor declares one field and three public, shared functions:
+El actor `Counter` declara un campo y tres funciones públicas compartidas:
 
--   The field `count` is mutable, initialized to zero and implicitly `private`.
+- El campo `count` es mutable, inicializado a cero e implícitamente `private`.
 
--   Function `inc()` asynchronously increments the counter and returns a future of type `async ()` for synchronization.
+- La función `inc()` incrementa asincrónicamente el contador y devuelve un
+  futuro de tipo `async ()` para sincronización.
 
--   Function `read()` asynchronously reads the counter value and returns a future of type `async Nat` containing its value.
+- La función `read()` lee asincrónicamente el valor del contador y devuelve un
+  futuro de tipo `async Nat` que contiene su valor.
 
--   Function `bump()` asynchronously increments and reads the counter.
+- La función `bump()` incrementa y lee asincrónicamente el contador.
 
-The only way to read or modify the state (`count`) of the `Counter` actor is through its shared functions.
+La única forma de leer o modificar el estado (`count`) del actor `Counter` es a
+través de sus funciones compartidas.
 
-## Using `await` to consume async futures
+## Usando `await` para consumir futuros asíncronos
 
-The caller of a shared function typically receives a future, a value of type `async T` for some T.
+El llamador de una función compartida típicamente recibe un futuro, un valor de
+tipo `async T` para algún T.
 
-The only thing the caller can do with this future is wait for it to be completed by the producer, throw it away, or store it for later use.
+Lo único que el llamador puede hacer con este futuro es esperar a que sea
+completado por el productor, desecharlo o almacenarlo para su uso posterior.
 
-To access the result of an `async` value, the receiver of the future uses an `await` expression.
+Para acceder al resultado de un valor `async`, el receptor del futuro utiliza
+una expresión `await`.
 
-For example, to use the result of `Counter.read()` above, we can first bind the future to an identifier `a`, and then `await a` to retrieve the underlying [`Nat`](../base/Nat.md), `n`:
+Por ejemplo, para usar el resultado de `Counter.read()` anterior, podemos
+primero asignar el futuro a un identificador `a`, y luego `await a` para
+recuperar el [`Nat`](../base/Nat.md) subyacente, `n`:
 
-``` motoko no-repl
+```motoko no-repl
 let a : async Nat = Counter.read();
 let n : Nat = await a;
 ```
 
-The first line immediately receives a future of the counter value, but does not wait for it, and thus cannot use it as a natural number yet.
+La primera línea recibe inmediatamente un futuro del valor del contador, pero no
+espera por él y, por lo tanto, no puede usarlo como un número natural todavía.
 
-The second line `await`s this future and extracts the result, a natural number. This line may suspend execution until the future has been completed.
+La segunda línea `await` este futuro y extrae el resultado, un número natural.
+Esta línea puede suspender la ejecución hasta que el futuro se haya completado.
 
-Typically, one rolls the two steps into one and just awaits an asynchronous call directly:
+Normalmente, se combinan los dos pasos en uno y simplemente se espera una
+llamada asíncrona directamente:
 
-``` motoko no-repl
+```motoko no-repl
 let n : Nat = await Counter.read();
 ```
 
-Unlike a local function call, which blocks the caller until the callee has returned a result, a shared function call immediately returns a future, `f`, without blocking. Instead of blocking, a later call to `await f` suspends the current computation until `f` is complete. Once the future is completed (by the producer), execution of `await p` resumes with its result. If the result is a value, `await f` returns that value. Otherwise the result is some error, and `await f` propagates the error to the consumer of `await f`.
+A diferencia de una llamada a una función local, que bloquea al llamante hasta
+que el llamado haya devuelto un resultado, una llamada a una función compartida
+devuelve inmediatamente un futuro, `f`, sin bloquear. En lugar de bloquear, una
+llamada posterior a `await f` suspende el cálculo actual hasta que `f` esté
+completo. Una vez que el futuro se completa (por el productor), la ejecución de
+`await p` se reanuda con su resultado. Si el resultado es un valor, `await f`
+devuelve ese valor. De lo contrario, el resultado es algún error, y `await f`
+propaga el error al consumidor de `await f`.
 
-Awaiting a future a second time will just produce the same result, including re-throwing any error stored in the future. Suspension occurs even if the future is already complete; this ensures state changes and message sends prior to every `await` are committed.
+Esperar un futuro por segunda vez simplemente produce el mismo resultado,
+incluyendo volver a lanzar cualquier error almacenado en el futuro. La
+suspensión ocurre incluso si el futuro ya está completo; esto asegura que los
+cambios de estado y los envíos de mensajes antes de cada `await` se confirmen.
 
-## Using parentheticals to modify message send modalities
+## Usando paréntesis para modificar las modalidades de envío de mensajes
 
-In the above examples all messages sent to the `Counter` actor do not transmit cycles and will never timeout when their results are awaited. Both of these
-aspects can be configured by syntactically adding a parenthetical and thus modifying the dynamic attributes of the message send.
+En los ejemplos anteriores, todos los mensajes enviados al actor `Counter` no
+transmiten ciclos y nunca expiran cuando se espera su resultado. Ambos aspectos
+se pueden configurar agregando sintácticamente un paréntesis y modificando así
+los atributos dinámicos del envío del mensaje.
 
-To add cycles to the send one would write
-``` motoko no-repl
+Para agregar ciclos al envío, se escribiría
+
+```motoko no-repl
 let a = (with cycles = 42_000_000) Counter.bump();
 ```
-Similarly, one can specify an explicit timeout to apply when awaiting the result of the message. This is useful in applications that prefer best-effort over guaranteed response message delivery:
-``` motoko no-repl
+
+De manera similar, se puede especificar un tiempo de espera explícito para
+aplicar al esperar el resultado del mensaje. Esto es útil en aplicaciones que
+prefieren un esfuerzo máximo sobre la entrega garantizada de mensajes de
+respuesta:
+
+```motoko no-repl
 let a = (with timeout = 25) Counter.bump();
 ```
-Custom defaults for these attributes can be defined in a record that is used as the base expression of a parenthetical:
-``` motoko no-repl
+
+Se pueden definir valores predeterminados personalizados para estos atributos en
+un registro que se utiliza como la expresión base de un paréntesis:
+
+```motoko no-repl
 let boundedWait = { timeout = 25 };
 let a = (boundedWait with cycles = 42_000_000) Counter.bump();
 ```
 
 :::danger
 
-A function that does not `await` in its body is guaranteed to execute atomically. In particular, the environment cannot change the state of the actor while the function is executing. If a function performs an `await`, however, atomicity is no longer guaranteed. Between suspension and resumption around the `await`, the state of the enclosing actor may change due to concurrent processing of other incoming actor messages. It is the programmer’s responsibility to guard against non-synchronized state changes. A programmer may, however, rely on any state change prior to the await being committed.
+Una función que no realiza `await` en su cuerpo tiene la garantía de ejecutarse
+de manera atómica. En particular, el entorno no puede cambiar el estado del
+actor mientras la función se está ejecutando. Sin embargo, si una función
+realiza un `await`, la atomicidad ya no está garantizada. Entre la suspensión y
+la reanudación alrededor del `await`, el estado del actor que la contiene puede
+cambiar debido al procesamiento concurrente de otros mensajes entrantes del
+actor. Es responsabilidad del programador protegerse contra cambios de estado no
+sincronizados. Sin embargo, un programador puede confiar en que cualquier cambio
+de estado antes del `await` se confirmará.
 
 :::
 
-For example, the implementation of `bump()` above is guaranteed to increment and read the value of `count`, in one atomic step. The following alternative implementation does not have the same semantics and allows another client of the actor to interfere with its operation.
+Por ejemplo, la implementación de `bump()` anterior tiene la garantía de
+incrementar y leer el valor de `count` en un solo paso atómico. La siguiente
+implementación alternativa no tiene la misma semántica y permite que otro
+cliente del actor interfiera con su operación.
 
-``` motoko no-repl
+```motoko no-repl
   public shared func bump() : async Nat {
     await inc();
     await read();
   };
 ```
 
-Each `await` suspends execution, allowing an interloper to change the state of the actor. By design, the explicit `await`s make the potential points of interference clear to the reader.
+Cada `await` suspende la ejecución, permitiendo que un interlocutor cambie el
+estado del actor. Por diseño, los `await` explícitos hacen que los posibles
+puntos de interferencia sean claros para el lector.
 
-## Mops packages for async data flow
+## Paquetes Mops para el flujo de datos asíncronos
 
-- [`maf`](https://mops.one/maf) and [`mal`](https://mops.one/mal): Async data deliveries.
+- [`maf`](https://mops.one/maf) y [`mal`](https://mops.one/mal): Entregas de
+  datos asíncronos.
 
-- [`rxmo`](https://mops.one/rxmo): A library for reactive programming using observables, making it easier to compose asynchronous or callback-based code.
+- [`rxmo`](https://mops.one/rxmo): Una biblioteca para programación reactiva que
+  utiliza observables, facilitando la composición de código asíncrono o basado
+  en devoluciones de llamada.
 
 <img src="https://github.com/user-attachments/assets/844ca364-4d71-42b3-aaec-4a6c3509ee2e" alt="Logo" width="150" height="150" />

@@ -2,34 +2,57 @@
 sidebar_position: 13
 ---
 
-# Objects and classes
+# Objetos y clases
 
 <!--
 TODO: Move examples into doc/modules/language-guide/examples
 -->
 
+En Motoko, un objeto es simplemente una colección de campos nombrados que
+contienen valores. Estos valores pueden ser datos simples o valores de
+funciones. Además, cada campo puede ser mutable o inmutable.
 
-In Motoko, an object is just a collection of named fields, holding values. These values can either be plain data, or function values. In addition, each field can be mutable or immutable.
+Un objeto simple que contiene solo campos de datos es como un registro en una
+base de datos. Cuando los campos son inmutables y tienen tipos compartidos, el
+objeto en sí es compartible y puede enviarse y recibirse desde funciones
+compartidas.
 
-A simple object containing just fields of data is like a record in a database.
-When the fields are immutable and have shared types, the object itself is shareable and can be sent and received from shared functions.
+Cuando los campos contienen valores de funciones, los objetos de Motoko pueden
+representar objetos tradicionales con métodos, familiares en la programación
+orientada a objetos (OOP). Desde una perspectiva de OOP, un objeto es una
+abstracción definida por el comportamiento de sus métodos. Los métodos se
+utilizan típicamente para modificar u observar algún estado encapsulado (es
+decir, oculto) de un objeto. Los programas de Motoko se benefician de la
+capacidad de encapsular el estado como objetos con tipos abstractos. El
+[estado mutable](mutable-state.md) introduce declaraciones de estado mutable en
+forma de variables declaradas con `var`. Usando tales declaraciones de manera
+privada en su cuerpo, un objeto puede encapsular el estado, declarando métodos
+públicos que lo acceden y actualizan.
 
-When fields contain function values, Motoko objects can represent traditional objects with methods, familiar from object-oriented programming (OOP).
-From an OOP perspective, an object is an abstraction, defined by the behavior of its methods. Methods are typically used to modify or observe some encapsulated (i.e. hidden) state of an object.
-Motoko programs benefit from the ability to encapsulate state as objects with abstract types. The [mutable state](mutable-state.md) introduces declarations of mutable state in the form of `var`-declared variables. Using such declarations privately in its body, an object can encapsulate the state, declaring public methods that access and update it.
+Por diseño, los objetos con campos o métodos mutables no pueden enviarse a
+actores remotos. Si eso estuviera permitido, un receptor tendría que recibir una
+referencia remota al objeto local, rompiendo el aislamiento del modelo de
+actores al permitir actualizaciones remotas al estado local. O bien, el receptor
+tendría que recibir una copia del objeto local. Entonces, el efecto de cualquier
+cambio en la copia no se reflejaría en el original, lo que llevaría a confusión.
 
-By design, objects with mutable fields or methods cannot be sent to remote actors. If that were allowed, a receiver would either have to receive a remote reference to the local object, breaking the isolation of the actor model by allowing remote updates to local state. Or, the receiver would have to receive a copy of the local object. Then, the effect of any changes to the copy would not be reflected in the original, leading to confusion.
+Para compensar esta limitación necesaria, los objetos `actor` son compartibles,
+pero siempre se ejecutan de manera remota. Se comunican solo con datos
+compartibles de Motoko. Los objetos locales interactúan de maneras menos
+restrictivas entre sí y pueden pasar cualquier dato de Motoko a los métodos de
+los demás, incluidos otros objetos. En la mayoría de los demás aspectos, los
+objetos y clases locales son contrapartes no compartibles de los objetos y
+clases de actores.
 
+## Ejemplo
 
-To compensate for this necessary limitation, `actor` objects are shareable, but always execute remotely. They communicate with shareable Motoko data only. Local objects interact in less restricted ways with themselves, and can pass any Motoko data to each other’s methods, including other objects. In most other ways, local objects and classes are non-shareable counterparts to actor objects and classes.
+El siguiente ejemplo ilustra una ruta de evolución general para los programas de
+Motoko. Cada objeto tiene el potencial de ser refactorizado en un servicio al
+convertir el objeto local en un objeto actor.
 
-## Example
+Considera la siguiente declaración de objeto del valor de objeto `counter`:
 
-The following example illustrates a general evolution path for Motoko programs. Each object has the potential to be refactored into a service by refactoring the local object into an actor object.
-
-Consider the following object declaration of the object value `counter`:
-
-``` motoko
+```motoko
 object counter {
   var count = 0;
   public func inc() { count += 1 };
@@ -41,15 +64,21 @@ object counter {
 };
 ```
 
-This declaration introduces a single object instance named `counter`. The developer exposes three public functions `inc`, `read` and `bump` using keyword `public` to declare each in the object body. The body of the object, like a block expression, consists of a list of declarations.
+Esta declaración introduce una única instancia de objeto llamada `counter`. El
+desarrollador expone tres funciones públicas `inc`, `read` y `bump` utilizando
+la palabra clave `public` para declarar cada una en el cuerpo del objeto. El
+cuerpo del objeto, al igual que una expresión de bloque, consiste en una lista
+de declaraciones.
 
-In addition to these three functions, the object has one private mutable variable `count`, which holds the current count and is initially zero.
+Además de estas tres funciones, el objeto tiene una variable mutable privada
+`count`, que almacena el recuento actual y que inicialmente es cero.
 
-## Object types
+## Tipos de objetos
 
-This object `counter` has the following object type, written as a list of field-type pairs, enclosed in braces `{` and `}`:
+Este objeto `counter` tiene el siguiente tipo de objeto, escrito como una lista
+de pares campo-tipo, encerrados entre llaves `{` y `}`:
 
-``` motoko no-repl
+```motoko no-repl
 {
   inc  : () -> () ;
   read : () -> Nat ;
@@ -57,17 +86,25 @@ This object `counter` has the following object type, written as a list of field-
 }
 ```
 
-Each field type consists of an identifier, a colon `:`, and a type for the field content. Here, each field is a function, and thus has an arrow type form (`_ -> _`).
+Cada tipo de campo consta de un identificador, dos puntos `:`, y un tipo para el
+contenido del campo. Aquí, cada campo es una función y, por lo tanto, tiene la
+forma de un tipo de flecha (`_ -> _`).
 
-In the declaration of `object`, the variable `count` was explicitly declared neither as `public` nor as `private`.
+En la declaración de `object`, la variable `count` no se declaró explícitamente
+como `public` ni como `private`.
 
-By default, all declarations in an object block are `private`. Consequently, the type for `count` does not appear in the type of the object. Its name and presence are both inaccessible from the outside.
+Por defecto, todas las declaraciones en un bloque de objeto son `private`. En
+consecuencia, el tipo de `count` no aparece en el tipo del objeto. Su nombre y
+presencia son inaccesibles desde el exterior.
 
-By not exposing this implementation detail, the object has a more general type with fewer fields, and as a result, is interchangeable with objects that have the same interface but a different implementation.
+Al no exponer este detalle de implementación, el objeto tiene un tipo más
+general con menos campos y, como resultado, es intercambiable con objetos que
+tienen la misma interfaz pero una implementación diferente.
 
-To illustrate the point just above, consider this variation of the `counter` declaration above, of `byteCounter`:
+Para ilustrar el punto anterior, considera esta variación de la declaración de
+`counter` anterior, llamada `byteCounter`:
 
-``` motoko
+```motoko
 import Nat8 "mo:base/Nat8";
 object byteCounter {
   var count : Nat8 = 0;
@@ -77,9 +114,11 @@ object byteCounter {
 };
 ```
 
-This object has the same type as the previous one, and thus from the standpoint of type checking, this object is interchangeable with the prior one:
+Este objeto tiene el mismo tipo que el anterior, y por lo tanto, desde el punto
+de vista de la verificación de tipos, este objeto es intercambiable con el
+anterior:
 
-``` motoko no-repl
+```motoko no-repl
 {
   inc  : () -> () ;
   read : () -> Nat ;
@@ -87,29 +126,45 @@ This object has the same type as the previous one, and thus from the standpoint 
 }
 ```
 
-This version does not use the same implementation of the counter field. Rather than use an ordinary natural [`Nat`](../base/Nat.md), this version uses a byte-sized natural number, type [`Nat8`](../base/Nat8.md), whose size is always eight bits.
+Esta versión no utiliza la misma implementación del campo `counter`. En lugar de
+usar un número natural ordinario ([`Nat`](../base/Nat.md)), esta versión utiliza
+un número natural de tamaño de byte, tipo [`Nat8`](../base/Nat8.md), cuyo tamaño
+es siempre de ocho bits.
 
-As such, the `inc` operation may fail with an overflow for this object but never the prior one, which may instead fill the program’s memory.
+Como tal, la operación `inc` puede fallar con un desbordamiento para este
+objeto, pero nunca para el anterior, que en su lugar podría llenar la memoria
+del programa.
 
-Neither implementation of a counter comes without some complexity. In this case, they share a common type.
+Ninguna implementación de un contador está exenta de cierta complejidad. En este
+caso, comparten un tipo común.
 
-The common type abstracts the differences in the implementations of the objects, shielding the rest of the application from their implementation details.
+El tipo común abstrae las diferencias en las implementaciones de los objetos,
+protegiendo al resto de la aplicación de sus detalles de implementación.
 
-Objects types can also have [subtypes](object-subtyping.md), allowing an object with a more specific type to pass as an object of a more general type, for example, to pass as an object with fewer fields.
+Los tipos de objetos también pueden tener [subtipos](object-subtyping.md), lo
+que permite que un objeto con un tipo más específico pase como un objeto de un
+tipo más general, por ejemplo, para pasar como un objeto con menos campos.
 
-## Object and actor classes
+## Clases de objetos y actores
 
-**Object classes** : A family of related objects to perform a task with a customizable initial state. Motoko provides a syntactical construct, called a `class` definition, which simplifies building objects of the same type and implementation.
+**Clases de objetos**: Una familia de objetos relacionados para realizar una
+tarea con un estado inicial personalizable. Motoko proporciona una construcción
+sintáctica, llamada definición de `class`, que simplifica la creación de objetos
+del mismo tipo e implementación.
 
-**Actor classes** : An object class that exposes a [service](async-data.md) using asynchronous behavior. The corresponding Motoko construct is an [actor class](actor-classes.md), which follows a similar but distinct design.
+**Clases de actores**: Una clase de objetos que expone un
+[servicio](async-data.md) utilizando comportamiento asíncrono. La construcción
+correspondiente en Motoko es una [clase de actor](actor-classes.md), que sigue
+un diseño similar pero distinto.
 
-## Object classes
+## Clases de objetos
 
-In Motoko, an object encapsulates state, and an object `class` is a package of two entities that share a common name.
+En Motoko, un objeto encapsula estado, y una `class` de objetos es un paquete de
+dos entidades que comparten un nombre común.
 
-Consider this example `class` for counters that start at zero:
+Considera este ejemplo de `class` para contadores que comienzan en cero:
 
-``` motoko no-repl
+```motoko no-repl
 class Counter() {
   var c = 0;
   public func inc() : Nat {
@@ -119,24 +174,26 @@ class Counter() {
 };
 ```
 
-The value of this definition is that we can construct new counters, each starting with their own unique state, initially at zero:
+El valor de esta definición es que podemos construir nuevos contadores, cada uno
+comenzando con su propio estado único, inicialmente en cero:
 
-``` motoko no-repl
+```motoko no-repl
 let c1 = Counter();
 let c2 = Counter();
 ```
 
-Each is independent:
+Cada uno es independiente:
 
-``` motoko no-repl
+```motoko no-repl
 let x = c1.inc();
 let y = c2.inc();
 (x, y)
 ```
 
-You could achieve the same results by writing a function that returns an object:
+Podrías lograr los mismos resultados escribiendo una función que devuelve un
+objeto:
 
-``` motoko
+```motoko
 func Counter() : { inc : () -> Nat } =
   object {
     var c = 0;
@@ -144,35 +201,44 @@ func Counter() : { inc : () -> Nat } =
   };
 ```
 
-Notice the return type of this constructor function is an object type:
+Observa que el tipo de retorno de esta función constructora es un tipo de
+objeto:
 
-``` motoko no-repl
+```motoko no-repl
 { inc : () -> Nat }
 ```
 
-You may want to name this type such as `Counter` for use in further type declarations:
+Es posible que desees nombrar este tipo como `Counter` para usarlo en
+declaraciones de tipo adicionales:
 
-``` motoko no-repl
+```motoko no-repl
 type Counter = { inc : () -> Nat };
 ```
 
-The `class` keyword syntax shown above is a shorthand for these two definitions of `Counter`: a factory function `Counter` that constructs objects, and the type `Counter` of these objects. Classes do not provide any new functionality beyond this convenience.
+La sintaxis de la palabra clave `class` mostrada anteriormente es una
+abreviatura para estas dos definiciones de `Counter`: una función de fábrica
+`Counter` que construye objetos y el tipo `Counter` de estos objetos. Las clases
+no proporcionan ninguna funcionalidad nueva más allá de esta conveniencia.
 
-### Class constructor
+### Constructor de clase
 
-An object class defines a constructor function that may carry zero or more data arguments and zero or more type arguments.
+Una clase de objetos define una función constructora que puede llevar cero o más
+argumentos de datos y cero o más argumentos de tipo.
 
-The `Counter` example above has zero of each. The example below takes two data arguments, `arg1` and `arg2`, with `Type1` and `Type2` as the types of these arguments, respectively.
+El ejemplo de `Counter` anterior no tiene ninguno de estos. El siguiente ejemplo
+toma dos argumentos de datos, `arg1` y `arg2`, con `Type1` y `Type2` como los
+tipos de estos argumentos, respectivamente.
 
-``` motoko no-repl
+```motoko no-repl
 class MyClass(arg1: Type1, arg2: Type2) {
   // class body here
 };
 ```
 
-For example, you can write a `Counter` class that takes an argument of type `Nat` and an argument of type `Bool`:
+Por ejemplo, puedes escribir una clase `Counter` que toma un argumento de tipo
+`Nat` y un argumento de tipo `Bool`:
 
-``` motoko no-repl
+```motoko no-repl
 import Nat "mo:base/Nat";
 
 persistent actor {
@@ -191,24 +257,29 @@ persistent actor {
 }
 ```
 
-The type arguments, if any, parameterize both the type and the constructor function for the class.
+Los argumentos de tipo, si los hay, parametrizan tanto el tipo como la función
+constructora de la clase.
 
-The data arguments, if any, parameterize only the constructor function for the class.
+Los argumentos de datos, si los hay, parametrizan solo la función constructora
+de la clase.
 
-#### Data arguments
+#### Argumentos de datos
 
-Suppose you want to initialize the counter with some non-zero value. You can supply that value as a data argument to the `class` constructor:
+Supongamos que deseas inicializar el contador con algún valor distinto de cero.
+Puedes proporcionar ese valor como un argumento de datos al constructor de la
+`class`:
 
-``` motoko
+```motoko
 class Counter(init : Nat) {
   var c = init;
   public func inc() : Nat { c += 1; c };
 };
 ```
 
-This parameter is available to all methods. For instance, you can `reset` the `Counter` to its initial value, a parameter:
+Este parámetro está disponible para todos los métodos. Por ejemplo, puedes
+`resetear` el `Counter` a su valor inicial, un parámetro:
 
-``` motoko
+```motoko
 class Counter(init : Nat) {
   var c = init;
   public func inc() : Nat { c += 1; c };
@@ -216,15 +287,20 @@ class Counter(init : Nat) {
 };
 ```
 
-#### Type arguments
+#### Argumentos de tipo
 
-Suppose you want the counter to actually carry data that it counts, like a specialized `Buffer`.
+Supongamos que quieres que el contador lleve datos que cuenta, como un `Buffer`
+especializado.
 
-When classes use or contain data of arbitrary type, they carry a type argument. This is equivalent to a type parameter for an unknown type, just as with functions.
+Cuando las clases usan o contienen datos de tipo arbitrario, llevan un argumento
+de tipo. Esto es equivalente a un parámetro de tipo para un tipo desconocido, al
+igual que con las funciones.
 
-The scope of this type parameter covers the entire `class` with data parameters. As such, the methods of the class can use these type parameters without reintroducing them.
+El alcance de este parámetro de tipo abarca toda la `class` con los parámetros
+de datos. Como tal, los métodos de la clase pueden usar estos parámetros de tipo
+sin reintroducirlos.
 
-``` motoko
+```motoko
 import Buffer "mo:base/Buffer";
 
 class Counter<X>(init : Buffer.Buffer<X>) {
@@ -240,13 +316,19 @@ class Counter<X>(init : Buffer.Buffer<X>) {
 };
 ```
 
-#### Type annotation
+#### Anotación de tipo
 
-The class constructor may also carry a type annotation for its return type. When supplied, Motoko checks that this type annotation is compatible with the body of the class, which is an object definition. This check ensures that each object produced by the constructor meets the supplied specification.
+El constructor de la clase también puede llevar una anotación de tipo para su
+tipo de retorno. Cuando se proporciona, Motoko verifica que esta anotación de
+tipo sea compatible con el cuerpo de la clase, que es una definición de objeto.
+Esta verificación asegura que cada objeto producido por el constructor cumpla
+con la especificación proporcionada.
 
-For example, repeat the `Counter` as a buffer and annotate it with a more general type `Accum<X>` that permits adding, but not resetting, the counter. This annotation ensures that the objects are compatible with the type `Accum<X>`.
+Por ejemplo, repite el `Counter` como un buffer y anótalo con un tipo más
+general `Accum<X>` que permite agregar, pero no restablecer, el contador. Esta
+anotación asegura que los objetos sean compatibles con el tipo `Accum<X>`.
 
-``` motoko
+```motoko
 import Buffer "mo:base/Buffer";
 
 type Accum<X> = { add : X -> Nat };
@@ -258,25 +340,31 @@ class Counter<X>(init : Buffer.Buffer<X>) : Accum<X> {
 };
 ```
 
-#### Full syntax
+#### Sintaxis completa
 
-Classes are defined by the keyword `class`, followed by:
+Las clases se definen mediante la palabra clave `class`, seguida de:
 
-- A name for the constructor and type being defined. For example, `Counter`.
+- Un nombre para el constructor y el tipo que se está definiendo. Por ejemplo,
+  `Counter`.
 
-- Optional type arguments. For example, omitted, or `<X>`, or `<X, Y>`.
+- Argumentos de tipo opcionales. Por ejemplo, omitidos, o `<X>`, o `<X, Y>`.
 
-- An argument list. For example, `()`, or `(init : Nat)`, etc.
+- Una lista de argumentos. Por ejemplo, `()`, o `(init : Nat)`, etc.
 
-- An optional type annotation for the constructed objects. For example, omitted, or `Accum<X>`.
+- Una anotación de tipo opcional para los objetos construidos. Por ejemplo,
+  omitida, o `Accum<X>`.
 
-- The class "body" is an object definition, parameterized by the type and value arguments, if any.
+- El "cuerpo" de la clase es una definición de objeto, parametrizada por los
+  argumentos de tipo y valor, si los hay.
 
-The constituents of the body marked `public` contribute to the resulting objects' type and these types compared against the optional annotation, if given.
+Los componentes del cuerpo marcados como `public` contribuyen al tipo de los
+objetos resultantes, y estos tipos se comparan con la anotación opcional, si se
+proporciona.
 
-Consider the task of walking the bits of a natural [`Nat`](../base/Nat.md) number. For this example, you could define the following:
+Considera la tarea de recorrer los bits de un número natural
+([`Nat`](../base/Nat.md)). Para este ejemplo, podrías definir lo siguiente:
 
-``` motoko
+```motoko
 class Bits(n : Nat) {
   var state = n;
   public func next() : ?Bool {
@@ -288,30 +376,36 @@ class Bits(n : Nat) {
 }
 ```
 
-The above class definition is equivalent to the simultaneous definition of a structural type synonym and a factory function, both named `Bits`:
+La definición de clase anterior es equivalente a la definición simultánea de un
+sinónimo de tipo estructural y una función de fábrica, ambos llamados `Bits`:
 
-``` motoko no-repl
+```motoko no-repl
 type Bits = {next : () -> ?Bool};
 func Bits(n : Nat) : Bits = object {
   // class body
 };
 ```
 
+## Combinación y extensión de objetos
 
-## Object combination and extension
+Motoko te permite construir un objeto único a partir de un registro simple y un
+bloque de objeto más complicado, al mismo tiempo que proporciona una sintaxis
+para construir nuevos objetos a partir de los existentes, agregar nuevos campos
+o reemplazar campos existentes. Los registros y objetos _base_ se separan con la
+palabra clave `and` y pueden ir seguidos de `with` y campos adicionales (o
+sobreescritos) separados por punto y coma. Los registros y campos se encierran
+entre llaves, indicando la formación de un registro. Cuando los registros base
+tienen campos superpuestos (según sus tipos), se debe proporcionar una
+sobreescritura de campo para desambiguar. Los registros base originales nunca se
+modifican; en su lugar, se copian sus campos para crear un nuevo objeto, y por
+eso nos referimos a esto como una combinación y extensión funcional de objetos.
 
-Motoko allows you to construct a single object from a simple record and a more complicated object block, while also providing syntax for building new objects from existing ones, adding new fields, or replacing existing fields.
-The *base* records and objects are separated by the `and` keyword and can be followed by `with` and semicolon-separated additional (or overriden) fields.
-The bases and fields are enclosed in braces, indicating record formation.
-When the bases have overlapping fields (according to their types), then a disambiguating field overwrite must be provided.
-The original bases are never modified; instead, their fields are copied to create a new object, and thus we refer to this as a functional object combination and extension.
+Aquí tienes algunos ejemplos simples:
 
-Here are some simple examples:
+1. Combinación de objetos con `and`: La palabra clave `and` combina dos o más
+   objetos.
 
-1. Object combination with `and`:
-   The `and` keyword combines two or more objects.
-
-``` motoko
+```motoko
 let person = { name = "Alice"; };
 let employee = { id = 123; department = "Engineering" };
 
@@ -319,10 +413,10 @@ let employedPerson = { person and employee };
 // employeePerson now has: name, id, and department
 ```
 
-2. Object extension with `with`:
-   The `with` keyword allows you to add new fields or override existing ones.
+2. Extensión de objetos con `with`: La palabra clave `with` te permite agregar
+   nuevos campos o sobrescribir los existentes.
 
-``` motoko
+```motoko
 let person = { name = "Alice" };
 
 let agedPerson = { person with age = 30 };
@@ -330,10 +424,10 @@ let agedPerson = { person with age = 30 };
 // agedPersion now has: name and age
 ```
 
-3. Combining `and` and `with`:
-   You can use both `and` and `with` together for more complex object manipulations.
+3. Combinando `and` y `with`: Puedes usar tanto `and` como `with` juntos para
+   manipulaciones de objetos más complejas.
 
-``` motoko
+```motoko
 let person = { name = "Alice" };
 let employee = { id = 123; department = "Engineering" };
 
@@ -341,14 +435,20 @@ let employedPersonWithAge = { person and employee with age = 30 };
 // employedPersionWithAge now has: name, id, department and age
 ```
 
-Key points to remember:
-- When using `and`, if there are conflicting field names in the bases, the conflict must be resolved using a `with` field.
-- The `with` clause is used to disambiguate field labels, define new fields, override existing fields, add new `var` fields, or redefine existing `var` fields to prevent aliasing.
-- You must explicitly override any `var` fields from base objects to prevent introducing aliases.
+- Al usar `and`, si hay nombres de campo en conflicto en las bases, el conflicto
+  debe resolverse utilizando un campo `with`.
+- La cláusula `with` se utiliza para desambiguar etiquetas de campo, definir
+  nuevos campos, anular campos existentes, agregar nuevos campos `var` o
+  redefinir campos `var` existentes para evitar el aliasing.
+- Debes anular explícitamente cualquier campo `var` de los objetos base para
+  evitar la introducción de alias.
 
-This syntax provides a convenient way to create modular and reusable code in Motoko, allowing developers to build complex objects from simpler components and
-extend existing objects with new functionality.
+Esta sintaxis proporciona una forma conveniente de crear código modular y
+reutilizable en Motoko, permitiendo a los desarrolladores construir objetos
+complejos a partir de componentes más simples y extender objetos existentes con
+nueva funcionalidad.
 
-For more details, see the [language manual](../reference/language-manual#object-combinationextension).
+Para obtener más detalles, consulta el
+[manual de lenguaje](../reference/language-manual#object-combinationextension).
 
 <img src="https://github.com/user-attachments/assets/844ca364-4d71-42b3-aaec-4a6c3509ee2e" alt="Logo" width="150" height="150" />
