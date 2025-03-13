@@ -2,121 +2,163 @@
 sidebar_position: 3
 ---
 
+# Entorno de desarrollo
 
-# Developer environment
+Para desarrollar e implementar contratos inteligentes de canister Motoko,
+necesitarás un entorno de desarrollo que contenga el compilador Motoko y la
+biblioteca base. Se recomienda utilizar el
+[IC SDK](https://github.com/dfinity/sdk#readme), que incluye Motoko, junto con
+`dfx`, una herramienta de línea de comandos utilizada para crear, compilar e
+implementar canisters en ICP.
 
+Los entornos de desarrollo vienen en varios tipos y formatos, lo que hace que el
+desarrollo sea flexible y accesible.
 
+## Entornos en la nube
 
-To develop and deploy Motoko canister smart contracts, you will need a developer environment that contains the Motoko compiler and base library. It is recommended to use the [IC SDK](https://github.com/dfinity/sdk#readme), which includes Motoko, along with `dfx`, a command-line tool used to create, build, and deploy canisters on ICP.
+[Gitpod](https://www.gitpod.io/) y
+[GitHub Codespaces](https://github.com/features/codespaces) son entornos de
+desarrollo basados en el navegador que se pueden utilizar para construir, probar
+y ejecutar contratos inteligentes de Motoko.
 
-Developer environments come in several types and formats, making developing flexible and accessible.
+Aquí tienes algunos proyectos de inicio para el desarrollo de canisters de
+Motoko en línea:
 
-## Cloud environments
+- [ICP Hello World Motoko](https://github.com/dfinity/icp-hello-world-motoko#readme)
+- [Vite + React + Motoko](https://github.com/rvanasa/vite-react-motoko#readme)
 
-[Gitpod](https://www.gitpod.io/) and [GitHub Codespaces](https://github.com/features/codespaces) are browser-based development environments that can be used to build, test, and run Motoko smart contracts.
+Obtén más información sobre
+[Gitpod](https://internetcomputer.org/docs/current/developer-docs/developer-tools/ide/gitpod)
+y
+[GitHub Codespaces](https://internetcomputer.org/docs/current/developer-docs/developer-tools/ide/codespaces)
+para el desarrollo de Motoko.
 
-Here are some starter projects for online Motoko canister development:
+## Entornos de contenedores
 
-* [ICP Hello World Motoko](https://github.com/dfinity/icp-hello-world-motoko#readme)
-* [Vite + React + Motoko](https://github.com/rvanasa/vite-react-motoko#readme)
+Los desarrolladores pueden querer configurar un entorno en contenedor para el
+desarrollo de Motoko y otras actividades relacionadas con ICP. Los entornos de
+contenedores son especialmente útiles para sistemas basados en Windows, ya que
+`dfx` no es compatible de forma nativa en Windows.
 
-Learn more about [Gitpod](https://internetcomputer.org/docs/current/developer-docs/developer-tools/ide/gitpod) and [GitHub Codespaces](https://internetcomputer.org/docs/current/developer-docs/developer-tools/ide/codespaces) for Motoko development.
-
-## Container environments
-
-Developers may want to setup a containerized environment for Motoko and other ICP-related development. Container environments are especially useful for Windows-based systems, since `dfx` is not natively supported on Windows.
-
-Learn more about [developer containers](https://internetcomputer.org/docs/current/developer-docs/developer-tools/ide/dev-containers) and [Docker containers](https://internetcomputer.org/docs/current/developer-docs/developer-tools/ide/dev-containers#using-docker-directly) for Motoko development.
+Obtén más información sobre
+[contenedores de desarrollo](https://internetcomputer.org/docs/current/developer-docs/developer-tools/ide/dev-containers)
+y
+[contenedores Docker](https://internetcomputer.org/docs/current/developer-docs/developer-tools/ide/dev-containers#using-docker-directly)
+para el desarrollo de Motoko.
 
 ## Motoko playground
 
-[Motoko playground](https://play.motoko.org/) is a browser-based developer environment that allows for temporary deployment and testing of canister smart contracts. Motoko playground can also be utilized through the `dfx deploy --playground` command via the CLI.
+[Motoko playground](https://play.motoko.org/) es un entorno de desarrollo basado
+en el navegador que permite la implementación y prueba temporal de contratos
+inteligentes de canister. El Motoko playgroud también se puede utilizar a través
+del comando `dfx deploy --playground` en la CLI.
 
-Canisters deployed to the Motoko playground use borrowed resources from a canister pool and are limited to a deployment length of 20 minutes. Therefore, the playground is not recommended for long-term development.
+Los canisters implementados en el Motoko playgroud utilizan recursos prestados
+de un grupo de canisters y están limitados a una duración de implementación de
+20 minutos. Por lo tanto, no se recomienda el uso del playground para el
+desarrollo a largo plazo.
 
-Learn more about the [Motoko playground](https://internetcomputer.org/docs/current/developer-docs/developer-tools/ide/playground).
+Obtén más información sobre el
+[Motoko playgroud](https://internetcomputer.org/docs/current/developer-docs/developer-tools/ide/playground).
 
-## Local developer environment
+## Entorno de desarrollo local
 
-Before you start developing Motoko, verify the following:
+Antes de comenzar a desarrollar en Motoko, verifica lo siguiente:
 
-- [x] You have an internet connection and access to a shell terminal on your local macOS or Linux computer.
+- [x] Tienes una conexión a internet y acceso a una terminal de shell en tu
+      computadora local macOS o Linux.
 
-- [x] You have a command line interface (CLI) window open. This window is also referred to as the 'terminal' window.
+- [x] Tienes una ventana de interfaz de línea de comandos (CLI) abierta. Esta
+      ventana también se conoce como ventana de "terminal".
 
-- [x] You have downloaded and installed the IC SDK package as described in the [installing the IC SDK](https://internetcomputer.org/docs/current/developer-docs/getting-started/install) page.
+- [x] Has descargado e instalado el paquete IC SDK como se describe en la página
+      de
+      [instalación del IC SDK](https://internetcomputer.org/docs/current/developer-docs/getting-started/install).
 
-- [x] You have a code editor installed. The [VS Code IDE](https://code.visualstudio.com/download) (with the [Motoko extension](https://marketplace.visualstudio.com/items?itemName=dfinity-foundation.vscode-motoko)) is a popular choice.
+- [x] Tienes un editor de código instalado. El
+      [IDE de VS Code](https://code.visualstudio.com/download) (con la
+      [extensión de Motoko](https://marketplace.visualstudio.com/items?itemName=dfinity-foundation.vscode-motoko))
+      es una opción popular.
 
-- [x] You have downloaded and installed [git](https://git-scm.com/downloads).
+- [x] Has descargado e instalado [git](https://git-scm.com/downloads).
 
-- [x] Assure that all packages and tools above are updated to the latest release versions.
+- [x] Asegúrate de que todos los paquetes y herramientas mencionados
+      anteriormente estén actualizados a las últimas versiones.
 
-## Motoko version
+## Versión de Motoko
 
-The following table details which version of Motoko shipped with each major version of the IC SDK.
+La siguiente tabla detalla qué versión de Motoko se incluyó con cada versión
+principal del IC SDK.
 
-| IC SDK version  | Motoko version   |
-|-----------------|------------------|
-| 0.20.0          | 0.11.1           |
-| 0.19.0          | 0.11.1           |
-| 0.18.0          | 0.11.0           |
-| 0.17.0          | 0.10.4           |
-| 0.16.0          | 0.10.4           |
-| 0.15.0          | 0.9.7            |
-| 0.14.0          | 0.8.7            |
-| 0.13.0          | 0.7.6            |
-| 0.12.0          | 0.7.3            |
-| 0.11.0          | 0.6.29           |
-| 0.10.0          | 0.6.26           |
-| 0.9.0           | 0.6.20           |
-| 0.8.0           | 0.6.5            |
-| 0.7.0           | 0.6.1            |
+| IC SDK version | Motoko version |
+| -------------- | -------------- |
+| 0.20.0         | 0.11.1         |
+| 0.19.0         | 0.11.1         |
+| 0.18.0         | 0.11.0         |
+| 0.17.0         | 0.10.4         |
+| 0.16.0         | 0.10.4         |
+| 0.15.0         | 0.9.7          |
+| 0.14.0         | 0.8.7          |
+| 0.13.0         | 0.7.6          |
+| 0.12.0         | 0.7.3          |
+| 0.11.0         | 0.6.29         |
+| 0.10.0         | 0.6.26         |
+| 0.9.0          | 0.6.20         |
+| 0.8.0          | 0.6.5          |
+| 0.7.0          | 0.6.1          |
 
-
-You can find out which version of Motoko shipped with a version of the IC SDK through the following file:
+Puedes averiguar qué versión de Motoko se incluyó con una versión del IC SDK a
+través del siguiente archivo:
 
 ```
 https://github.com/dfinity/sdk/blob/<VERSION>/nix/sources.json#L144
 ```
 
-Replace `<VERSION>` with the IC SDK release version, such as `0.14.2`.
+Reemplaza `<VERSION>` con la versión de lanzamiento de IC SDK, como `0.14.2`.
 
-## Custom developer environment
+## Entorno de desarrollo personalizado
 
-### Specifying a custom version of the compiler
+### Especificar una versión personalizada del compilador
 
-To specify a custom version of the Motoko compiler to be used with `dfx`, you can use the package manager `mops` or `vessel`.
+Para especificar una versión personalizada del compilador Motoko que se
+utilizará con `dfx`, puedes usar el administrador de paquetes `mops` o `vessel`.
 
-For `mops`, use the following command to download a different version of the Motoko compiler (`moc`):
+Para `mops`, utiliza el siguiente comando para descargar una versión diferente
+del compilador Motoko (`moc`):
 
 ```
 mops toolchain use moc 0.10.3
 ```
 
-For `vessel`, set the following environment variable:
+Para `vessel`, configura la siguiente variable de entorno:
 
 ```
 DFX_MOC_PATH="$(vessel bin)/moc" dfx deploy
 ```
 
-## Specifying a custom version of the base library
+## Especificar una versión personalizada de la biblioteca base
 
-To specify a custom version of the Motoko base library to be used with `dfx`, you can use the package manager `mops` with the following command:
+Para especificar una versión personalizada de la biblioteca base de Motoko que
+se utilizará con `dfx`, puedes usar el administrador de paquetes `mops` con el
+siguiente comando:
 
 ```
 mops add base@<VERSION>
 ```
 
-For example, to use base library version `0.9.0`, use the command:
+Por ejemplo, para usar la versión `0.9.0` de la biblioteca base, utiliza el
+siguiente comando:
 
 ```
 mops add base@0.9.0
 ```
 
-### Specifying a custom version of `dfx`
+### Especificar una versión personalizada de `dfx`
 
-To specify a custom version of `dfx`, you can use the [`dfxvm` tool](https://internetcomputer.org/docs/current/developer-docs/developer-tools/cli-tools/dfxvm/docs/cli-reference/dfxvm/dfxvm-default). To set a default `dfx` version to be used in your project, run the command:
+Para especificar una versión personalizada de `dfx`, puedes usar la herramienta
+[`dfxvm`](https://internetcomputer.org/docs/current/developer-docs/developer-tools/cli-tools/dfxvm/docs/cli-reference/dfxvm/dfxvm-default).
+Para establecer una versión predeterminada de `dfx` que se utilizará en tu
+proyecto, ejecuta el siguiente comando:
 
 ```
 $ dfxvm default 0.7.2
@@ -125,11 +167,13 @@ info: installed dfx 0.7.2
 info: set default version to dfx 0.7.2
 ```
 
-### Pass flags to `moc` in `dfx.json`
+### Pasar flags a `moc` en `dfx.json`
 
-You can pass flags directly to `moc` by adding an `args` field in your Motoko canister's description in your project's `dfx.json` file:
+Puedes pasar flags directamente a `moc` agregando un campo `args` en la
+descripción del canister Motoko en el archivo `dfx.json` de tu proyecto:
 
-Here is an example `dfx.json` canister configuration that uses `args`:
+Aquí tienes un ejemplo de configuración de canister `dfx.json` que utiliza
+`args`:
 
 ```json
 ...

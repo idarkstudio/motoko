@@ -2,30 +2,30 @@
 sidebar_position: 4
 ---
 
+# Guía de inicio rápido de Motoko
 
-# Motoko quickstart
+Esta guía de inicio rápido muestra cómo implementar un contrato inteligente
+simple de Motoko que dice '¡Hola, mundo!'.
 
+## Requisitos previos
 
+Antes de comenzar, asegúrate de haber configurado tu entorno de desarrollo
+siguiendo las instrucciones de la [guía de entorno de desarrollo](./dev-env).
 
-This quickstart guide showcases how to deploy a simple 'Hello, world!' Motoko smart contract.
+## Crear un nuevo proyecto
 
-## Prerequisites
+Abre una ventana de terminal en tu computadora local, si aún no tienes una
+abierta.
 
-Before getting started, assure you have set up your developer environment according to the instructions in the [developer environment guide](./dev-env).
+Crea un nuevo proyecto y cambia al directorio del proyecto.
 
-## Creating a new project
-
-Open a terminal window on your local computer, if you don’t already have one open.
-
-Create a new project and change to the project directory.
-
-Use `dfx new [project_name]` to create a new project:
+Usa `dfx new [nombre_del_proyecto]` para crear un nuevo proyecto:
 
 ```
 dfx new hello_world
 ```
 
-You will be prompted to select the language that your backend canister will use:
+Se te pedirá que selecciones el lenguaje que utilizará tu canister de backend:
 
 ```
 ? Select a backend language: ›
@@ -35,7 +35,8 @@ TypeScript (Azle)
 Python (Kybra)
 ```
 
-Then, select a frontend framework for your frontend canister. In this example, select:
+Luego, selecciona un marco de trabajo frontend para tu canister frontend. En
+este ejemplo, selecciona:
 
 ```
 ? Select a frontend framework: ›
@@ -47,7 +48,8 @@ No JS template
 ❯ No frontend canister
 ```
 
-Lastly, you can include extra features to be added to your project:
+Por último, puedes incluir características adicionales que se agregarán a tu
+proyecto:
 
 ```
 ? Add extra features (space to select, enter to confirm) ›
@@ -56,10 +58,12 @@ Lastly, you can include extra features to be added to your project:
 ⬚ Frontend tests
 ```
 
-## Smart contract code
+## Código del contrato inteligente
 
-This hello world actor has a single function called `greet`. It is marked as `query` because it doesn't modify the state of the actor. The function accepts a name as input in type [`Text`](../base/Text.md) and returns a greeting of type [`Text`](../base/Text.md).
-
+Este actor de hello world tiene una única función llamada `greet`. Está marcada
+como `query` porque no modifica el estado del actor. La función acepta un nombre
+como entrada de tipo [`Text`](../base/Text.md) y devuelve un saludo de tipo
+[`Text`](../base/Text.md).
 
 ```motoko title="src/hello_backend/main.mo"
 
@@ -70,27 +74,29 @@ actor {
 };
 ```
 
-## Starting the deployment environment
+## Iniciando el entorno de implementación
 
-Start the Internet Computer for local development or check your connection to the Internet Computer for network deployment:
-- [Local deployment](https://internetcomputer.org/docs/current/developer-docs/getting-started/deploy-and-manage).
-- [Mainnet deployment](https://internetcomputer.org/docs/current/developer-docs/getting-started/deploy-and-manage).
+Inicia Internet Computer para el desarrollo local o verifica tu conexión a
+Internet Computer para la implementación en la red:
 
-## Register, build, and deploy locally or on the mainnet
+- [Implementación local](https://internetcomputer.org/docs/current/developer-docs/getting-started/deploy-and-manage).
+- [Implementación en la red principal (Mainnet)](https://internetcomputer.org/docs/current/developer-docs/getting-started/deploy-and-manage).
 
-To deploy locally, use the command:
+## Registrar, construir e deployar localmente o en mainnet
+
+Para deployar localmente, utiliza el siguiente comando:
 
 ```
 dfx deploy
 ```
 
-For deploying to the mainnet, use: `--network ic`.
+Para deployar en mainnet, usa: `--network ic`.
 
 ```
 dfx deploy --network <network>
 ```
 
-## View your service or application in a browser, using the URLS in the output of the `dfx deploy` command:
+## Ver tu servicio o aplicación en un navegador, utilizando las URL en la salida del comando `dfx deploy`:
 
 ```
 ...
