@@ -2,62 +2,88 @@
 sidebar_position: 3
 ---
 
+# Clases de actores
 
-# Actor classes
+Las clases de actores te permiten crear redes de actores de manera programática.
+Las clases de actores deben definirse en un archivo fuente separado. Para
+ilustrar cómo definir e importar clases de actores, el siguiente ejemplo
+implementa un mapa distribuido de claves de tipo [`Nat`](../base/Nat.md) a
+valores de tipo [`Text`](../base/Text.md). Proporciona funciones simples de
+inserción y búsqueda, `put(k, v)` y `get(k)`, para trabajar con estas claves y
+valores.
 
+## Definiendo una clase de actor
 
+Para distribuir los datos en este ejemplo, el conjunto de claves se divide en
+`n` recipientes. Por ahora, simplemente fijamos `n = 8`. El recipiente, `i`, de
+una clave, `k`, se determina por el resto de `k` dividido por `n`, es decir,
+`i = k % n`. El recipiente `i`-ésimo (`i` en `[0..n)`) recibe un actor dedicado
+para almacenar valores de texto asignados a las claves en ese recipiente.
 
-Actor classes enable you to create networks of actors programmatically. Actor classes have to be defined in a separate source file. To illustrate how to define and import actor classes, the following example implements a distributed map of keys of type [`Nat`](../base/Nat.md) to values of type [`Text`](../base/Text.md). It provides simple insert and lookup functions, `put(k, v)` and `get(k)`, for working with these keys and values.
-
-## Defining an actor class
-
-To distribute the data for this example, the set of keys is partitioned into `n` buckets. For now, we just fix `n = 8`. The bucket, `i`, of a key, `k`, is determined by the remainder of `k` divided by `n`, that is, `i = k % n`. The `i`th bucket (`i` in `[0..n)`) receives a dedicated actor to store text values assigned to keys in that bucket.
-
-The actor responsible for bucket `i` is obtained as an instance of the actor class `Bucket(i)`, defined in the sample `Buckets.mo` file, as follows:
+El actor responsable del recipiente `i` se obtiene como una instancia de la
+clase de actor `Bucket(i)`, definida en el archivo de ejemplo `Buckets.mo`, de
+la siguiente manera:
 
 `Buckets.mo`:
 
-``` motoko no-repl name=Buckets file=../examples/Buckets.mo
+```motoko no-repl name=Buckets file=../examples/Buckets.mo
+
 ```
 
-A bucket stores the current mapping of keys to values in a mutable `map` variable containing an imperative RedBlack tree, `map`, that is initially empty.
+Un recipiente almacena el mapeo actual de claves a valores en una variable
+mutable `map` que contiene un árbol Rojo-Negro imperativo, `map`, que
+inicialmente está vacío.
 
-On `get(k)`, the bucket actor simply returns any value stored at `k`, returning `map.get(k)`.
+En `get(k)`, el actor del recipiente simplemente devuelve cualquier valor
+almacenado en `k`, devolviendo `map.get(k)`.
 
-On `put(k, v)`, the bucket actor updates the current `map` to map `k` to `?v` by calling `map.put(k, v)`.
+En `put(k, v)`, el actor del recipiente actualiza el `map` actual para mapear
+`k` a `v` llamando a `map.put(k, v)`.
 
-Both functions use the class parameters `n` and `i` to verify that the key is appropriate for the bucket by asserting `((k % n) == i)`.
+Ambas funciones utilizan los parámetros de clase `n` e `i` para verificar que la
+clave sea apropiada para el recipiente mediante la afirmación `((k % n) == i)`.
 
-Clients of the map can then communicate with a coordinating `Map` actor, implemented as follows:
+Los clientes del mapa pueden comunicarse con un actor coordinador `Map`,
+implementado de la siguiente manera:
 
-``` motoko no-repl include=Buckets file=../examples/Map.mo
+```motoko no-repl include=Buckets file=../examples/Map.mo
+
 ```
 
-As this example illustrates, the `Map` code imports the `Bucket` actor class as module `Buckets`.
+Como ilustra este ejemplo, el código de `Map` importa la clase de actor `Bucket`
+como el módulo `Buckets`.
 
-The actor maintains an array of `n` allocated buckets, with all entries initially `null`. Entries are populated with `Bucket` actors on demand.
+El actor mantiene un arreglo de `n` recipientes asignados, con todas las
+entradas inicialmente en `null`. Las entradas se llenan con actores `Bucket`
+según sea necesario.
 
-On `get(k, v)`, the `Map` actor:
+En `get(k, v)`, el actor `Map`:
 
--   Uses the remainder of key `k` divided by `n` to determine the index `i` of the bucket responsible for that key.
+- Usa el resto de la clave `k` dividido por `n` para determinar el índice `i`
+  del recipiente responsable de esa clave.
 
--   Returns `null` if the `i`th bucket does not exist, or
+- Devuelve `null` si el recipiente `i`-ésimo no existe, o
 
--   Delegates to that bucket by calling `bucket.get(k, v)` if it does.
+- Delega a ese recipiente llamando a `bucket.get(k, v)` si existe.
 
-On `put(k, v)`, the `Map` actor:
+En `put(k, v)`, el actor `Map`:
 
--   Uses the remainder of key `k` divided by `n` to determine the index `i` of the bucket responsible for that key.
+- Usa el resto de la clave `k` dividido por `n` para determinar el índice `i`
+  del recipiente responsable de esa clave.
 
--   Installs bucket `i` if the bucket does not exist by using an asynchronous call to the constructor, `Buckets.Bucket(i)`, and, after awaiting the result, records it in the array `buckets`.
+- Instala el recipiente `i` si el recipiente no existe mediante una llamada
+  asíncrona al constructor, `Buckets.Bucket(i)`, y, después de esperar el
+  resultado, lo registra en el arreglo `buckets`.
 
--   Delegates the insertion to that bucket by calling `bucket.put(k, v)`.
+- Delega la inserción a ese recipiente llamando a `bucket.put(k, v)`.
 
-While this example sets the number of buckets to `8`, you can generalize the example by making the `Map` actor an actor class, adding a parameter `(n : Nat)` and omitting the declaration `let n = 8;`.
+Si bien este ejemplo establece el número de recipientes en `8`, puedes
+generalizar el ejemplo convirtiendo el actor `Map` en una clase de actor,
+agregando un parámetro `(n : Nat)` y omitiendo la declaración `let n = 8;`.
 
-For example:
+Por ejemplo:
 
-``` motoko no-repl
+```motoko no-repl
 actor class Map(n : Nat) {
 
   type Key = Nat
@@ -65,23 +91,38 @@ actor class Map(n : Nat) {
 }
 ```
 
-Clients of actor class `Map` are now free to determine the maximum number of buckets in the network by passing an argument on construction.
+Los clientes de la clase de actor `Map` ahora son libres de determinar el número
+máximo de recipientes en la red pasando un argumento en la construcción.
 
 :::note
 
-On ICP, calls to a class constructor must be provisioned with cycles to pay for the creation of a principal. See [ExperimentalCycles](../base/ExperimentalCycles.md) for instructions on how to add cycles to a call using the imperative `ExperimentalCycles.add<system>(cycles)` function.
+En ICP, las llamadas a un constructor de clase deben estar provistas de ciclos
+para pagar la creación de un principal. Consulta
+[ExperimentalCycles](../base/ExperimentalCycles.md) para obtener instrucciones
+sobre cómo agregar ciclos a una llamada utilizando la función imperativa
+`ExperimentalCycles.add<system>(cycles)`.
 
 :::
 
-## Configuring and managing actor class instances
+## Configuración y gestión de instancias de clases de actores
 
-On ICP, the primary constructor of an imported actor class always creates a new principal and installs a fresh instance of the class as the code for that principal.
+En ICP, el constructor principal de una clase de actor importada siempre crea un
+nuevo principal e instala una nueva instancia de la clase como el código para
+ese principal.
 
-To provide further control over actor class installation, Motoko endows each imported actor class with an extra, secondary constructor. This constructor takes an additional first argument that specifies the desired installation mode. The constructor is only available via special syntax that stresses its `system` functionality.
+Para proporcionar un mayor control sobre la instalación de clases de actores,
+Motoko dota a cada clase de actor importada de un constructor secundario
+adicional. Este constructor toma un argumento adicional que especifica el modo
+de instalación deseado. El constructor solo está disponible a través de una
+sintaxis especial que resalta su funcionalidad `system`.
 
-Using this syntax, it's possible to specify initial canister settings (such as an array of controllers), manually install, upgrade and reinstall canisters, exposing all of the
-lower-level facilities of the Internet Computer.
+Utilizando esta sintaxis, es posible especificar la configuración inicial del
+canister (como un arreglo de controladores), instalar, actualizar y reinstalar
+manualmente canisters, exponiendo todas las facilidades de nivel inferior de
+Internet Computer.
 
-See [actor class management](../reference/language-manual#actor-class-management) for more details.
+Consulta
+[gestión de clases de actores](../reference/language-manual#actor-class-management)
+para obtener más detalles.
 
 <img src="https://github.com/user-attachments/assets/844ca364-4d71-42b3-aaec-4a6c3509ee2e" alt="Logo" width="150" height="150" />

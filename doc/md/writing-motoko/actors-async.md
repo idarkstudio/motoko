@@ -2,75 +2,133 @@
 sidebar_position: 2
 ---
 
-# Actors
+# Actores
 
+El modelo de programación de Internet Computer consiste en canisters aislados en
+memoria que se comunican mediante el paso de mensajes asíncronos de datos
+binarios que codifican valores Candid. Un canister procesa sus mensajes uno a la
+vez, evitando condiciones de carrera. Un canister utiliza devoluciones de
+llamada (call-backs) para registrar lo que debe hacerse con el resultado de
+cualquier mensaje entre canisters que emita.
 
+Motoko proporciona un modelo de programación **basado en actores** a los
+desarrolladores para expresar **servicios**, incluidos los de contratos
+inteligentes de canisters en ICP. Cada canister se representa como un actor
+tipado. El tipo de un actor enumera los mensajes que puede manejar. Cada mensaje
+se abstrae como una función asíncrona tipada. Una traducción de tipos de actores
+a tipos Candid impone estructura en los datos binarios subyacentes de Internet
+Computer. Un actor es similar a un objeto, pero es diferente en que su estado
+está completamente aislado, sus interacciones con el mundo son completamente a
+través de mensajería asíncrona, y sus mensajes se procesan uno a la vez, incluso
+cuando se emiten en paralelo por actores concurrentes.
 
-The programming model of the Internet Computer consists of memory-isolated canisters communicating by asynchronous message passing of binary data encoding Candid values. A canister processes its messages one-at-a-time, preventing race conditions. A canister uses call-backs to register what needs to be done with the result of any inter-canister messages it issues.
+# Actores
 
-Motoko provides an **actor-based** programming model to developers to express **services**, including those of canister smart contracts on ICP. Each canister is represented as a typed actor. The type of an actor lists the messages it can handle. Each message is abstracted as a typed, asynchronous function. A translation from actor types to Candid types imposes structure on the raw binary data of the underlying Internet Computer. An actor is similar to an object, but is different in that its state is completely isolated, its interactions with the world are entirely through asynchronous messaging, and its messages are processed one-at-a-time, even when issued in parallel by concurrent actors.
+Un actor es similar a un objeto, pero es diferente en que:
 
-# Actors
+- Su estado está completamente aislado.
 
-An actor is similar to an object, but is different in that:
+- Sus interacciones con el mundo se realizan completamente a través de
+  mensajería asíncrona.
 
-- Its state is completely isolated.
+- Sus mensajes se procesan uno a la vez, incluso cuando se emiten en paralelo
+  por actores concurrentes.
 
-- Its interactions with the world are done entirely through asynchronous messaging.
+Toda comunicación con y entre actores implica el paso de mensajes asíncronos a
+través de la red utilizando el protocolo de mensajería de Internet Computer. Los
+mensajes de un actor se procesan en secuencia, por lo que las modificaciones de
+estado nunca admiten condiciones de carrera, a menos que se permita
+explícitamente mediante el uso de expresiones `await`.
 
-- Its messages are processed one-at-a-time, even when issued in parallel by concurrent actors.
+Internet Computer garantiza que cada mensaje enviado recibe una respuesta. La
+respuesta es éxito con algún valor o un error. Un error puede ser el rechazo
+explícito del mensaje por parte del canister receptor, un error debido a una
+instrucción ilegal como la división por cero, o un error del sistema debido a
+restricciones de distribución o recursos. Por ejemplo, un error del sistema
+podría ser la indisponibilidad transitoria o permanente del receptor (ya sea
+porque el actor receptor está sobresuscrito o ha sido eliminado).
 
-All communication with and between actors involves passing messages asynchronously over the network using the Internet Computer’s messaging protocol. An actor’s messages are processed in sequence, so state modifications never admit race conditions, unless explicitly allowed by punctuating `await` expressions.
+En Motoko, los actores tienen sintaxis y tipos dedicados:
 
-The Internet Computer ensures that each message that is sent receives a response. The response is either success with some value or an error. An error can be the explicit rejection of the message by the receiving canister, a trap due to an illegal instruction such as division by zero, or a system error due to distribution or resource constraints. For example, a system error might be the transient or permanent unavailability of the receiver (either because the receiving actor is oversubscribed or has been deleted).
+- La mensajería se maneja mediante las llamadas funciones **compartidas
+  (shared)** que devuelven futuros. Las funciones compartidas son accesibles
+  para llamadas remotas y tienen restricciones adicionales: sus argumentos y
+  valor de retorno deben ser tipos compartidos. Los tipos compartidos son un
+  subconjunto de tipos que incluye datos inmutables, referencias a actores y
+  referencias a funciones compartidas, pero excluye referencias a funciones
+  locales y datos mutables.
 
-In Motoko, actors have dedicated syntax and types:
+- Un futuro, `f`, es un valor del tipo especial `async T` para algún tipo `T`.
 
-- Messaging is handled by so called **shared** functions returning futures. Shared functions are accessible to remote callers and have additional restrictions: their arguments and return value must be shared types. Shared types are a subset of types that includes immutable data, actor references, and shared function references, but excludes references to local functions and mutable data.
+- Esperar a que `f` se complete se expresa usando `await f` para obtener un
+  valor de tipo `T`. Para evitar introducir estado compartido a través de la
+  mensajería, por ejemplo, enviando un objeto o un arreglo mutable, los datos
+  que se pueden transmitir a través de funciones compartidas están restringidos
+  a tipos compartidos inmutables.
 
-- Future, `f`, is a value of the special type `async T` for some type `T`.
+- Todo el estado debe encapsularse dentro del actor o clase de actor. El archivo
+  principal del actor debe comenzar con importaciones, seguidas de la definición
+  del actor o clase de actor.
 
-- Waiting on `f` to be completed is expressed using `await f` to obtain a value of type `T`. To avoid introducing shared state through messaging, for example, by sending an object or mutable array, the data that can be transmitted through shared functions is restricted to immutable, shared types.
+## Definiendo un actor
 
-- All state should be encapsulated within the actor or actor class. The main actor file should begin with imports, followed by the actor or actor class definition.
+Considera la siguiente declaración de actor:
 
-## Defining an actor
+```motoko file=../examples/counter-actor.mo
 
-Consider the following actor declaration:
-
-``` motoko file=../examples/counter-actor.mo
 ```
 
-The `Counter` actor declares one field and three public, shared functions:
+El actor `Counter` declara un campo y tres funciones públicas y compartidas:
 
--   The field `count` is mutable, initialized to zero and implicitly `private`.
+- El campo `count` es mutable, inicializado en cero e implícitamente `private`.
 
--   Function `inc()` asynchronously increments the counter and returns a future of type `async ()` for synchronization.
+- La función `inc()` incrementa asincrónicamente el contador y devuelve un
+  futuro de tipo `async ()` para sincronización.
 
--   Function `read()` asynchronously reads the counter value and returns a future of type `async Nat` containing its value.
+- La función `read()` lee asincrónicamente el valor del contador y devuelve un
+  futuro de tipo `async Nat` que contiene su valor.
 
--   Function `bump()` asynchronously increments and reads the counter.
+- La función `bump()` incrementa y lee asincrónicamente el contador.
 
-Shared functions, unlike local functions, are accessible to remote callers and have additional restrictions. Their arguments and return value must be shared type. Shared types are a subset of types that includes immutable data, actor references, and shared function references, but excludes references to local functions and mutable data. Because all interaction with actors is asynchronous, an actor’s functions must return futures, that is, types of the form `async T`, for some type `T`.
+Las funciones compartidas, a diferencia de las funciones locales, son accesibles
+para llamadas remotas y tienen restricciones adicionales. Sus argumentos y valor
+de retorno deben ser de tipo compartido. Los tipos compartidos son un
+subconjunto de tipos que incluye datos inmutables, referencias a actores y
+referencias a funciones compartidas, pero excluye referencias a funciones
+locales y datos mutables. Debido a que toda la interacción con los actores es
+asíncrona, las funciones de un actor deben devolver futuros, es decir, tipos de
+la forma `async T`, para algún tipo `T`. La única forma de leer o modificar el
+estado (`count`) del actor `Counter` es a través de sus funciones compartidas.
 
-The only way to read or modify the state (`count`) of the `Counter` actor is through its shared functions.
+Un valor de tipo `async T` es un futuro. El productor del futuro completa el
+futuro cuando devuelve un resultado, ya sea un valor o un error.
 
-A value of type `async T` is a future. The producer of the future completes the future when it returns a result, either a value or error.
+A diferencia de los objetos y módulos, los actores solo pueden exponer
+funciones, y estas funciones deben ser `shared`. Por esta razón, Motoko te
+permite omitir el modificador `shared` en las funciones públicas del actor, lo
+que permite una declaración más concisa pero equivalente del actor:
 
-Unlike objects and modules, actors can only expose functions, and these functions must be `shared`. For this reason, Motoko allows you to omit the `shared` modifier on public actor functions, allowing the more concise, but equivalent, actor declaration:
+```motoko name=counter file=../examples/counter-actor-sugar.mo
 
-``` motoko name=counter file=../examples/counter-actor-sugar.mo
 ```
 
-For now, the only place shared functions can be declared is in the body of an actor or actor class. Despite this restriction, shared functions are still first-class values in Motoko and can be passed as arguments or results, and stored in data structures.
+Para ahora, el único lugar donde se pueden declarar funciones compartidas es en
+el cuerpo de un actor o clase de actor. A pesar de esta restricción, las
+funciones compartidas siguen siendo valores de primera clase en Motoko y se
+pueden pasar como argumentos o resultados, y almacenarse en estructuras de
+datos.
 
-The type of a shared function is specified using a shared function type. For example, the value `inc` has type `shared () → async Nat` and could be supplied as a standalone callback to some other service.
+El tipo de una función compartida se especifica utilizando un tipo de función
+compartida. Por ejemplo, el valor `inc` tiene el tipo `shared () → async Nat` y
+se podría suministrar como una devolución de llamada independiente a algún otro
+servicio.
 
-## Actor types
+## Tipos de actores
 
-Just as objects have object types, actors have actor types. The `Counter` example above has the following type:
+Así como los objetos tienen tipos de objetos, los actores tienen tipos de
+actores. El ejemplo de `Counter` anterior tiene el siguiente tipo:
 
-``` motoko no-repl
+```motoko no-repl
 actor {
   inc  : shared () -> async ();
   read : shared () -> async Nat;
@@ -78,11 +136,12 @@ actor {
 }
 ```
 
-The `shared` modifier is required on every member of an actor. Motoko both elides them on display and allows you to omit them when authoring an actor type.
+El modificador `shared` es requerido en cada miembro de un actor. Motoko los
+omite en la visualización y te permite omitirlos al escribir un tipo de actor.
 
-Thus, the previous type can be expressed more succinctly as:
+Por lo tanto, el tipo anterior puede expresarse de manera más concisa como:
 
-``` motoko no-repl
+```motoko no-repl
 actor {
   inc  : () -> async ();
   read : () -> async Nat;
@@ -90,14 +149,17 @@ actor {
 }
 ```
 
-Like object types, actor types support subtyping: an actor type is a subtype of a more general one that offers fewer functions with more general types.
+Al igual que los tipos de objetos, los tipos de actores admiten subtipos: un
+tipo de actor es un subtipo de uno más general que ofrece menos funciones con
+tipos más generales.
 
+## Comportamiento asíncrono
 
-## Asynchronous behavior
+Al igual que otros lenguajes de programación modernos, Motoko permite una
+sintaxis ergonómica para la comunicación **asíncrona** entre componentes.
 
-Like other modern programming languages, Motoko permits an ergonomic syntax for **asynchronous** communication among components.
-
-In the case of Motoko, each communicating component is an actor. As an example of using actors, consider this three-line program:
+En el caso de Motoko, cada componente de comunicación es un actor. Como ejemplo
+de uso de actores, considera este programa de tres líneas:
 
 ```motoko no-repl
 let result1 = service1.computeAnswer(params);
@@ -105,51 +167,97 @@ let result2 = service2.computeAnswer(params);
 finalStep(await result1, await result2)
 ```
 
-This program’s behavior can be summarized as:
+Este programa se puede resumir en el siguiente comportamiento:
 
-1.  The program makes two requests (lines 1 and 2) to two distinct services, each implemented as a Motoko actor or canister smart contract implemented in some other language.
+1. El programa realiza dos solicitudes (líneas 1 y 2) a dos servicios distintos,
+   cada uno implementado como un actor Motoko o un contrato inteligente de
+   canister implementado en otro lenguaje.
 
-2.  The program waits for each result to be ready (line 3) using the keyword `await` on each result value.
+2. El programa espera a que cada resultado esté listo (línea 3) utilizando la
+   palabra clave `await` en cada valor de resultado.
 
-3.  The program uses both results in the final step (line 3) by calling the `finalStep` function.
+3. El programa utiliza ambos resultados en el paso final (línea 3) llamando a la
+   función `finalStep`.
 
-The services **interleave** their executions rather than wait for one another, since this reduces overall latency. If you try to reduce latency this way without special language support, such interleaving will quickly sacrifice clarity and simplicity.
+Los servicios **entrelazan** sus ejecuciones en lugar de esperarse unos a otros,
+ya que esto reduce la latencia general. Si intentas reducir la latencia de esta
+manera sin soporte especial del lenguaje, dicho entrelazamiento rápidamente
+sacrificará la claridad y la simplicidad.
 
-Even in cases where there are no interleaving executions, for example, if there were only one call above, not two, the programming abstractions still permit clarity and simplicity for the same reason. Namely, they signal to the compiler where to transform the program, freeing the programmer from contorting the program’s logic in order to interleave its execution with the underlying system’s message-passing loop.
+Incluso en casos donde no hay ejecuciones entrelazadas, por ejemplo, si hubiera
+solo una llamada arriba, no dos, las abstracciones de programación aún permiten
+claridad y simplicidad por la misma razón. Es decir, le indican al compilador
+dónde transformar el programa, liberando al programador de tener que
+distorsionar la lógica del programa para entrelazar su ejecución con el bucle de
+paso de mensajes del sistema subyacente.
 
-In the above example, the program uses `await` in line 3 to express that interleaving behavior in a simple fashion.
+En el ejemplo anterior, el programa usa `await` en la línea 3 para expresar ese
+comportamiento de entrelazado de una manera simple.
 
-In other programming languages that lack these abstractions, developers would not merely call these two functions directly, but would instead employ very advanced programming patterns, possibly registering developer-provided “callback functions” within system-provided “event handlers”. Each callback would handle an asynchronous event that arises when an answer is ready. This kind of systems-level programming is powerful, but very error-prone, since it decomposes a high-level data flow into low-level system events that communicate through shared state.
+En otros lenguajes de programación que carecen de estas abstracciones, los
+desarrolladores no solo llamarían a estas dos funciones directamente, sino que
+emplearían patrones de programación muy avanzados, posiblemente registrando
+"funciones de devolución de llamada" proporcionadas por el desarrollador dentro
+de "manejadores de eventos" proporcionados por el sistema. Cada devolución de
+llamada manejaría un evento asíncrono que surge cuando una respuesta está lista.
+Este tipo de programación a nivel de sistemas es potente, pero muy propenso a
+errores, ya que descompone un flujo de datos de alto nivel en eventos de sistema
+de bajo nivel que se comunican a través de un estado compartido.
 
-## Traps and commit points
+## Trampas y puntos de confirmación
 
-A trap is a non-recoverable runtime failure caused by errors such as division-by-zero, out-of-bounds array indexing, numeric overflow, cycle exhaustion or assertion failure.
+un error es un fallo en tiempo de ejecución no recuperable causado por errores
+como división por cero, indexación de arreglos fuera de límites, desbordamiento
+numérico, agotamiento de ciclos o fallo de aserción.
 
-A shared function call that executes without executing an `await` expression never suspends and executes atomically. A shared function that contains no `await` expression is syntactically atomic.
+Una llamada a una función compartida que se ejecuta sin ejecutar una expresión
+`await` nunca se suspende y se ejecuta atómicamente. Una función compartida que
+no contiene ninguna expresión `await` es sintácticamente atómica.
 
-### Commit points
+### Puntos de confirmación
 
-An atomic shared function whose execution traps has no visible effect on the state of the enclosing actor or its environment - any state change is reverted, and any message that it has sent is revoked. In fact, all state changes and message sends are tentative during execution: they are committed only after a successful commit point is reached.
+Una función compartida atómica cuya ejecución genera un error no tiene ningún
+efecto visible en el estado del actor que la contiene o en su entorno: cualquier
+cambio de estado se revierte y cualquier mensaje que haya enviado se revoca. De
+hecho, todos los cambios de estado y envíos de mensajes son tentativos durante
+la ejecución: solo se confirman después de alcanzar un punto de confirmación
+exitoso.
 
-The points at which tentative state changes and message sends are irrevocably committed are:
+Los puntos en los que los cambios de estado tentativos y los envíos de mensajes
+se confirman irrevocablemente son:
 
--   Implicit exit from a shared function by producing a result.
+- Salida implícita de una función compartida al producir un resultado.
 
--   Explicit exit via `return` or `throw` expressions.
+- Salida explícita mediante expresiones `return` o `throw`.
 
--   Explicit `await` expressions.
+- Expresiones `await` explícitas.
 
-### Traps
+### Errores (traps)
 
-A trap will only revoke changes made since the last commit point. In particular, in a non-atomic function that does multiple awaits, a trap will only revoke changes attempted since the last await - all preceding effects will have been committed and cannot be undone.
+Un error solo revocará los cambios realizados desde el último punto de
+confirmación. En particular, en una función no atómica que realiza múltiples
+`await`, un error solo revocará los cambios intentados desde el último `await`:
+todos los efectos anteriores se habrán confirmado y no se pueden deshacer.
 
-Consider the following stateful `Atomicity` actor:
+Considera el siguiente actor con estado `Atomicidad`:
 
-``` motoko no-repl file=../examples/atomicity.mo
+```motoko no-repl file=../examples/atomicity.mo
+
 ```
 
-Calling the shared function `atomic()` will fail with an error, since the last statement causes a trap. However, the trap leaves the mutable variable `s` with value `0`, not `1`, and variable `pinged` with value `false`, not `true`. This is because the trap happens before the method `atomic` has executed an `await`, or exited with a result. Even though `atomic` calls `ping()`, `ping()` is queued until the next commit point.
+Llamar a la función compartida `atomic()` fallará con un error, ya que la última
+instrucción causa una trampa. Sin embargo, la trampa deja la variable mutable
+`s` con el valor `0`, no `1`, y la variable `pinged` con el valor `false`, no
+`true`. Esto se debe a que la trampa ocurre antes de que el método `atomic` haya
+ejecutado un `await`, o haya salido con un resultado. Aunque `atomic` llama a
+`ping()`, `ping()` se encola hasta el próximo punto de confirmación.
 
-Calling the shared function `nonAtomic()` will also fail with an error due to a trap. In this function, the trap leaves the variable `s` with value `3`, not `0`, and variable `pinged` with value `true`, not `false`. This is because each `await` commits its preceding side-effects, including message sends. Even though `f` is complete by the second await, this await also forces a commit of the state, suspends execution and allows for interleaved processing of other messages to this actor.
+Llamar a la función compartida `nonAtomic()` también fallará con un error debido
+a una trampa. En esta función, la trampa deja la variable `s` con el valor `3`,
+no `0`, y la variable `pinged` con el valor `true`, no `false`. Esto se debe a
+que cada `await` confirma sus efectos secundarios anteriores, incluyendo el
+envío de mensajes. Aunque `f` está completo en el segundo `await`, este `await`
+también obliga a confirmar el estado, suspende la ejecución y permite el
+procesamiento intercalado de otros mensajes a este actor.
 
 <img src="https://github.com/user-attachments/assets/844ca364-4d71-42b3-aaec-4a6c3509ee2e" alt="Logo" width="150" height="150" />
