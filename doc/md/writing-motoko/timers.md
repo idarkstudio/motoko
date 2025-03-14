@@ -4,30 +4,45 @@ sidebar_position: 26
 
 # Timers
 
+En ICP, los canisters pueden establecer timers (timeres) recurrentes que
+ejecutan un fragmento de código después de un período de tiempo o intervalo
+regular. Los tiempos en Motoko se implementan utilizando el módulo
+[`Timer.mo`](../base/Timer.md) y devuelven un `TimerId`. Los `TimerId` son
+únicos para cada instancia de timer. Un canister puede contener varios timers.
 
+## Ejemplo
 
-On ICP, canisters can set recurring timers that execute a piece of code after a specified period of time or regular interval. Times in Motoko are implemented using the [`Timer.mo`](../base/Timer.md) module, and return a `TimerId`. `TimerId`s are unique for each timer instance. A canister can contain multiple timers.
+Un ejemplo simple es un recordatorio periódico que registra un mensaje de año
+nuevo:
 
-## Example
+```motoko no-repl file=../examples/Reminder.mo
 
-A simple example is a periodic reminder that logs a new year's message:
-
-``` motoko no-repl file=../examples/Reminder.mo
 ```
 
-The underlying mechanism is a [canister global timer](https://internetcomputer.org/docs/current/references/ic-interface-spec#timer) that by default is issued with appropriate callbacks from a priority queue maintained by the Motoko runtime.
+El mecanismo subyacente es un
+[timer global del canister](https://internetcomputer.org/docs/current/references/ic-interface-spec#timer)
+que, por defecto, emite devoluciones de llamada apropiadas desde una cola de
+prioridad mantenida por el tiempo de ejecución de Motoko.
 
-The timer mechanism can be disabled completely by passing the `-no-timer` flag to `moc`.
+El mecanismo del timer se puede desactivar por completo pasando la bandera
+`-no-timer` a `moc`.
 
-## Low-level access
+## Acceso de bajo nivel
 
-When lower-level access to the canister global timer is desired, an actor can elect to receive timer expiry messages by declaring a `system` function named `timer`. The function takes one argument used to reset the global timer and returns a future of unit type `async ()`.
+Cuando se desea acceder a un nivel más bajo del timer global del canister, un
+actor puede optar por recibir mensajes de expiración del timer declarando una
+función `system` llamada `timer`. La función toma un argumento que se utiliza
+para restablecer el timer global y devuelve un futuro de tipo unit `async ()`.
 
-If the `timer` system method is declared, the [`Timer.mo`](../base/Timer.md) base library module may not function correctly and should not be used.
+Si se declara el método del sistema `timer`, el módulo de la biblioteca base
+[`Timer.mo`](../base/Timer.md) puede no funcionar correctamente y no debe
+utilizarse.
 
-The following example of a global timer expiration callback gets called immediately after the canister starts, i.e. after install, and periodically every twenty seconds thereafter:
+El siguiente ejemplo de una devolución de llamada de expiración del timer global
+se llama inmediatamente después de que el canister se inicia, es decir, después
+de la instalación, y periódicamente cada veinte segundos a partir de entonces:
 
-``` motoko no-repl
+```motoko no-repl
 system func timer(setGlobalTimer : Nat64 -> ()) : async () {
   let next = Nat64.fromIntWrap(Time.now()) + 20_000_000_000;
   setGlobalTimer(next); // absolute time in nanoseconds

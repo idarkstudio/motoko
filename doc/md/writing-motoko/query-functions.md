@@ -2,95 +2,146 @@
 sidebar_position: 21
 ---
 
-# Query functions
+# Funciones de consulta (Query functions)
 
+En la terminología de ICP, los mensajes de **actualización** (update), también
+conocidos como llamadas, pueden alterar el estado del canister cuando se
+invocan. Para efectuar un cambio de estado, se requiere un acuerdo entre las
+réplicas distribuidas antes de que la red pueda confirmar el cambio y devolver
+un resultado. Alcanzar un consenso es un proceso costoso con una latencia
+relativamente alta.
 
+Para las partes de las aplicaciones que no requieren las garantías del consenso,
+el ICP admite operaciones de consulta más eficientes. Estas pueden leer el
+estado de un canister desde una sola réplica, modificar una instantánea durante
+su ejecución y devolver un resultado, pero no pueden alterar permanentemente el
+estado ni enviar mensajes adicionales.
 
-In ICP terminology, **update** messages, also referred to as calls, can alter the state of the canister when called. Effecting a state change requires agreement amongst the distributed replicas before the network can commit the change and return a result. Reaching consensus is an expensive process with relatively high latency.
+## Funciones de consulta
 
-For the parts of applications that don’t require the guarantees of consensus, the ICP supports more efficient query operations. These are able to read the state of a canister from a single replica, modify a snapshot during their execution and return a result, but cannot permanently alter the state or send further messages.
+Motoko admite la implementación de consultas mediante funciones `query`. La
+palabra clave `query` modifica la declaración de una función compartida de un
+actor para que se ejecute con semántica de consulta no comprometedora y más
+rápida.
 
-## Query functions
+Por ejemplo, considera el siguiente actor `Counter` con una función `read`
+llamada `peek`:
 
-Motoko supports the implementation of queries using `query` functions. The `query` keyword modifies the declaration of a shared actor function so that it executes with non-committing and faster query semantics.
+```motoko file=../examples/CounterWithQuery.mo
 
-For example, consider the following `Counter` actor with a `read` function called `peek`:
-
-``` motoko file=../examples/CounterWithQuery.mo
 ```
 
-The `peek()` function might be used by a `Counter` frontend offering a quick, but less trustworthy, display of the current counter value.
+La función `peek()` podría ser utilizada por un frontend de `Counter` que ofrece
+una visualización rápida pero menos confiable del valor actual del contador.
 
-Query functions can be called from non-query functions. Because those nested calls require consensus, the efficiency gains of nested query calls will be modest at best.
+Las funciones de consulta pueden ser llamadas desde funciones que no son de
+consulta. Debido a que esas llamadas anidadas requieren consenso, las ganancias
+de eficiencia de las llamadas anidadas de consulta serán modestas en el mejor de
+los casos.
 
-The `query` modifier is reflected in the type of a query function:
+El modificador `query` se refleja en el tipo de una función de consulta:
 
-``` motoko no-repl
+```motoko no-repl
   peek : shared query () -> async Nat
 ```
 
-As before, in `query` declarations and actor types the `shared` keyword can be omitted.
+Como antes, en las declaraciones de `query` y en los tipos de actores, la
+palabra clave `shared` se puede omitir.
 
 :::info
 
-A query method cannot call an actor function and will result in an error when the code is compiled. Calls to ordinary functions are permitted.
+Un método query no puede llamar a una función de actor y dará como resultado un
+error al compilar el código. Las llamadas a funciones ordinarias están
+permitidas.
 
 :::
 
+## Funciones de consulta compuestas (Composite query functions)
 
-## Composite query functions
+Las consultas tienen limitaciones en lo que pueden hacer. En particular, no
+pueden enviar mensajes adicionales, incluidas otras consultas.
 
-Queries are limited in what they can do. In particular, they cannot themselves issue further messages, including queries.
+Para abordar esta limitación, el ICP admite otro tipo de función de consulta
+llamada consulta compuesta.
 
-To address this limitation, the ICP supports another type of query function called a composite query.
+Al igual que las consultas simples, los cambios de estado realizados por una
+consulta compuesta son transitorios, aislados y nunca se confirman. Además, las
+consultas compuestas no pueden llamar a funciones de actualización, incluidas
+aquellas implícitas en expresiones `async`, que requieren llamadas de
+actualización en segundo plano.
 
-Like plain queries, the state changes made by a composite query are transient, isolated and never committed. Moreover, composite queries cannot call update functions, including those
-implicit in `async` expressions, which require update calls under the hood.
+A diferencia de las consultas simples, las consultas compuestas pueden llamar a
+funciones de consulta y a funciones de consulta compuesta en el mismo actor o en
+otros actores, pero solo si esos actores residen en la misma subred.
 
-Unlike plain queries, composite queries can call query functions and composite query functions on the same and other actors, but only provided those actors reside on the same subnet.
+Como un ejemplo artificial, considera generalizar el actor `Counter` anterior a
+una clase de contadores. Cada instancia de la clase proporciona una función
+adicional de `composite query` para sumar los valores de un arreglo dado de
+contadores:
 
-As a contrived example, consider generalizing the previous `Counter` actor to a class of counters. Each instance of the class provides an additional `composite query` to sum the values of a given array of counters:
+```motoko file=../examples/CounterWithCompositeQuery.mo
 
-``` motoko file=../examples/CounterWithCompositeQuery.mo
 ```
 
-Declaring `sum` as a `composite query` enables it call the `peek` queries of its argument counters.
+Declarar `sum` como una `composite query` le permite llamar a las consultas
+`peek` de los contadores de sus argumentos.
 
-While update messages can call plain query functions, they cannot call composite query functions. This distinction, which is dictated by the current capabilities of ICP, explains why query functions and composite query functions are regarded as distinct types of shared functions.
+Si bien los mensajes de actualización pueden llamar a funciones de consulta
+simples, no pueden llamar a funciones de consulta compuestas. Esta distinción,
+que está dictada por las capacidades actuales de ICP, explica por qué las
+funciones de consulta y las funciones de consulta compuestas se consideran tipos
+distintos de funciones compartidas.
 
-Note that the `composite query` modifier is reflected in the type of a composite query function:
+Tenga en cuenta que el modificador `composite query` se refleja en el tipo de
+una función de consulta compuesta:
 
-``` motoko no-repl
+```motoko no-repl
   sum : shared composite query ([Counter]) -> async Nat
 ```
 
-Since only a composite query can call another composite query, you may be wondering how any composite query gets called at all?
+Desde que solo una consulta compuesta puede llamar a otra consulta compuesta, es
+posible que te preguntes cómo se llama alguna consulta compuesta en absoluto.
 
-Composite queries are initiated outside ICP, typically by an application (such as a browser frontend) sending an ingress message invoking a composite query on a backend actor.
+Las consultas compuestas se inician fuera de ICP, generalmente por una
+aplicación (como un frontend de navegador) que envía un mensaje de ingreso
+invocando una consulta compuesta en un actor de backend.
 
-:::danger
+:::danger La semántica de las consultas compuestas de Internet Computer asegura
+que los cambios de estado realizados por una consulta compuesta estén aislados
+de otras llamadas entre canisters, incluyendo consultas recursivas, al mismo
+actor.
 
-The Internet Computer's semantics of composite queries ensures that state changes made by a composite query are isolated from other inter-canister calls, including recursive queries, to the same actor.
+En particular, una llamada a una consulta compuesta deshace su estado al salir
+de la función, pero tampoco pasa los cambios de estado a las llamadas de
+sub-consulta o sub-consulta compuesta. Las llamadas repetidas, que incluyen
+llamadas recursivas, tienen una semántica diferente a las llamadas que acumulan
+cambios de estado.
 
-In particular, a composite query call rolls back its state on function exit, but is also does not pass state changes to sub-query or sub-composite-query calls. Repeated calls, which include recursive calls, have different semantics from calls that accumulate state changes.
+En las llamadas secuenciales, los cambios de estado internos de las consultas
+anteriores no tienen efecto en las consultas posteriores, ni las consultas
+observarán los cambios de estado locales realizados por la consulta compuesta
+que las envuelve. Los cambios de estado locales realizados por la consulta
+compuesta se conservan a lo largo de las llamadas hasta que finalmente se
+deshacen al salir de la consulta compuesta.
 
-In sequential calls, the internal state changes of preceding queries will have no effect on subsequent queries, nor will the queries observe any local state changes made by the enclosing composite query. Local states changes made by the composite query are preserved across the calls until finally being rolled-back on exit from the composite query.
+Esta semántica puede llevar a un comportamiento sorprendente para los usuarios
+acostumbrados a la programación imperativa ordinaria.
 
-This semantics can lead to surprising behavior for users accustomed to ordinary imperative programming.
+Considera este ejemplo que contiene la consulta compuesta `test` que llama a la
+consulta `q` y a la consulta compuesta `cq`.
 
-Consider this example containing the composite query `test` that calls query `q` and composite query `cq`.
+```motoko no-repl file=../examples/CompositeSemantics.mo
 
-
-``` motoko no-repl file=../examples/CompositeSemantics.mo
 ```
 
-When `state` is `0`, a call to `test` returns
+Cuando `state` es `0`, una llamada a `test` devuelve
 
 ```
 {s0 = 0; s1 = 0; s2 = 0; s3 = 3_000}
 ```
 
-This is because none of the local updates to `state` are visible to any of the callers or callees.
+Esto se debe a que ninguna de las actualizaciones locales de `state` es visible
+para ninguno de los llamadores o llamados.
 
 :::
 

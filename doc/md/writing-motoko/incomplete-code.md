@@ -1,50 +1,62 @@
 ---
 sidebar_position: 27
 ---
-# Writing incomplete code
 
+# Escribiendo código incompleto
 
+En medio de la escritura de un programa, es posible que desees ejecutar una
+versión incompleta o una versión donde una o más rutas de ejecución estén
+ausentes o simplemente sean inválidas.
 
-In the midst of writing a program, you may want to run an incomplete version or a version where one or more execution paths are either missing or simply invalid.
+Para acomodar estas situaciones, Motoko proporciona las funciones `xxx`, `nyi` y
+`unreachable` de la biblioteca base `Prelude`, explicadas a continuación. Cada
+una es un envoltorio simple alrededor de un mecanismo de
+[traps más general](../getting-started/basic-concepts.md#errores-traps).
 
-To accommodate these situations, Motoko provides the `xxx`, `nyi` and `unreachable` functions from the base `Prelude` library, explained below. Each is a simple wrapper around a more [general trap mechanism](../getting-started/basic-concepts.md#traps).
+## Agujeros a corto plazo
 
-## Short-term holes
+Asumiendo que se ha importado el preludio de la siguiente manera:
 
-Assuming that one has imported the prelude as follows:
-
-``` motoko no-repl
+```motoko no-repl
 import P "mo:base/Prelude";
 ```
 
-You can fill any missing expression with the following:
+Puedes completar cualquier expresión faltante con lo siguiente:
 
-``` motoko no-repl
+```motoko no-repl
 P.xxx()
 ```
 
-The expression `xxx()` has type `None`, which is a subtype of every other type. This means the expression can plug any short-term gap in your code.
-`xxx()` will trap when executed.
+La expresión `xxx()` tiene tipo `None`, que es un subtipo de cualquier otro
+tipo. Esto significa que la expresión puede llenar cualquier brecha a corto
+plazo en tu código. `xxx()` generará un error cuando se ejecute.
 
-## Long-term holes
+## Agujeros a largo plazo
 
-By convention, longer-term holes can be considered "not yet implemented" (`nyi`) features, and marked as such with a similar function from the Prelude module:
+Por convención, los agujeros a largo plazo pueden considerarse características
+"aún no implementadas" (`nyi`), y marcarse como tal con una función similar del
+módulo Prelude:
 
-``` motoko no-repl
+```motoko no-repl
 P.nyi()
 ```
-Like `xxx()`, `nyi()` has type `None`, thus any other type, and will trap on execution.
-## Unreachable code
 
+Como `xxx()`, `nyi()` tiene tipo `None`, por lo tanto cualquier otro tipo, y
+generará un error al ejecutarse.
 
-Sometimes you will be required to provide code that they know will never be executed, due to the preceding program logic.
+## Código inalcanzable
 
-To document unreachable code, you can use the  `unreachable` function from the prelude:
+A veces se te pedirá que proporciones código que sabes que nunca se ejecutará,
+debido a la lógica del programa anterior.
 
-``` motoko no-repl
+Para documentar código inalcanzable, puedes usar la función `unreachable` del
+preludio:
+
+```motoko no-repl
 P.unreachable()
 ```
 
-Like `unreachable()` has type `None` and thus any other type, and will trap on (unexpected!) execution.
+Como `unreachable()` tiene tipo `None` y, por lo tanto, cualquier otro tipo,
+generará una trampa en la ejecución (¡inesperada!).
 
 <img src="https://github.com/user-attachments/assets/844ca364-4d71-42b3-aaec-4a6c3509ee2e" alt="Logo" width="150" height="150" />

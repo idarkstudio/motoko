@@ -2,29 +2,41 @@
 sidebar_position: 15
 ---
 
-# Messaging restrictions
+# Restricciones de mensajería
 
+ICP impone restricciones sobre cuándo y cómo los canisters pueden comunicarse.
+Estas restricciones se aplican dinámicamente, pero se previenen estáticamente en
+Motoko, eliminando una clase de errores de ejecución dinámica. Dos ejemplos son:
 
+- La instalación de un canister puede ejecutar código, pero no enviar mensajes.
 
-ICP places restrictions on when and how canisters are allowed to communicate. These restrictions are enforced dynamically but prevented statically in Motoko, ruling out a class of dynamic execution errors. Two examples are:
+- Un método de consulta (`query`) de un canister no puede enviar mensajes.
 
--   Canister installation can execute code, but not send messages.
+Estas restricciones de ICP se reflejan en Motoko como limitaciones en el
+contexto del programa en el que pueden aparecer ciertas expresiones. Las
+violaciones de estas restricciones se reportan como errores por el verificador
+de tipos.
 
--   A canister query method cannot send messages.
+En Motoko, una expresión ocurre en un contexto asíncrono si aparece en el cuerpo
+de una expresión `async`, que puede ser el cuerpo de una función compartida
+(`shared`) o local, o una expresión independiente. La única excepción son las
+funciones `query`, cuyo cuerpo no se considera que abra un contexto asíncrono.
 
-These ICP restrictions are surfaced in Motoko as constraints on the program context in which certain expressions can be appear.
-Violations of these constraints are reported as errors by the type checker.
+En Motoko, llamar a una función compartida (`shared`) es un error a menos que la
+función se llame en un contexto asíncrono. Llamar a una función compartida desde
+el constructor de una clase de actor también es un error.
 
-In Motoko, an expression occurs in an asynchronous context if it appears in the body of an `async` expression, which may be the body of a shared or local function or a stand-alone expression. The only exception are `query` functions, whose body is not considered to open an asynchronous context.
+Los constructores `await` y `async` solo están permitidos en un contexto
+asíncrono.
 
-In Motoko calling a shared function is an error unless the function is called in an asynchronous context. Calling a shared function from an actor class constructor is also an error.
+Solo es posible lanzar (`throw`) o manejar errores con `try/catch` en un
+contexto asíncrono. Esto se debe a que el manejo estructurado de errores solo es
+compatible con errores de mensajería y, como la mensajería en sí, está confinado
+a contextos asíncronos.
 
-The `await` and `async` constructs are only allowed in an asynchronous context.
+Estas reglas también significan que las funciones locales no pueden llamar
+directamente a funciones compartidas o `await` a futuros.
 
-It is only possible to `throw` or `try/catch` errors in an asynchronous context. This is because structured error handling is supported for messaging errors only and, like messaging itself, confined to asynchronous contexts.
-
-These rules also mean that local functions cannot directly call shared functions or `await` futures.
-
-(The same restrictions apply to `await*` and `async*` expressions.)
+(Las mismas restricciones se aplican a las expresiones `await*` y `async*`).
 
 <img src="https://github.com/user-attachments/assets/844ca364-4d71-42b3-aaec-4a6c3509ee2e" alt="Logo" width="150" height="150" />

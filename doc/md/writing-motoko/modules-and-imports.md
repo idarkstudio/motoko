@@ -2,82 +2,121 @@
 sidebar_position: 16
 ---
 
-# Modules and imports
+# Módulos e importaciones
 
+El diseño de Motoko busca minimizar los tipos y operaciones integrados. En lugar
+de tipos integrados, Motoko proporciona una biblioteca base de módulos para
+manejar muchos tipos de operaciones comunes y hacer que el lenguaje se sienta
+completo. Esta biblioteca base sigue evolucionando con módulos que admiten
+características principales, y las API de la biblioteca base están sujetas a
+cambios con el tiempo en diversos grados. Debes tener en cuenta, en particular,
+que el tamaño y la cantidad de módulos y funciones incluidos en la biblioteca
+base probablemente aumentarán drásticamente. Las actualizaciones de los módulos
+de la biblioteca base podrían introducir cambios importantes que requieran que
+actualices tus programas para mantener la compatibilidad. Los cambios
+importantes se comunican a través de las
+[guías de migración de Motoko](../migration-guides/overview.md).
 
+Esta sección proporciona ejemplos de diferentes escenarios para usar las
+palabras clave `module` e `import`.
 
-The design of Motoko strives to minimize built-in types and operations. Instead of built-in types, Motoko provides a base library of modules to handle many kinds of common operations and make the language feel complete. This base library is still evolving with modules that support core features, and the base library APIs are subject to change over time to varying degrees. You should note, in particular, that the size and number of modules and functions included in the base library is likely to increase dramatically. Updates to the base library modules might introduce breaking changes that require you to update your programs to remain compatible. Breaking changes are communicated through the [Motoko migration guides](../migration-guides/overview.md).
+## Importando desde la biblioteca base
 
-This section provides examples of different scenarios for using the `module` and `import` keywords.
+Consulta la
+[documentación en línea de la biblioteca base de Motoko](../base/index.md).
 
-## Importing from the base library
+Puedes encontrar el código fuente de los módulos base de Motoko en el
+repositorio de código abierto
+[repository](https://github.com/dfinity/motoko-base).
 
-View the [online documentation for the Motoko base library](../base/index.md).
+En el repositorio hay instrucciones para generar una copia local de la
+documentación actual del paquete base de Motoko.
 
-You can find source code for the Motoko base modules in the open source [repository](https://github.com/dfinity/motoko-base).
+Para importar desde la biblioteca base, usa la palabra clave `import` seguida de
+un nombre de módulo local y una URL donde la declaración `import` pueda
+encontrar el módulo. Por ejemplo:
 
-There are instructions in the repository for generating a local copy of the current documentation for the Motoko base package.
-
-To import from the base library, use the `import` keyword followed by a local module name and a URL where the `import` declaration can find the module. For example:
-
-``` motoko
+```motoko
 import Debug "mo:base/Debug";
 Debug.print("hello world");
 ```
 
-This example illustrates how to import Motoko code—indicated by using the `mo:` prefix to identify the module as a Motoko module. The declaration does not include the `.mo` file type extension. Then, it uses the `base/` base library path and the module name [`Debug`](../base/Debug.md).
+Este ejemplo ilustra cómo importar código Motoko, indicado por el uso del
+prefijo `mo:` para identificar el módulo como un módulo Motoko. La declaración
+no incluye la extensión de tipo de archivo `.mo`. Luego, se utiliza la ruta de
+la biblioteca base `base/` y el nombre del módulo [`Debug`](../base/Debug.md).
 
-You can also selectively import a subset of named values from a module by using the object pattern syntax:
+También puedes importar selectivamente un subconjunto de valores nombrados de un
+módulo utilizando la sintaxis del patrón de objeto:
 
-``` motoko
+```motoko
 import { map; find; foldLeft = fold } = "mo:base/Array";
 ```
 
-In this example, the functions `map` and `find` are imported unaltered, while the `foldLeft` function is renamed to `fold`.
+En este ejemplo, las funciones `map` y `find` se importan sin modificar,
+mientras que la función `foldLeft` se renombra a `fold`.
 
-## Importing local files
+## Importando archivos locales
 
-Another common approach to writing programs in Motoko involves splitting up the source code into different modules. For example, you might design an application to use the following model:
+Otro enfoque común para escribir programas en Motoko implica dividir el código
+fuente en diferentes módulos. Por ejemplo, podrías diseñar una aplicación
+utilizando el siguiente modelo:
 
--   A `main.mo` file to contain the actor and functions that change state.
+- Un archivo `main.mo` para contener el actor y las funciones que cambian el
+  estado.
 
--   A `types.mo` file for all of your custom type definitions.
+- Un archivo `types.mo` para todas tus definiciones de tipos personalizados.
 
--   A `utils.mo` file for functions that do work outside of the actor.
+- Un archivo `utils.mo` para funciones que realizan trabajo fuera del actor.
 
-In this scenario, you might place all three files in the same directory and use a local import to make the functions available where they are needed.
+En este escenario, podrías colocar los tres archivos en el mismo directorio y
+usar una importación local para que las funciones estén disponibles donde se
+necesiten.
 
-For example, the `main.mo` contains the following lines to reference the modules in the same directory:
+Por ejemplo, el archivo `main.mo` contiene las siguientes líneas para hacer
+referencia a los módulos en el mismo directorio:
 
-``` motoko no-repl
+```motoko no-repl
 import Types "types";
 import Utils "utils";
 ```
 
-Because these lines import modules from the local project instead of the Motoko library, these import declarations don’t use the `mo:` prefix.
+Porque estas líneas importan módulos del proyecto local en lugar de la
+biblioteca Motoko, estas declaraciones de importación no utilizan el prefijo
+`mo:`.
 
-In this example, both the `types.mo` and `utils.mo` files are in the same directory as the `main.mo` file. Once again, import does not use the `.mo` file suffix.
+En este ejemplo, tanto los archivos `types.mo` como `utils.mo` están en el mismo
+directorio que el archivo `main.mo`. Una vez más, la importación no utiliza el
+sufijo de archivo `.mo`.
 
-## Importing from another package or directory
+## Importando desde otro paquete o directorio
 
-You can also import modules from other packages or from directories other than the local directory.
+También puedes importar módulos de otros paquetes o de directorios distintos al
+directorio local.
 
-For example, the following lines import modules from a `redraw` package that is defined as a dependency:
+Por ejemplo, las siguientes líneas importan módulos de un paquete `redraw` que
+está definido como una dependencia:
 
-``` motoko no-repl
+```motoko no-repl
 import Render "mo:redraw/Render";
 import Mono5x5 "mo:redraw/glyph/Mono5x5";
 ```
 
-You can define dependencies for a project using a package manager or in the project `dfx.json` configuration file.
+Puedes definir dependencias para un proyecto utilizando un gestor de paquetes o
+en el archivo de configuración `dfx.json` del proyecto.
 
-In this example, the `Render` module is in the default location for source code in the `redraw` package and the `Mono5x5` module is in a `redraw` package subdirectory called `glyph`.
+En este ejemplo, el módulo `Render` se encuentra en la ubicación predeterminada
+para el código fuente en el paquete `redraw`, y el módulo `Mono5x5` está en un
+subdirectorio del paquete `redraw` llamado `glyph`.
 
-## Importing packages from a package manager
+## Importando paquetes desde un gestor de paquetes
 
-To download and install third-party packages, a package manager such as [Mops](https://mops.one) or [Vessel](https://github.com/dfinity/vessel) can be used.
+Para descargar e instalar paquetes de terceros, se puede utilizar un gestor de
+paquetes como [Mops](https://mops.one) o
+[Vessel](https://github.com/dfinity/vessel).
 
-To use either package manager, edit your project's `dfx.json` file to specify a `packtool`, such as:
+Para usar cualquiera de estos gestores de paquetes, edita el archivo `dfx.json`
+de tu proyecto para especificar una herramienta de paquetes (`packtool`), como:
 
 ```json
 {
@@ -89,91 +128,130 @@ To use either package manager, edit your project's `dfx.json` file to specify a 
 }
 ```
 
-For Vessel, use `vessel sources`.
+Para Vessel, utiliza `vessel sources`.
 
-Then, to download a package with the `mops` CLI tool, use a command such as:
+Luego, para descargar un paquete con la herramienta de línea de comandos `mops`,
+utiliza un comando como:
 
 ```
 mops add vector
 ```
 
-For Vessel, edit the `vessel.dhall` file to include what packages your project will import.
+Para Vessel, edita el archivo `vessel.dhall` para incluir los paquetes que tu
+proyecto importará.
 
-Then, import the packages as you would import other packages in the Motoko source file:
+Luego, importa los paquetes como lo harías con otros paquetes en el archivo
+fuente de Motoko:
 
 ```motoko no-repl
 import Vec "mo:vector";
 import Vec "mo:vector/Class";
 ```
 
-## Importing actor classes
+## Importando clases de actores
 
-While module imports are typically used to import libraries of local functions and values, they can also be used to import actor classes. When an imported file consists of a named actor class, the client of the imported field sees a module containing the actor class.
+Aunque las importaciones de módulos se utilizan típicamente para importar
+bibliotecas de funciones y valores locales, también pueden usarse para importar
+clases de actores. Cuando un archivo importado contiene una clase de actor con
+nombre, el cliente del archivo importado ve un módulo que contiene la clase de
+actor.
 
-This module has two components, both named after the actor class:
+Este módulo tiene dos componentes, ambos nombrados según la clase de actor:
 
--   A type definition describing the interface of the class.
+- Una definición de tipo que describe la interfaz de la clase.
 
--   An asynchronous function that takes the class parameters as arguments an asynchronously returns a fresh instance of the class.
+- Una función asíncrona que toma los parámetros de la clase como argumentos y
+  devuelve de manera asíncrona una nueva instancia de la clase.
 
-For example, a Motoko actor can import and instantiate the `Counter` class described as follows:
+Por ejemplo, un actor en Motoko puede importar e instanciar la clase `Counter`
+descrita de la siguiente manera:
 
 `Counters.mo`:
 
-``` motoko name=Counters file=../examples/Counters.mo
+```motoko name=Counters file=../examples/Counters.mo
+
 ```
 
 `CountToTen.mo`:
 
-``` motoko no-repl file=../examples/CountToTen.mo
+```motoko no-repl file=../examples/CountToTen.mo
+
 ```
 
-The call to `Counters.Counter(1)` installs a fresh counter on the network. Installation is asynchronous, so the caller must `await` the result.
+La instalación es asíncrona, por lo que el llamador debe esperar el resultado.
 
-The type annotation `: Counters.Counter` is redundant here. It’s included only to illustrate that the type of the actor class is available when required.
+La anotación de tipo `: Counters.Counter` es redundante aquí. Se incluye solo
+para ilustrar que el tipo de la clase del actor está disponible cuando se
+requiere.
 
-## Importing from another canister smart contract
+## Importando desde otro contrato inteligente de canister
 
-You can also import actors and their shared functions from another canister by using the `canister:` prefix in place of the `mo:` prefix.
+También puedes importar actores y sus funciones compartidas desde otro canister
+utilizando el prefijo `canister:` en lugar del prefijo `mo:`.
 
 :::note
 
-Unlike a Motoko library, an imported canister can be implemented in any other language, such as Rust or even a different Motoko version, that emits Candid interfaces for its canister.
+A diferencia de una biblioteca de Motoko, un canister importado puede ser
+implementado en cualquier otro lenguaje, como Rust o incluso una versión
+diferente de Motoko, que emite interfaces Candid para su canister.
 
 :::
 
-For example, you might have a project that produces the following three canisters:
+Por ejemplo, podrías tener un proyecto que produce los siguientes tres
+canisters:
 
--   BigMap (implemented in Rust).
+- BigMap (implementado en Rust).
 
--   Connectd (implemented in Motoko).
+- Connectd (implementado en Motoko).
 
--   LinkedUp (implemented in Motoko).
+- LinkedUp (implementado en Motoko).
 
-These three canisters are declared in the project’s `dfx.json` configuration file and compiled by running `dfx build`.
+Estos tres canisters se declaran en el archivo de configuración `dfx.json` del
+proyecto y se compilan ejecutando `dfx build`.
 
-You can use the following lines to import the `BigMap` and `Connectd` canisters as actors in the Motoko LinkedUp actor:
+Puedes utilizar las siguientes líneas para importar los canisters `BigMap` y
+`Connectd` como actores en el actor Motoko LinkedUp:
 
-``` motoko no-repl
+```motoko no-repl
 import BigMap "canister:BigMap";
 import Connectd "canister:connectd";
 ```
 
-When importing canisters, it is important to note that the type for the imported canister corresponds to a **Motoko actor** instead of a **Motoko module**. This distinction can affect how some data structures are typed.
+Al importar canisters, es importante tener en cuenta que el tipo para el
+canister importado corresponde a un **actor de Motoko** en lugar de un **módulo
+de Motoko**. Esta distinción puede afectar cómo se tipan algunas estructuras de
+datos.
 
-For the imported canister actor, types are derived from the Candid `project-name.did` file for the canister, rather than from Motoko itself.
+Para el actor del canister importado, los tipos se derivan del archivo Candid
+`project-name.did` del canister, en lugar de derivarse directamente de Motoko.
 
-The translation from Motoko actor type to Candid service type is typically one-to-one, and there are some distinct Motoko types that map to the same Candid type. For example, the Motoko [`Nat32`](../base/Nat32.md) and `Char` types are both exported as Candid type [`Nat32`](../base/Nat32.md), but [`Nat32`](../base/Nat32.md) is canonically imported as Motoko [`Nat32`](../base/Nat32.md), not `Char`.
+La traducción del tipo de actor de Motoko al tipo de servicio Candid suele ser
+uno a uno, y hay algunos tipos distintos de Motoko que se mapean al mismo tipo
+Candid. Por ejemplo, los tipos de Motoko [`Nat32`](../base/Nat32.md) y `Char` se
+exportan ambos como el tipo Candid [`Nat32`](../base/Nat32.md), pero
+[`Nat32`](../base/Nat32.md) se importa canónicamente como el tipo de Motoko
+[`Nat32`](../base/Nat32.md), no como `Char`.
 
-The type of an imported canister function might differ from the type of the original Motoko code that implements it. For example, if the Motoko function had type `shared Nat32 -> async Char` in the implementation, its exported Candid type would be `(nat32) -> (nat32)`, but the Motoko type imported from this Candid type will actually be the correct type `shared Nat32 -> async Nat32`.
+El tipo de una función de canister importada podría diferir del tipo del código
+original de Motoko que la implementa. Por ejemplo, si la función de Motoko tenía
+el tipo `shared Nat32 -> async Char` en la implementación, su tipo Candid
+exportado sería `(nat32) -> (nat32)`, pero el tipo de Motoko importado a partir
+de este tipo Candid será en realidad el tipo correcto
+`shared Nat32 -> async Nat32`.
 
-## Naming imported modules
+## Nombrando módulos importados
 
-Although the most common convention is to identify imported modules by the module name as illustrated in the examples above, there’s no requirement for you to do so. For example, you might want to use different names to avoid naming conflicts or to simplify the naming scheme.
+Aunque la convención más común es identificar los módulos importados por el
+nombre del módulo, como se ilustra en los ejemplos anteriores, no hay un
+requisito que te obligue a hacerlo. Por ejemplo, podrías querer usar nombres
+diferentes para evitar conflictos de nombres o para simplificar el esquema de
+nombres.
 
-The following example illustrates different names you might use when importing the `List` base library module, avoiding a clash with another `List` library from a fictional `collections` package:
+El siguiente ejemplo ilustra diferentes nombres que podrías usar al importar el
+módulo `List` de la biblioteca base, evitando un choque con otra biblioteca
+`List` de un paquete ficticio llamado `collections`:
 
-``` motoko no-repl
+```motoko no-repl
 import List "mo:base/List:";
 import Sequence "mo:collections/List";
 import L "mo:base/List";

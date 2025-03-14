@@ -2,51 +2,75 @@
 sidebar_position: 22
 ---
 
-# Randomness
+# Aleatoriedad (Randomness)
 
+El módulo [`Random`](../base/Random.md) de la biblioteca base de Motoko puede
+usarse para generar valores aleatorios dentro de contratos inteligentes en ICP.
+La generación de aleatoriedad en ICP es un proceso complejo, ya que ICP utiliza
+computación determinista para obtener valores aleatorios criptográficamente
+seguros.
 
+A nivel bajo, ICP utiliza una Función Aleatoria Verificable (Verifiable Random
+Function, VRF) que es expuesta por el canister de gestión y utilizada por el
+módulo `Random` de Motoko. En cada ronda de ejecución, la función de
+aleatoriedad se evalúa utilizando el número de la ronda actual como entrada para
+producir un nuevo conjunto de bytes aleatorios.
 
-The Motoko [`Random`](../base/Random.md) base library can be used for generating random values within smart contracts on ICP. Randomness on ICP is an intricate process, since ICP uses deterministic computing to obtain cryptographic random values.
+Para utilizar la aleatoriedad, se deben seguir ciertas pautas:
 
-At the low level, ICP uses a Verifiable Random Function that is exposed by the management canister and is used by the Motoko `Random` module. In each execution round, the randomness function is evaluated with number of the current round used as input in order to produce a fresh set of random bytes.
+- La fuente de aleatoriedad solo puede obtenerse de forma asíncrona en
+  fragmentos de 256 bits, que son `Blobs` de 32 bytes.
 
-To use randomness, certain guidelines must be followed:
+- Las apuestas deben cerrarse antes de solicitar la fuente de aleatoriedad. Esto
+  implica que la misma fuente de aleatoriedad no puede usarse para una nueva
+  ronda de apuestas sin perder su garantía criptográfica.
 
-- The randomness source must only be obtainable asynchronously in chunks of 256 bits that are 32-byte sized `Blobs`.
+El módulo `Random` incluye una clase llamada `Finite` y un método `*From`. Estos
+conllevan el riesgo de arrastrar el estado de una ronda anterior, pero se
+proporcionan por razones de rendimiento y conveniencia. Deben usarse con
+cuidado.
 
-- Bets must be closed before the randomness source is requested. This implies that the same randomness source cannot be used for a new round of bets without losing its cryptographic guarantee.
+## Ejemplo del módulo `Random`
 
-The Random module features a class called `Finite` and a `*From` method. These carry the risk of carrying over the state from a previous round, but they are provided for performance and convenience reasons. They should be used carefully.
-
-
-## `Random` module example
-
-To demonstrate randomness, consider the following example that shuffles a deck of cards then returns the cards in their shuffled order. The code is annotated with additional information:
+Para demostrar el uso de la aleatoriedad, considera el siguiente ejemplo que
+baraja un mazo de cartas y luego devuelve las cartas en su orden barajado. El
+código está anotado con información adicional:
 
 ```motoko file=../examples/CardShuffle.mo
+
 ```
 
-View this example on the [Motoko Playground](https://play.motoko.org/?tag=2675232834) or on [GitHub](https://github.com/crusso/card-shuffle/blob/main/src/cards_backend/main.mo).
+Ver este ejemplo en [Motoko Playground](https://play.motoko.org/?tag=2675232834)
+o en
+[GitHub](https://github.com/crusso/card-shuffle/blob/main/src/cards_backend/main.mo).
 
-:::tip
+:::tip La solución anterior utiliza directamente el conjunto finito de 256 bits
+aleatorios devuelto por el canister de gestión. La clase `Random.Finite` utiliza
+este suministro finito de bits para generar como máximo 256 lanzamientos de
+moneda, devolviendo `null` cuando no es posible hacer más lanzamientos.
 
-The above solution directly uses the finite blob of 256-random bits returned by the management canister. Class `Random.Finite` uses this finite supply of bits to generate at most 256 coin flips, returning `null` when no more flips are possible.
-
-When its current supply of bits is exhausted, the code asynchronously requests another 256-bit blob to continue the shuffle. A more efficient, and equally robust approach would be to use the first 256-bit blob as a seed to a sequential pseudo random number generator, generating an infinite, lazy stream of bits, and then complete the shuffle with a single round of communication.
+Cuando se agota su suministro actual de bits, el código solicita de forma
+asíncrona otro conjunto de 256 bits para continuar la mezcla. Un enfoque más
+eficiente y igualmente robusto sería utilizar el primer conjunto de 256 bits
+como semilla para un generador de números pseudoaleatorios secuencial, generando
+una secuencia infinita y perezosa de bits, y luego completar la mezcla con una
+sola ronda de comunicación.
 
 :::
 
-## Calling the management canister's `raw_rand` method
+## Llamando al método `raw_rand` del canister de gestión
 
-Alternatively, you can use randomness by calling the management canister's `raw_rand` endpoint:
+Alternativamente, puedes utilizar la aleatoriedad llamando al endpoint
+`raw_rand` del canister de gestión:
 
 ```motoko file=../examples/RawRand.mo
+
 ```
 
-## Resources
+## Recursos
 
-- [Onchain randomness](https://internetcomputer.org/docs/current/developer-docs/smart-contracts/advanced-features/randomness)
+- [Aletoriedad onchain](https://internetcomputer.org/docs/current/developer-docs/smart-contracts/advanced-features/randomness)
 
-- [Random base library documentation](../base/Random.md)
+- [Documentacion de la libreria base `Random`](../base/Random.md)
 
 <img src="https://github.com/user-attachments/assets/844ca364-4d71-42b3-aaec-4a6c3509ee2e" alt="Logo" width="150" height="150" />

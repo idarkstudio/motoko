@@ -2,88 +2,129 @@
 sidebar_position: 28
 ---
 
-# Candid serialization
+# Serialización Candid
 
+Candid es un lenguaje de descripción de interfaces y un formato de serialización
+diseñado específicamente para el protocolo de Internet Computer. Es un
+componente crucial que permite la comunicación fluida entre diferentes servicios
+y contratos inteligentes de canisters en ICP, independientemente de los
+lenguajes de programación en los que estén implementados.
 
+En esencia, Candid proporciona una forma independiente del lenguaje para
+describir y transmitir datos. Las garantías de tipado fuerte aseguran una
+interpretación precisa de los datos en varios servicios y lenguajes. Esta
+seguridad de tipos se complementa con un formato binario eficiente para
+codificar datos, lo que lo hace ideal para la transmisión en red. En el contexto
+de Motoko, Candid está profundamente integrado en el lenguaje. Motoko genera
+automáticamente interfaces Candid para contratos inteligentes de canisters y
+proporciona funciones integradas como `to_candid` y `from_candid` para facilitar
+la serialización y deserialización de datos hacia y desde el formato Candid.
 
-Candid is an interface description language and serialization format designed specifically for the Internet Computer protocol.
-It's a crucial component that enables seamless communication between different services and canister smart contracts on ICP, regardless of the programming languages they're implemented in.
+En un ámbito más amplio, Candid sirve como el protocolo de comunicación estándar
+entre canisters. Cuando un canister llama a otro, los argumentos se serializan
+en Candid, se transmiten y luego se deserializan por el canister receptor. Esta
+estandarización permite a los desarrolladores crear frontends en lenguajes como
+JavaScript que pueden interactuar fácilmente con canisters backend escritos en
+Motoko o Rust.
 
-At its core, Candid provides a language-agnostic way to describe and transmit data.
-Strong typing guarantees accurate data interpretation across various services and languages.
-This type safety is complemented by an efficient binary format for encoding data, making it ideal for network transmission.
-In the context of Motoko, Candid is deeply integrated into the language.
-Motoko automatically generates Candid interfaces for canister smart contracts and provides built-in functions like `to_candid` and `from_candid` for easy serialization and deserialization of data to and from Candid format.
+Es importante destacar que el diseño de Candid permite actualizaciones
+compatibles con versiones anteriores de las interfaces de los canisters. Esta
+característica facilita la evolución de los servicios a lo largo del tiempo, un
+aspecto crítico para aplicaciones de larga duración en Internet Computer.
 
-In a broader scope, Candid serves as the standard communication protocol between canisters. When one canister calls another, the arguments are serialized to Candid, transmitted, and then deserialized by the receiving canister. This standardization enables developers to create frontends in languages like JavaScript that can easily interact with backend canisters written in Motoko or Rust.
+## Serialización explícita de Candid
 
+Los operadores `to_candid` y `from_candid` de Motoko te permiten trabajar con
+datos codificados en Candid.
 
-Importantly, Candid's design allows for backwards-compatible upgrades of canister interfaces.
-This feature facilitates the evolution of services over time, a critical aspect for long-lived applications
-on the Internet Computer.
+`to_candid (<exp1>, ..., <expn>)` serializa una secuencia de valores de Motoko
+en un `Blob` que contiene una codificación binaria Candid de los datos.
 
+Por ejemplo:
 
-## Explicit Candid serialization
-
-Motoko's `to_candid` and `from_candid` operators allow you to work with Candid-encoded data.
-
-`to_candid (<exp1>, ..., <expn>)` serializes a sequence of Motoko values into a `Blob` containing a Candid binary encoding of the data.
-
-For example,
-
-``` motoko no-repl
+```motoko no-repl
 let encoding : Blob = to_candid ("dogs", #are, ['g', 'r', 'e', 'a', 't']);
 ```
 
-`from_candid <exp>` deserializes a blob that contains Candid data back into a Motoko value.
+`from_candid <exp>` deserializa un `Blob` que contiene datos Candid de vuelta a
+un valor de Motoko.
 
-``` motoko no-repl
+```motoko no-repl
  let ?(t, v, cs) = from_candid encoding : ?(Text, {#are; #are_not}, [Char]);
 ```
 
-`from_candid` will trap if its argument is a blob that does not contain valid Candid data.
-Because deserialization can fail if the encoded value does not have the expected Candid type, `from_candid` returns a value of option type, with `null` indicating the encoding is well-formed but of the wrong Candid type or some value `?v`, where `v` is the decoded value. `from_candid` can only be used in the context of other code that determines its optional result type, for which a type annotation may be required.
+`from_candid` lanzará una excepción si su argumento es un blob que no contiene
+datos Candid válidos. Debido a que la deserialización puede fallar si el valor
+codificado no tiene el tipo Candid esperado, `from_candid` devuelve un valor de
+tipo opción, con `null` indicando que la codificación está bien formada pero del
+tipo Candid incorrecto o algún valor `?v`, donde `v` es el valor decodificado.
+`from_candid` solo se puede usar en el contexto de otro código que determine su
+tipo de resultado opcional, para lo cual puede ser necesaria una anotación de
+tipo.
 
-For example, this code that under specifies the expected type of the decoded value is rejected by the compiler:
+Por ejemplo, este código que subespecifica el tipo esperado del valor
+decodificado es rechazado por el compilador:
 
-``` motoko no-repl
+```motoko no-repl
 let ?(t, v, cs) = from_candid encoding;
 ```
 
-The `to_candid` and `from_candid` operators are keywords built into the language and handle most common use cases automatically.
-The operators ensure type safety and proper data encoding without requiring developers to manually handle the intricacies of Candid serialization.
+Los operadores `to_candid` y `from_candid` son palabras clave incorporadas en el
+lenguaje y manejan la mayoría de los casos de uso comunes automáticamente. Estos
+operadores garantizan la seguridad de tipos y la codificación adecuada de datos
+sin requerir que los desarrolladores manejen manualmente las complejidades de la
+serialización de Candid.
 
 :::danger
 
-Although `to_candid` will return a valid Candid encoding of its argument, there are actually many different Candid encodings, and thus blobs, for the same value.
-There is no guarantee that `to_candid` will always return the same `blob`, given the same argument.
-That means that you should never use these blobs to compare values for equality or be tempted to
-compute a hash for a value by hashing its Candid encoding.
-The hash of a value should be unique, but if you compute it from one of several Candid encodings, it may not be.
+Aunque `to_candid` devolverá una codificación Candid válida de su argumento, en
+realidad existen muchas codificaciones Candid diferentes y, por lo tanto, blobs,
+para el mismo valor. No hay garantía de que `to_candid` siempre devuelva el
+mismo `blob`, dado el mismo argumento. Esto significa que nunca debes usar estos
+blobs para comparar valores por igualdad o intentar calcular un hash para un
+valor mediante el hash de su codificación Candid. El hash de un valor debe ser
+único, pero si lo calculas a partir de una de varias codificaciones Candid, es
+posible que no lo sea.
 
 :::
 
-See the language manual for more details on [`Candid serialization`](../reference/language-manual#candid_serialization).
+Consulta el manual de lenguaje para obtener más detalles sobre la
+[`serialización Candid`](../reference/language-manual#candid_serialization).
 
+## Llamadas dinámicas
 
-## Dynamic calls
+La mayoría de los usuarios nunca deberían necesitar usar `to_candid` y
+`from_candid`. Un escenario en el que estas operaciones son útiles es cuando se
+realizan llamadas dinámicas a métodos de canisters utilizando la función `call`
+de la biblioteca base `ExperimentalInternetComputer`.
 
-Most users should never need to use `to_candid` and `from_candid`.
-One scenario in which the operations are useful is when calling canister methods dynamically using the `call` function from the `ExperimentalInternetComputer` base library.
+Aunque la mayoría de los canisters en ICP utilizan Candid, esto no está impuesto
+por ICP. A nivel de protocolo, los canisters se comunican en datos binarios
+crudos. Candid es simplemente una interpretación común de esos datos que permite
+que los canisters escritos en diferentes lenguajes interoperen.
 
-Although most canisters on ICP speak Candid, this isn't mandated by ICP. At the protocol level, canisters communicate in raw binary data. Candid is just a common interpretation of that data that allows canisters written in different languages to interoperate.
+La función `call` toma un principal de canister, el nombre de un método como
+texto y un `Blob` binario crudo, y devuelve un futuro que contiene el resultado
+de la llamada, también como un `Blob` binario crudo.
 
-The `call` function takes a canister principal, the name of a method as text, and a raw binary blob and returns a future containing the result of the call, also as a raw binary blob.
+Las llamadas dinámicas son particularmente útiles cuando se trabaja con
+canisters o servicios que tienen interfaces complejas o no estándar, o cuando se
+necesita un control detallado sobre el proceso de llamada. Sin embargo,
+requieren un manejo manual de la codificación y decodificación binaria, lo que
+es más propenso a errores que usar las abstracciones de alto nivel
+proporcionadas por Motoko.
 
-Dynamic calls are particularly useful when working with canisters or services that have complex or non-standard interfaces, or when you need fine-grained control over the calling process. However, they require manual handling of binary encoding and decoding, which is more error-prone than using the high-level abstractions provided by Motoko.
+Cuando un servicio utiliza Candid y conoces los tipos del método que deseas
+invocar, puedes usar `to_candid` y `from_candid` para manejar el formato
+binario.
 
-When a service does speak Candid and you know the types of the method you want to invoke, you can use `to_candid` and `from_candid` to deal with the binary format.
+Típicamente, podrías usar `to_candid` para preparar el argumento de una llamada
+y `from_candid` para procesar su resultado.
 
-Typically, you might use `to_candid` to prepare the argument of a call and `from_candid` to process its result.
+En este ejemplo, usamos la función `call` importada para hacer una llamada
+dinámica en el actor:
 
-In this example, we use the imported `call` function to make a dynamic call on the actor:
-
-``` motoko no-repl
+```motoko no-repl
 import Principal "mo:base/Principal";
 import {call} "mo:base/ExperimentalInternetComputer";
 
@@ -105,20 +146,21 @@ persistent actor This {
 }
 ```
 
-While dynamic calls offer more flexibility, they should be used judiciously.
-In most cases, the standard inter-canister call mechanisms and automatic Candid handling in Motoko provide a safer and more convenient approach to canister interactions.
+Mientras que las llamadas dinámicas ofrecen más flexibilidad, deben ser
+utilizadas con prudencia. En la mayoría de los casos, los mecanismos estándar de
+llamadas entre canisters y el manejo automático de Candid en Motoko proporcionan
+un enfoque más seguro y conveniente para las interacciones entre canisters.
 
+## Recursos
 
-## Resources
-
-For further information on Candid, check out the documentation here:
+Para obtener más información sobre Candid, consulta la documentación aquí:
 
 - [Candid UI](https://internetcomputer.org/docs/current/developer-docs/smart-contracts/candid).
 
-- [What is Candid?](https://internetcomputer.org/docs/current/developer-docs/smart-contracts/candid/candid-concepts).
+- [Que es Candid?](https://internetcomputer.org/docs/current/developer-docs/smart-contracts/candid/candid-concepts).
 
-- [Using Candid](https://internetcomputer.org/docs/current/developer-docs/smart-contracts/candid/candid-howto).
+- [Usando Candid](https://internetcomputer.org/docs/current/developer-docs/smart-contracts/candid/candid-howto).
 
-- [Candid specification](https://github.com/dfinity/candid/blob/master/spec/Candid.md).
+- [Especificacion Candid](https://github.com/dfinity/candid/blob/master/spec/Candid.md).
 
 <img src="https://github.com/user-attachments/assets/844ca364-4d71-42b3-aaec-4a6c3509ee2e" alt="Logo" width="150" height="150" />
