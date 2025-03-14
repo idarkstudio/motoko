@@ -2,36 +2,43 @@
 sidebar_position: 2
 ---
 
-# Stable memory
+# Memoria estable
 
+La biblioteca [`Region`](stable-regions.md) se puede utilizar para interactuar
+con la memoria estable en ICP.
 
+La biblioteca proporciona acceso de bajo nivel a la memoria estable de Internet
+Computer.
 
-The [`Region` library](stable-regions.md) can be used to interact with stable memory on ICP.
+:::danger La biblioteca `ExperimentalStableMemory` ha quedado obsoleta.
 
-The  library provides low-level access to Internet Computer stable memory.
+Las nuevas aplicaciones deben usar la biblioteca `Region`: ofrece un aislamiento
+adicional entre diferentes bibliotecas que utilizan memoria estable. :::
 
-:::danger
-The `ExperimentalStableMemory` library has been deprecated.
+## Paquetes de Mops para memoria estable
 
-New applications should use the `Region` library: it offers additional isolation between different libraries using stable memory.
-:::
+- [`memory-buffer`](https://mops.one/memory-buffer): Implementación de búfer
+  persistente.
 
-## Mops packages for stable memory
+- [`memory-hashtable`](https://mops.one/memory-hashtable): Una biblioteca para
+  almacenar, actualizar, eliminar y recuperar un solo valor de blob por clave.
 
-- [`memory-buffer`](https://mops.one/memory-buffer): Persistent buffer implementation.
+- [`StableTrie`](https://mops.one/stable-trie): Una estructura de datos de mapa
+  clave-valor que tiene sus datos principales viviendo permanentemente en
+  memoria estable utilizando Regions.
 
-- [`memory-hashtable`](https://mops.one/memory-hashtable): A library for storing, updating, deleting, and retrieving a single blob-value per key.
+## Ejemplos
 
-- [`StableTrie`](https://mops.one/stable-trie): A key-value map data structure that has its main data living permanently in stable memory using Regions.
+- [motoko-bucket](https://github.com/PrimLabs/Bucket): Una biblioteca de base de
+  datos clave-valor que utiliza memoria estable.
 
-## Samples
+- [motoko-cdn](https://github.com/gabrielnic/motoko-cdn): Una solución de
+  almacenamiento de escalado automático.
 
-- [motoko-bucket](https://github.com/PrimLabs/Bucket): A key value database library that uses stable memory.
+- [motoko-dht](https://github.com/enzoh/motoko-dht): Un ejemplo de tabla hash
+  distribuida.
 
-- [motoko-cdn](https://github.com/gabrielnic/motoko-cdn): An auto-scaling storage solution.
-
-- [motoko-dht](https://github.com/enzoh/motoko-dht): A distributed hash table sample.
-
-- [motoko-document-db](https://github.com/DepartureLabsIC/motoko-document-db): A document database sample.
+- [motoko-document-db](https://github.com/DepartureLabsIC/motoko-document-db):
+  Un ejemplo de base de datos de documentos.
 
 <img src="https://github.com/user-attachments/assets/844ca364-4d71-42b3-aaec-4a6c3509ee2e" alt="Logo" width="150" height="150" />
