@@ -2,22 +2,29 @@
 sidebar_position: 3
 ---
 
-# Databases
+# Bases de datos
 
-## Mops packages for databases
+## Paquetes Mops para bases de datos
 
-[Mops](https://mops.one/) is an onchain package manager for Motoko. Here are some Mops packages for database implementations:
+[Mops](https://mops.one/) es un administrador de paquetes en cadena para Motoko.
+Aquí hay algunos paquetes Mops para implementaciones de bases de datos:
 
-- [`candb`](https://mops.one/candb): A flexible, performant, and scalable non-relational, multi-canister data store built for ICP.
+- [`candb`](https://mops.one/candb): Un almacén de datos no relacional,
+  flexible, eficiente y escalable construido para ICP.
 
-- [`candb-multi`](https://mops.one/candb-multi): An add on to CanDB that allows you to work with multiple partition canisters at once.
+- [`candb-multi`](https://mops.one/candb-multi): Un complemento para CanDB que
+  te permite trabajar con múltiples canisters de partición a la vez.
 
-- [`new-candb`](https://mops.one/new-candb): A new form of CanDB that features an autoscaling option.
+- [`new-candb`](https://mops.one/new-candb): Una nueva forma de CanDB que
+  incluye una opción de escalado automático.
 
-- [`nacdb`](https://mops.one/nacdb): Multi-canister databases with seamless enumeration.
+- [`nacdb`](https://mops.one/nacdb): Bases de datos multi-canister con
+  enumeración fluida.
 
-- [`nacdb-reorder`](https://mops.one/nacdb-reorder): Re-orderable lists in NacDB database.
+- [`nacdb-reorder`](https://mops.one/nacdb-reorder): Listas reordenables en la
+  base de datos NacDB.
 
-- [`rxmodb`](https://mops.one/rxmodb): Motoko databases using `Vector` for main storage and `BTree` for indexes.
+- [`rxmodb`](https://mops.one/rxmodb): Bases de datos Motoko que utilizan
+  `Vector` para el almacenamiento principal y `BTree` para los índices.
 
 <img src="https://github.com/user-attachments/assets/844ca364-4d71-42b3-aaec-4a6c3509ee2e" alt="Logo" width="150" height="150" />

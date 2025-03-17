@@ -2,69 +2,85 @@
 sidebar_position: 7
 ---
 
-# Utilities
+# Utilidades
 
-## Mops packages for utility functions
+## Paquetes de Mops para funciones de utilidad
 
-[Mops](https://mops.one/) is an onchain package manager for Motoko. Here are some Mops packages for utility functions:
+[Mops](https://mops.one/) es un administrador de paquetes en cadena para Motoko.
+Aquí hay algunos paquetes de Mops para funciones de utilidad:
 
-- [`backup`](https://mops.one/backup): Library for backup restore.
+- [`backup`](https://mops.one/backup): Biblioteca para respaldo y restauración.
 
-- [`bench`](https://mops.one/bench): Benchmarking library.
+- [`bench`](https://mops.one/bench): Biblioteca de pruebas de rendimiento.
 
-- [`cycles-simple`](https://mops.one/cycles-simple): Manage the cycles balance of child canisters.
+- [`cycles-simple`](https://mops.one/cycles-simple): Gestiona el saldo de ciclos
+  de los canisters secundarios.
 
-- [`dao-proposal-engine`](https://mops.one/dao-proposal-engine): DAO proposal module.
+- [`dao-proposal-engine`](https://mops.one/dao-proposal-engine): Módulo de
+  propuestas de DAO.
 
-- [`datetime`](https://mops.one/datetime): `DateTime` values and manipulation.
+- [`datetime`](https://mops.one/datetime): Valores y manipulación de `DateTime`.
 
-- [`ekvm`](https://mops.one/ekvm): Infinitely scalable elastic key-value store.
+- [`ekvm`](https://mops.one/ekvm): Almacenamiento de clave-valor elástico
+  escalable infinitamente.
 
-- [`fuzz`](https://mops.one/fuzz): Random data generation.
+- [`fuzz`](https://mops.one/fuzz): Generación de datos aleatorios.
 
-- [`itertools`](https://mops.one/itertools): Utility functions and data types for creating efficient iterators.
+- [`itertools`](https://mops.one/itertools): Funciones de utilidad y tipos de
+  datos para crear iteradores eficientes.
 
-- [`lru-cache`](https://mops.one/lru-cache): Least recently used cache implementation.
+- [`lru-cache`](https://mops.one/lru-cache): Implementación de caché de uso
+  menos reciente.
 
-- [`json.mo`](https://mops.one/json.mo): A library for JSON formatting.
+- [`json.mo`](https://mops.one/json.mo): Una biblioteca para el formato JSON.
 
-- [`math`](https://mops.one/math): Linear algebra and mathematical calculus library.
+- [`math`](https://mops.one/math): Biblioteca de álgebra lineal y cálculo
+  matemático.
 
-- [`make-rules`](https://mops.one/make-rules): Library for using GNU make.
+- [`make-rules`](https://mops.one/make-rules): Biblioteca para usar GNU make.
 
-- [`motoko-crc`](https://mops.one/motoko-crc): Cyclic redundancy checks for Motoko.
+- [`motoko-crc`](https://mops.one/motoko-crc): Comprobaciones de redundancia
+  cíclica para Motoko.
 
-- [`neuro`](https://mops.one/neuro): Basic staking and neuron management.
+- [`neuro`](https://mops.one/neuro): Stake básico y gestión de neuronas.
 
-- [`passport-client`](https://mops.one/passport-client): Use Gitcoin Passport anti-Sybil information.
+- [`passport-client`](https://mops.one/passport-client): Utilizar información
+  anti-Sybil de Gitcoin Passport.
 
-- [`principal-ext`](https://mops.one/principal-ext): Principal utility module.
+- [`principal-ext`](https://mops.one/principal-ext): Módulo de utilidad de
+  principal.
 
-- [`prng`](https://mops.one/prng): Statistical pseudo-random number generators.
+- [`prng`](https://mops.one/prng): Generadores de números pseudoaleatorios
+  estadísticos.
 
-- [`random`](https://mops.one/random): Generate random data.
+- [`random`](https://mops.one/random): Generar datos aleatorios.
 
-- [`random-class`](https://mops.one/random-class): Random number generator objects.
+- [`random-class`](https://mops.one/random-class): Objetos generadores de
+  números aleatorios.
 
-- [`tecdsa`](https://mops.one/tecdsa): Generate and manage tECDSA identities.
+- [`tecdsa`](https://mops.one/tecdsa): Generar y gestionar identidades tECDSA.
 
-- [`test`](https://mops.one/test): Motoko testing library.
+- [`test`](https://mops.one/test): Biblioteca de pruebas de Motoko.
 
-- [`time`](https://mops.one/time): Timestamps in nano, micro, millis, and seconds to string `date` or `DateType`.
+- [`time`](https://mops.one/time): Marcas de tiempo en nano, micro, milisegundos
+  y segundos a cadena `date` o `DateType`.
 
-- [`timer-tool`](https://mops.one/timer-tool): Module for creating timers.
+- [`timer-tool`](https://mops.one/timer-tool): Módulo para crear temporizadores.
 
-- [`time-consts`](https://mops.one/time-consts): Time constants for Motoko.
+- [`time-consts`](https://mops.one/time-consts): Constantes de tiempo para
+  Motoko.
 
-- [`utilities`](https://mops.one/utilities): Class objects.
+- [`utilities`](https://mops.one/utilities): Objetos de clase.
 
-- [`uuid`](https://mops.one/uuid): Universally unique identifier library.
+- [`uuid`](https://mops.one/uuid): Biblioteca de identificadores únicos
+  universales.
 
-- [`xtended-numbers`](https://mops.one/xtended-numbers): Extended functionality for number types, such as byte encoding.
+- [`xtended-numbers`](https://mops.one/xtended-numbers): Funcionalidad extendida
+  para tipos de números, como codificación de bytes.
 
-- [`xtended-random`](https://mops.one/xtended-random): Extended library for random number generation.
+- [`xtended-random`](https://mops.one/xtended-random): Biblioteca extendida para
+  generación de números aleatorios.
 
-- [`xtended-text`](https://mops.one/xtended-text): Text manipulation.
-
+- [`xtended-text`](https://mops.one/xtended-text): Manipulación de texto.
 
 <img src="https://github.com/user-attachments/assets/844ca364-4d71-42b3-aaec-4a6c3509ee2e" alt="Logo" width="150" height="150" />
