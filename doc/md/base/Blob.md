@@ -1,132 +1,157 @@
 # Blob
-Module for working with Blobs: immutable sequence of bytes.
 
-Blobs represent sequences of bytes. They are immutable, iterable, but not indexable and can be empty.
+Módulo para trabajar con Blobs: secuencias inmutables de bytes.
 
-Byte sequences are also often represented as `[Nat8]`, i.e. an array of bytes, but this representation is currently much less compact than `Blob`, taking 4 physical bytes to represent each logical byte in the sequence.
-If you would like to manipulate Blobs, it is recommended that you convert
-Blobs to `[var Nat8]` or `Buffer<Nat8>`, do the manipulation, then convert back.
+Los Blobs representan secuencias de bytes. Son inmutables, iterables, pero no
+indexables y pueden estar vacíos.
 
-Import from the base library to use this module.
+Las secuencias de bytes también se representan a menudo como `[Nat8]`, es decir,
+un arreglo de bytes, pero esta representación es actualmente mucho menos
+compacta que `Blob`, ya que toma 4 bytes físicos para representar cada byte
+lógico en la secuencia. Si deseas manipular Blobs, se recomienda que conviertas
+los Blobs a `[var Nat8]` o `Buffer<Nat8>`, realices la manipulación y luego los
+conviertas de vuelta.
+
+Importa desde la biblioteca base para usar este módulo.
+
 ```motoko name=import
 import Blob "mo:base/Blob";
 ```
 
-Some built in features not listed in this module:
+Algunas características incorporadas no listadas en este módulo:
 
-* You can create a `Blob` literal from a `Text` literal, provided the context expects an expression of type `Blob`.
-* `b.size() : Nat` returns the number of bytes in the blob `b`;
-* `b.vals() : Iter.Iter<Nat8>` returns an iterator to enumerate the bytes of the blob `b`.
+- Puedes crear un literal de `Blob` a partir de un literal de `Text`, siempre
+  que el contexto espere una expresión de tipo `Blob`.
+- `b.size() : Nat` devuelve el número de bytes en el blob `b`;
+- `b.vals() : Iter.Iter<Nat8>` devuelve un iterador para enumerar los bytes del
+  blob `b`.
 
-For example:
+Por ejemplo:
+
 ```motoko include=import
 import Debug "mo:base/Debug";
 import Nat8 "mo:base/Nat8";
 
-let blob = "\00\00\00\ff" : Blob; // blob literals, where each byte is delimited by a back-slash and represented in hex
-let blob2 = "charsもあり" : Blob; // you can also use characters in the literals
-let numBytes = blob.size(); // => 4 (returns the number of bytes in the Blob)
-for (byte : Nat8 in blob.vals()) { // iterator over the Blob
+let blob = "\00\00\00\ff" : Blob; // literales de blob, donde cada byte está delimitado por una barra invertida y se representa en hexadecimal
+let blob2 = "charsもあり" : Blob; // también puedes usar caracteres en los literales
+let numBytes = blob.size(); // => 4 (devuelve el número de bytes en el Blob)
+for (byte : Nat8 in blob.vals()) { // iterador sobre el Blob
   Debug.print(Nat8.toText(byte))
 }
 ```
 
-## Type `Blob`
-``` motoko no-repl
+## Tipo `Blob`
+
+```motoko no-repl
 type Blob = Prim.Types.Blob
 ```
 
+## Función `fromArray`
 
-## Function `fromArray`
-``` motoko no-repl
+```motoko no-repl
 func fromArray(bytes : [Nat8]) : Blob
 ```
 
-Creates a `Blob` from an array of bytes (`[Nat8]`), by copying each element.
+Crea un `Blob` a partir de un arreglo de bytes (`[Nat8]`), copiando cada
+elemento.
 
-Example:
+Ejemplo:
+
 ```motoko include=import
 let bytes : [Nat8] = [0, 255, 0];
 let blob = Blob.fromArray(bytes); // => "\00\FF\00"
 ```
 
-## Function `fromArrayMut`
-``` motoko no-repl
+## Función `fromArrayMut`
+
+```motoko no-repl
 func fromArrayMut(bytes : [var Nat8]) : Blob
 ```
 
-Creates a `Blob` from a mutable array of bytes (`[var Nat8]`), by copying each element.
+Crea un `Blob` a partir de un arreglo mutable de bytes (`[var Nat8]`), copiando
+cada elemento.
 
-Example:
+Ejemplo:
+
 ```motoko include=import
 let bytes : [var Nat8] = [var 0, 255, 0];
 let blob = Blob.fromArrayMut(bytes); // => "\00\FF\00"
 ```
 
-## Function `toArray`
-``` motoko no-repl
+## Función `toArray`
+
+```motoko no-repl
 func toArray(blob : Blob) : [Nat8]
 ```
 
-Converts a `Blob` to an array of bytes (`[Nat8]`), by copying each element.
+Convierte un `Blob` en un arreglo de bytes (`[Nat8]`), copiando cada elemento.
 
-Example:
+Ejemplo:
+
 ```motoko include=import
 let blob = "\00\FF\00" : Blob;
 let bytes = Blob.toArray(blob); // => [0, 255, 0]
 ```
 
-## Function `toArrayMut`
-``` motoko no-repl
+## Función `toArrayMut`
+
+```motoko no-repl
 func toArrayMut(blob : Blob) : [var Nat8]
 ```
 
-Converts a `Blob` to a mutable array of bytes (`[var Nat8]`), by copying each element.
+Convierte un `Blob` en un arreglo mutable de bytes (`[var Nat8]`), copiando cada
+elemento.
 
-Example:
+Ejemplo:
+
 ```motoko include=import
 let blob = "\00\FF\00" : Blob;
 let bytes = Blob.toArrayMut(blob); // => [var 0, 255, 0]
 ```
 
-## Function `hash`
-``` motoko no-repl
+## Función `hash`
+
+```motoko no-repl
 func hash(blob : Blob) : Nat32
 ```
 
-Returns the (non-cryptographic) hash of `blob`.
+Devuelve el hash (no criptográfico) de `blob`.
 
-Example:
+Ejemplo:
+
 ```motoko include=import
 let blob = "\00\FF\00" : Blob;
 Blob.hash(blob) // => 1_818_567_776
 ```
 
-## Function `compare`
-``` motoko no-repl
+## Función `compare`
+
+```motoko no-repl
 func compare(b1 : Blob, b2 : Blob) : {#less; #equal; #greater}
 ```
 
-General purpose comparison function for `Blob` by comparing the value of
-the bytes. Returns the `Order` (either `#less`, `#equal`, or `#greater`)
-by comparing `blob1` with `blob2`.
+Función de comparación de propósito general para `Blob` comparando el valor de
+los bytes. Devuelve el `Order` (ya sea `#less`, `#equal` o `#greater`)
+comparando `blob1` con `blob2`.
 
-Example:
+Ejemplo:
+
 ```motoko include=import
 let blob1 = "\00\00\00" : Blob;
 let blob2 = "\00\FF\00" : Blob;
 Blob.compare(blob1, blob2) // => #less
 ```
 
-## Function `equal`
-``` motoko no-repl
+## Función `equal`
+
+```motoko no-repl
 func equal(blob1 : Blob, blob2 : Blob) : Bool
 ```
 
-Equality function for `Blob` types.
-This is equivalent to `blob1 == blob2`.
+Función de igualdad para tipos `Blob`. Esto es equivalente a `blob1 == blob2`.
 
-Example:
+Ejemplo:
+
 ```motoko include=import
 let blob1 = "\00\FF\00" : Blob;
 let blob2 = "\00\FF\00" : Blob;
@@ -134,12 +159,13 @@ ignore Blob.equal(blob1, blob2);
 blob1 == blob2 // => true
 ```
 
-Note: The reason why this function is defined in this library (in addition
-to the existing `==` operator) is so that you can use it as a function value
-to pass to a higher order function. It is not possible to use `==` as a
-function value at the moment.
+Nota: La razón por la cual esta función está definida en esta biblioteca (además
+del operador `==` existente) es para que puedas usarla como un valor de función
+para pasar a una función de orden superior. No es posible usar `==` como un
+valor de función en este momento.
 
-Example:
+Ejemplo:
+
 ```motoko include=import
 import Buffer "mo:base/Buffer";
 
@@ -148,15 +174,17 @@ let buffer2 = Buffer.Buffer<Blob>(3);
 Buffer.equal(buffer1, buffer2, Blob.equal) // => true
 ```
 
-## Function `notEqual`
-``` motoko no-repl
+## Función `notEqual`
+
+```motoko no-repl
 func notEqual(blob1 : Blob, blob2 : Blob) : Bool
 ```
 
-Inequality function for `Blob` types.
-This is equivalent to `blob1 != blob2`.
+Función de desigualdad para tipos `Blob`. Esto es equivalente a
+`blob1 != blob2`.
 
-Example:
+Ejemplo:
+
 ```motoko include=import
 let blob1 = "\00\AA\AA" : Blob;
 let blob2 = "\00\FF\00" : Blob;
@@ -164,20 +192,21 @@ ignore Blob.notEqual(blob1, blob2);
 blob1 != blob2 // => true
 ```
 
-Note: The reason why this function is defined in this library (in addition
-to the existing `!=` operator) is so that you can use it as a function value
-to pass to a higher order function. It is not possible to use `!=` as a
-function value at the moment.
+Nota: La razón por la cual esta función está definida en esta biblioteca (además
+del operador `!=` existente) es para que puedas usarla como un valor de función
+para pasar a una función de orden superior. No es posible usar `!=` como un
+valor de función en este momento.
 
-## Function `less`
-``` motoko no-repl
+## Función `less`
+
+```motoko no-repl
 func less(blob1 : Blob, blob2 : Blob) : Bool
 ```
 
-"Less than" function for `Blob` types.
-This is equivalent to `blob1 < blob2`.
+Función "menor que" para tipos `Blob`. Esto es equivalente a `blob1 < blob2`.
 
-Example:
+Ejemplo:
+
 ```motoko include=import
 let blob1 = "\00\AA\AA" : Blob;
 let blob2 = "\00\FF\00" : Blob;
@@ -185,20 +214,22 @@ ignore Blob.less(blob1, blob2);
 blob1 < blob2 // => true
 ```
 
-Note: The reason why this function is defined in this library (in addition
-to the existing `<` operator) is so that you can use it as a function value
-to pass to a higher order function. It is not possible to use `<` as a
-function value at the moment.
+Nota: La razón por la cual esta función está definida en esta biblioteca (además
+del operador `<` existente) es para que puedas usarla como un valor de función
+para pasar a una función de orden superior. No es posible usar `<` como un valor
+de función en este momento.
 
-## Function `lessOrEqual`
-``` motoko no-repl
+## Función `lessOrEqual`
+
+```motoko no-repl
 func lessOrEqual(blob1 : Blob, blob2 : Blob) : Bool
 ```
 
-"Less than or equal to" function for `Blob` types.
-This is equivalent to `blob1 <= blob2`.
+Función "menor o igual que" para tipos `Blob`. Esto es equivalente a
+`blob1 <= blob2`.
 
-Example:
+Ejemplo:
+
 ```motoko include=import
 let blob1 = "\00\AA\AA" : Blob;
 let blob2 = "\00\FF\00" : Blob;
@@ -206,20 +237,21 @@ ignore Blob.lessOrEqual(blob1, blob2);
 blob1 <= blob2 // => true
 ```
 
-Note: The reason why this function is defined in this library (in addition
-to the existing `<=` operator) is so that you can use it as a function value
-to pass to a higher order function. It is not possible to use `<=` as a
-function value at the moment.
+Nota: La razón por la cual esta función está definida en esta biblioteca (además
+del operador `<=` existente) es para que puedas usarla como un valor de función
+para pasar a una función de orden superior. No es posible usar `<=` como un
+valor de función en este momento.
 
-## Function `greater`
-``` motoko no-repl
+## Función `greater`
+
+```motoko no-repl
 func greater(blob1 : Blob, blob2 : Blob) : Bool
 ```
 
-"Greater than" function for `Blob` types.
-This is equivalent to `blob1 > blob2`.
+Función "mayor que" para tipos `Blob`. Esto es equivalente a `blob1 > blob2`.
 
-Example:
+Ejemplo:
+
 ```motoko include=import
 let blob1 = "\BB\AA\AA" : Blob;
 let blob2 = "\00\00\00" : Blob;
@@ -227,20 +259,22 @@ ignore Blob.greater(blob1, blob2);
 blob1 > blob2 // => true
 ```
 
-Note: The reason why this function is defined in this library (in addition
-to the existing `>` operator) is so that you can use it as a function value
-to pass to a higher order function. It is not possible to use `>` as a
-function value at the moment.
+Nota: La razón por la cual esta función está definida en esta biblioteca (además
+del operador `>` existente) es para que puedas usarla como un valor de función
+para pasar a una función de orden superior. No es posible usar `>` como un valor
+de función en este momento.
 
-## Function `greaterOrEqual`
-``` motoko no-repl
+## Función `greaterOrEqual`
+
+```motoko no-repl
 func greaterOrEqual(blob1 : Blob, blob2 : Blob) : Bool
 ```
 
-"Greater than or equal to" function for `Blob` types.
-This is equivalent to `blob1 >= blob2`.
+Función "mayor o igual que" para tipos `Blob`. Esto es equivalente a
+`blob1 >= blob2`.
 
-Example:
+Ejemplo:
+
 ```motoko include=import
 let blob1 = "\BB\AA\AA" : Blob;
 let blob2 = "\00\00\00" : Blob;
@@ -248,7 +282,7 @@ ignore Blob.greaterOrEqual(blob1, blob2);
 blob1 >= blob2 // => true
 ```
 
-Note: The reason why this function is defined in this library (in addition
-to the existing `>=` operator) is so that you can use it as a function value
-to pass to a higher order function. It is not possible to use `>=` as a
-function value at the moment.
+Nota: La razón por la cual esta función está definida en esta biblioteca (además
+del operador `>=` existente) es para que puedas usarla como un valor de función
+para pasar a una función de orden superior. No es posible usar `>=` como un
+valor de función en este momento.
