@@ -1,60 +1,70 @@
 # Deque
-Double-ended queue (deque) of a generic element type `T`.
 
-The interface to deques is purely functional, not imperative, and deques are immutable values.
-In particular, deque operations such as push and pop do not update their input deque but,  instead, return the
-value of the modified deque, alongside any other data.
-The input deque is left unchanged.
+Queue de doble extremo (deque) de un tipo genérico `T`.
 
-Examples of use-cases:
-Queue (FIFO) by using `pushBack()` and `popFront()`.
-Stack (LIFO) by using `pushFront()` and `popFront()`.
+La interfaz de los deques es puramente funcional, no imperativa, y los deques
+son valores inmutables. En particular, las operaciones de deque como push y pop
+no actualizan su deque de entrada, sino que devuelven el valor del deque
+modificado, junto con cualquier otro dato. El deque de entrada se mantiene sin
+cambios.
 
-A deque is internally implemented as two lists, a head access list and a (reversed) tail access list,
-that are dynamically size-balanced by splitting.
+Ejemplos de casos de uso: Cola (Queue) (FIFO) utilizando `pushBack()` y
+`popFront()`. Pila (Stack) (LIFO) utilizando `pushFront()` y `popFront()`.
 
-Construction: Create a new deque with the `empty<T>()` function.
+Un deque se implementa internamente como dos listas, una lista de acceso a la
+cabeza y una lista de acceso a la cola (invertida), que se equilibran
+dinámicamente mediante divisiones.
 
-Note on the costs of push and pop functions:
-* Runtime: `O(1) amortized costs, `O(n)` worst case cost per single call.
-* Space: `O(1) amortized costs, `O(n)` worst case cost per single call.
+Construcción: Crea un nuevo deque con la función `empty<T>()`.
 
-`n` denotes the number of elements stored in the deque.
+Nota sobre los costos de las funciones push y pop:
 
-## Type `Deque`
-``` motoko no-repl
+- Tiempo de ejecución: costos amortizados de `O(1)`, costo de peor caso de
+  `O(n)` por llamada única.
+- Espacio: costos amortizados de `O(1)`, costo de peor caso de `O(n)` por
+  llamada única.
+
+`n` denota el número de elementos almacenados en el deque.
+
+## Tipo `Deque`
+
+```motoko no-repl
 type Deque<T> = (List<T>, List<T>)
 ```
 
-Double-ended queue (deque) data type.
+Tipo de datos de cola de doble extremo (deque).
 
-## Function `empty`
-``` motoko no-repl
+## Función `empty`
+
+```motoko no-repl
 func empty<T>() : Deque<T>
 ```
 
-Create a new empty deque.
+Crea un deque vacío nuevo.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Deque "mo:base/Deque";
 
 Deque.empty<Nat>()
 ```
 
-Runtime: `O(1)`.
+Tiempo de ejecución: `O(1)`.
 
-Space: `O(1)`.
+Espacio: `O(1)`.
 
-## Function `isEmpty`
-``` motoko no-repl
+## Función `isEmpty`
+
+```motoko no-repl
 func isEmpty<T>(deque : Deque<T>) : Bool
 ```
 
-Determine whether a deque is empty.
-Returns true if `deque` is empty, otherwise `false`.
+Determina si un deque está vacío. Devuelve true si `deque` está vacío, de lo
+contrario, false.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Deque "mo:base/Deque";
 
@@ -62,42 +72,47 @@ let deque = Deque.empty<Nat>();
 Deque.isEmpty(deque) // => true
 ```
 
-Runtime: `O(1)`.
+Tiempo de ejecución: `O(1)`.
 
-Space: `O(1)`.
+Espacio: `O(1)`.
 
-## Function `pushFront`
-``` motoko no-repl
+## Función `pushFront`
+
+```motoko no-repl
 func pushFront<T>(deque : Deque<T>, element : T) : Deque<T>
 ```
 
-Insert a new element on the front end of a deque.
-Returns the new deque with `element` in the front followed by the elements of `deque`.
+Inserta un nuevo elemento en el extremo frontal de un deque. Devuelve el nuevo
+deque con `element` en el frente seguido de los elementos de `deque`.
 
-This may involve dynamic rebalancing of the two, internally used lists.
+Esto puede implicar el reequilibrio dinámico de las dos listas utilizadas
+internamente.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Deque "mo:base/Deque";
 
-Deque.pushFront(Deque.pushFront(Deque.empty<Nat>(), 2), 1) // deque with elements [1, 2]
+Deque.pushFront(Deque.pushFront(Deque.empty<Nat>(), 2), 1) // deque con elementos [1, 2]
 ```
 
-Runtime: `O(n)` worst-case, amortized to `O(1)`.
+Tiempo de ejecución: peor caso de `O(n)`, amortizado a `O(1)`.
 
-Space: `O(n)` worst-case, amortized to `O(1)`.
+Espacio: peor caso de `O(n)`, amortizado a `O(1)`.
 
-`n` denotes the number of elements stored in the deque.
+`n` denota el número de elementos almacenados en el deque.
 
-## Function `peekFront`
-``` motoko no-repl
+## Función `peekFront`
+
+```motoko no-repl
 func peekFront<T>(deque : Deque<T>) : ?T
 ```
 
-Inspect the optional element on the front end of a deque.
-Returns `null` if `deque` is empty. Otherwise, the front element of `deque`.
+Inspecciona el elemento opcional en el extremo frontal de un deque. Devuelve
+`null` si `deque` está vacío. De lo contrario, el elemento frontal de `deque`.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Deque "mo:base/Deque";
 
@@ -105,78 +120,86 @@ let deque = Deque.pushFront(Deque.pushFront(Deque.empty<Nat>(), 2), 1);
 Deque.peekFront(deque) // => ?1
 ```
 
-Runtime: `O(1)`.
+Tiempo de ejecución: `O(1)`.
 
-Space: `O(1)`.
+Espacio: `O(1)`.
 
+## Función `popFront`
 
-## Function `popFront`
-``` motoko no-repl
+```motoko no-repl
 func popFront<T>(deque : Deque<T>) : ?(T, Deque<T>)
 ```
 
-Remove the element on the front end of a deque.
-Returns `null` if `deque` is empty. Otherwise, it returns a pair of
-the first element and a new deque that contains all the remaining elements of `deque`.
+Elimina el elemento en el extremo frontal de un deque. Devuelve `null` si
+`deque` está vacío. De lo contrario, devuelve un par del primer elemento y un
+nuevo deque que contiene todos los elementos restantes de `deque`.
 
-This may involve dynamic rebalancing of the two, internally used lists.
+Esto puede implicar el reequilibrio dinámico de las dos listas utilizadas
+internamente.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Deque "mo:base/Deque";
 import Debug "mo:base/Debug";
 let initial = Deque.pushFront(Deque.pushFront(Deque.empty<Nat>(), 2), 1);
-// initial deque with elements [1, 2]
+// deque inicial con elementos [1, 2]
 let reduced = Deque.popFront(initial);
 switch reduced {
   case null {
-    Debug.trap "Empty queue impossible"
+    Debug.trap "Queue vacío imposible"
   };
   case (?result) {
     let removedElement = result.0; // 1
-    let reducedDeque = result.1; // deque with element [2].
+    let reducedDeque = result.1; // deque con elemento [2].
   }
 }
 ```
 
-Runtime: `O(n)` worst-case, amortized to `O(1)`.
+Tiempo de ejecución: peor caso de `O(n)`, amortizado a `O(1)`.
 
-Space: `O(n)` worst-case, amortized to `O(1)`.
+Espacio: peor caso de `O(n)`, amortizado a `O(1)`.
 
-`n` denotes the number of elements stored in the deque.
+`n` denota el número de elementos almacenados en el deque.
 
-## Function `pushBack`
-``` motoko no-repl
+## Función `pushBack`
+
+```motoko no-repl
 func pushBack<T>(deque : Deque<T>, element : T) : Deque<T>
 ```
 
-Insert a new element on the back end of a deque.
-Returns the new deque with all the elements of `deque`, followed by `element` on the back.
+Inserta un nuevo elemento en el extremo posterior de un deque. Devuelve el nuevo
+deque con todos los elementos de `deque`, seguido de `element` en la parte
+posterior.
 
-This may involve dynamic rebalancing of the two, internally used lists.
+Esto puede implicar el reequilibrio dinámico de las dos listas utilizadas
+internamente.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Deque "mo:base/Deque";
 
-Deque.pushBack(Deque.pushBack(Deque.empty<Nat>(), 1), 2) // deque with elements [1, 2]
+Deque.pushBack(Deque.pushBack(Deque.empty<Nat>(), 1), 2) // deque con elementos [1, 2]
 ```
 
-Runtime: `O(n)` worst-case, amortized to `O(1)`.
+Tiempo de ejecución: peor caso de `O(n)`, amortizado a `O(1)`.
 
-Space: `O(n)` worst-case, amortized to `O(1)`.
+Espacio: peor caso de `O(n)`, amortizado a `O(1)`.
 
-`n` denotes the number of elements stored in the deque.
+`n` denota el número de elementos almacenados en el deque.
 
-## Function `peekBack`
-``` motoko no-repl
+## Función `peekBack`
+
+```motoko no-repl
 func peekBack<T>(deque : Deque<T>) : ?T
 ```
 
-Inspect the optional element on the back end of a deque.
-Returns `null` if `deque` is empty. Otherwise, the back element of `deque`.
+Inspecciona el elemento opcional en el extremo posterior de un deque. Devuelve
+`null` si `deque` está vacío. De lo contrario, el elemento posterior de `deque`.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Deque "mo:base/Deque";
 
@@ -184,44 +207,46 @@ let deque = Deque.pushBack(Deque.pushBack(Deque.empty<Nat>(), 1), 2);
 Deque.peekBack(deque) // => ?2
 ```
 
-Runtime: `O(1)`.
+Tiempo de ejecución: `O(1)`.
 
-Space: `O(1)`.
+Espacio: `O(1)`.
 
+## Función `popBack`
 
-## Function `popBack`
-``` motoko no-repl
+```motoko no-repl
 func popBack<T>(deque : Deque<T>) : ?(Deque<T>, T)
 ```
 
-Remove the element on the back end of a deque.
-Returns `null` if `deque` is empty. Otherwise, it returns a pair of
-a new deque that contains the remaining elements of `deque`
-and, as the second pair item, the removed back element.
+Elimina el elemento en el extremo posterior de un deque. Devuelve `null` si
+`deque` está vacío. De lo contrario, devuelve un par de un nuevo deque que
+contiene los elementos restantes de `deque` y, como segundo elemento del par, el
+elemento posterior eliminado.
 
-This may involve dynamic rebalancing of the two, internally used lists.
+Esto puede implicar el reequilibrio dinámico de las dos listas utilizadas
+internamente.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Deque "mo:base/Deque";
 import Debug "mo:base/Debug";
 
 let initial = Deque.pushBack(Deque.pushBack(Deque.empty<Nat>(), 1), 2);
-// initial deque with elements [1, 2]
+// deque inicial con elementos [1, 2]
 let reduced = Deque.popBack(initial);
 switch reduced {
   case null {
-    Debug.trap "Empty queue impossible"
+    Debug.trap "Queue vacío imposible"
   };
   case (?result) {
-    let reducedDeque = result.0; // deque with element [1].
+    let reducedDeque = result.0; // deque con elemento [1].
     let removedElement = result.1; // 2
   }
 }
 ```
 
-Runtime: `O(n)` worst-case, amortized to `O(1)`.
+Tiempo de ejecución: peor caso de `O(n)`, amortizado a `O(1)`.
 
-Space: `O(n)` worst-case, amortized to `O(1)`.
+Espacio: peor caso de `O(n)`, amortizado a `O(1)`.
 
-`n` denotes the number of elements stored in the deque.
+`n` denota el número de elementos almacenados en el deque.

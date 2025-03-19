@@ -1,60 +1,74 @@
 # ExperimentalStableMemory
-Byte-level access to (virtual) _stable memory_.
 
-**WARNING**: As its name suggests, this library is **experimental**, subject to change
-and may be replaced by safer alternatives in later versions of Motoko.
-Use at your own risk and discretion.
+Acceso a nivel de byte a la _memoria estable_ (virtual).
 
-**DEPRECATION**: Use of `ExperimentalStableMemory` library may be deprecated in future.
-Going forward, users should consider using library `Region.mo` to allocate *isolated* regions of memory instead.
-Using dedicated regions for different user applications ensures that writing
-to one region will not affect the state of another, unrelated region.
+**ADVERTENCIA**: Como su nombre indica, esta biblioteca es **experimental**,
+está sujeta a cambios y puede ser reemplazada por alternativas más seguras en
+versiones posteriores de Motoko. Úsela bajo su propio riesgo y discreción.
 
-This is a lightweight abstraction over IC _stable memory_ and supports persisting
-raw binary data across Motoko upgrades.
-Use of this module is fully compatible with Motoko's use of
-_stable variables_, whose persistence mechanism also uses (real) IC stable memory internally, but does not interfere with this API.
+**DEPRECIACIÓN**: El uso de la biblioteca `ExperimentalStableMemory` puede
+quedar obsoleto en el futuro. En adelante, los usuarios deben considerar el uso
+de la biblioteca `Region.mo` para asignar regiones de memoria _aisladas_ en su
+lugar. El uso de regiones dedicadas para diferentes aplicaciones de usuario
+garantiza que escribir en una región no afectará el estado de otra región no
+relacionada.
 
-Memory is allocated, using `grow(pages)`, sequentially and on demand, in units of 64KiB pages, starting with 0 allocated pages.
-New pages are zero initialized.
-Growth is capped by a soft limit on page count controlled by compile-time flag
-`--max-stable-pages <n>` (the default is 65536, or 4GiB).
+Esta es una abstracción ligera sobre la _memoria estable_ de IC y admite la
+persistencia de datos binarios sin procesar en las actualizaciones de Motoko. El
+uso de este módulo es totalmente compatible con el uso de variables estables de
+Motoko, cuyo mecanismo de persistencia también utiliza (realmente) la memoria
+estable de IC internamente, pero no interfiere con esta API.
 
-Each `load` operation loads from byte address `offset` in little-endian
-format using the natural bit-width of the type in question.
-The operation traps if attempting to read beyond the current stable memory size.
+La memoria se asigna, utilizando `grow(pages)`, de forma secuencial y bajo
+demanda, en unidades de páginas de 64KiB, comenzando con 0 páginas asignadas.
+Las nuevas páginas se inicializan a cero. El crecimiento está limitado por un
+límite suave en el recuento de páginas controlado por la bandera de tiempo de
+compilación `--max-stable-pages <n>` (el valor predeterminado es 65536, o 4GiB).
 
-Each `store` operation stores to byte address `offset` in little-endian format using the natural bit-width of the type in question.
-The operation traps if attempting to write beyond the current stable memory size.
+Cada operación `load` carga desde la dirección de byte `offset` en formato
+little-endian utilizando el ancho de bits natural del tipo en cuestión. La
+operación falla si se intenta leer más allá del tamaño actual de la memoria
+estable.
 
-Text values can be handled by using `Text.decodeUtf8` and `Text.encodeUtf8`, in conjunction with `loadBlob` and `storeBlob`.
+Cada operación `store` almacena en la dirección de byte `offset` en formato
+little-endian utilizando el ancho de bits natural del tipo en cuestión. La
+operación falla si se intenta escribir más allá del tamaño actual de la memoria
+estable.
 
-The current page allocation and page contents is preserved across upgrades.
+Los valores de texto se pueden manejar utilizando `Text.decodeUtf8` y
+`Text.encodeUtf8`, en conjunto con `loadBlob` y `storeBlob`.
 
-NB: The IC's actual stable memory size (`ic0.stable_size`) may exceed the
-page size reported by Motoko function `size()`.
-This (and the cap on growth) are to accommodate Motoko's stable variables.
-Applications that plan to use Motoko stable variables sparingly or not at all can
-increase `--max-stable-pages` as desired, approaching the IC maximum (initially 8GiB, then 32Gib, currently 64Gib).
-All applications should reserve at least one page for stable variable data, even when no stable variables are used.
+La asignación de páginas actual y el contenido de las páginas se conservan en
+las actualizaciones.
 
-Usage:
+NB: El tamaño real de la memoria estable de IC (`ic0.stable_size`) puede superar
+el tamaño de página informado por la función de Motoko `size()`. Esto (y el
+límite de crecimiento) se deben a las variables estables de Motoko. Las
+aplicaciones que planean utilizar variables estables de Motoko de manera
+limitada o no en absoluto pueden aumentar `--max-stable-pages` según sea
+necesario, acercándose al máximo de IC (inicialmente 8GiB, luego 32Gib,
+actualmente 64Gib). Todas las aplicaciones deben reservar al menos una página
+para los datos de variables estables, incluso cuando no se utilizan variables
+estables.
+
+Uso:
+
 ```motoko no-repl
 import StableMemory "mo:base/ExperimentalStableMemory";
 ```
 
-## Value `size`
-``` motoko no-repl
+## Valor `size`
+
+```motoko no-repl
 let size : () -> (pages : Nat64)
 ```
 
-Current size of the stable memory, in pages.
-Each page is 64KiB (65536 bytes).
-Initially `0`.
-Preserved across upgrades, together with contents of allocated
-stable memory.
+Tamaño actual de la memoria estable, en páginas. Cada página es de 64KiB (65536
+bytes). Inicialmente `0`. Se conserva en las actualizaciones, junto con el
+contenido de la memoria estable asignada.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let beforeSize = StableMemory.size();
 ignore StableMemory.grow(10);
@@ -62,44 +76,51 @@ let afterSize = StableMemory.size();
 afterSize - beforeSize // => 10
 ```
 
-## Value `grow`
-``` motoko no-repl
+## Valor `grow`
+
+```motoko no-repl
 let grow : (newPages : Nat64) -> (oldPages : Nat64)
 ```
 
-Grow current `size` of stable memory by the given number of pages.
-Each page is 64KiB (65536 bytes).
-Returns the previous `size` when able to grow.
-Returns `0xFFFF_FFFF_FFFF_FFFF` if remaining pages insufficient.
-Every new page is zero-initialized, containing byte 0x00 at every offset.
-Function `grow` is capped by a soft limit on `size` controlled by compile-time flag
- `--max-stable-pages <n>` (the default is 65536, or 4GiB).
+Aumenta el `size` actual de la memoria estable en la cantidad de páginas
+especificada. Cada página es de 64KiB (65536 bytes). Devuelve el `size` anterior
+cuando puede crecer. Devuelve `0xFFFF_FFFF_FFFF_FFFF` si las páginas restantes
+son insuficientes. Cada nueva página se inicializa a cero, con el byte 0x00 en
+cada desplazamiento. La función `grow` está limitada por un límite suave en el
+`size` controlado por la bandera de tiempo de compilación
+`--max-stable-pages <n>` (el valor predeterminado es 65536, o 4GiB).
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 import Error "mo:base/Error";
 
 let beforeSize = StableMemory.grow(10);
 if (beforeSize == 0xFFFF_FFFF_FFFF_FFFF) {
-  throw Error.reject("Out of memory");
+  throw Error.reject("Sin memoria");
 };
 let afterSize = StableMemory.size();
 afterSize - beforeSize // => 10
 ```
 
-## Value `stableVarQuery`
-``` motoko no-repl
+## Valor `stableVarQuery`
+
+```motoko no-repl
 let stableVarQuery : () -> (shared query () -> async { size : Nat64 })
 ```
 
-Returns a query that, when called, returns the number of bytes of (real) IC stable memory that would be
-occupied by persisting its current stable variables before an upgrade.
-This function may be used to monitor or limit real stable memory usage.
-The query computes the estimate by running the first half of an upgrade, including any `preupgrade` system method.
-Like any other query, its state changes are discarded so no actual upgrade (or other state change) takes place.
-The query can only be called by the enclosing actor and will trap for other callers.
+Devuelve una consulta que, cuando se llama, devuelve el número de bytes de la
+memoria estable (real) de IC que ocuparía persistir sus variables estables
+actuales antes de una actualización. Esta función se puede utilizar para
+monitorear o limitar el uso de memoria estable real. La consulta calcula la
+estimación ejecutando la primera mitad de una actualización, incluido cualquier
+método del sistema `preupgrade`. Al igual que cualquier otra consulta, sus
+cambios de estado se descartan, por lo que no se produce ninguna actualización
+real (u otro cambio de estado). La consulta solo puede ser llamada por el actor
+que la contiene y fallará para otros llamadores.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 actor {
   stable var state = "";
@@ -113,15 +134,17 @@ actor {
 };
 ```
 
-## Value `loadNat32`
-``` motoko no-repl
+## Valor `loadNat32`
+
+```motoko no-repl
 let loadNat32 : (offset : Nat64) -> Nat32
 ```
 
-Loads a `Nat32` value from stable memory at the given `offset`.
-Traps on an out-of-bounds access.
+Carga un valor `Nat32` desde la memoria estable en el `offset` especificado.
+Falla si se produce un acceso fuera de los límites.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let offset = 0;
 let value = 123;
@@ -129,15 +152,17 @@ StableMemory.storeNat32(offset, value);
 StableMemory.loadNat32(offset) // => 123
 ```
 
-## Value `storeNat32`
-``` motoko no-repl
+## Valor `storeNat32`
+
+```motoko no-repl
 let storeNat32 : (offset : Nat64, value : Nat32) -> ()
 ```
 
-Stores a `Nat32` value in stable memory at the given `offset`.
-Traps on an out-of-bounds access.
+Almacena un valor `Nat32` en la memoria estable en el `offset` especificado.
+Falla si se produce un acceso fuera de los límites.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let offset = 0;
 let value = 123;
@@ -145,15 +170,17 @@ StableMemory.storeNat32(offset, value);
 StableMemory.loadNat32(offset) // => 123
 ```
 
-## Value `loadNat8`
-``` motoko no-repl
+## Valor `loadNat8`
+
+```motoko no-repl
 let loadNat8 : (offset : Nat64) -> Nat8
 ```
 
-Loads a `Nat8` value from stable memory at the given `offset`.
-Traps on an out-of-bounds access.
+Carga un valor `Nat8` desde la memoria estable en el `offset` especificado.
+Falla si se produce un acceso fuera de los límites.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let offset = 0;
 let value = 123;
@@ -161,15 +188,17 @@ StableMemory.storeNat8(offset, value);
 StableMemory.loadNat8(offset) // => 123
 ```
 
-## Value `storeNat8`
-``` motoko no-repl
+## Valor `storeNat8`
+
+```motoko no-repl
 let storeNat8 : (offset : Nat64, value : Nat8) -> ()
 ```
 
-Stores a `Nat8` value in stable memory at the given `offset`.
-Traps on an out-of-bounds access.
+Almacena un valor `Nat8` en la memoria estable en el `offset` especificado.
+Falla si se produce un acceso fuera de los límites.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let offset = 0;
 let value = 123;
@@ -177,15 +206,17 @@ StableMemory.storeNat8(offset, value);
 StableMemory.loadNat8(offset) // => 123
 ```
 
-## Value `loadNat16`
-``` motoko no-repl
+## Valor `loadNat16`
+
+```motoko no-repl
 let loadNat16 : (offset : Nat64) -> Nat16
 ```
 
-Loads a `Nat16` value from stable memory at the given `offset`.
-Traps on an out-of-bounds access.
+Carga un valor `Nat16` desde la memoria estable en el `offset` especificado.
+Falla si se produce un acceso fuera de los límites.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let offset = 0;
 let value = 123;
@@ -193,15 +224,17 @@ StableMemory.storeNat16(offset, value);
 StableMemory.loadNat16(offset) // => 123
 ```
 
-## Value `storeNat16`
-``` motoko no-repl
+## Valor `storeNat16`
+
+```motoko no-repl
 let storeNat16 : (offset : Nat64, value : Nat16) -> ()
 ```
 
-Stores a `Nat16` value in stable memory at the given `offset`.
-Traps on an out-of-bounds access.
+Almacena un valor `Nat16` en la memoria estable en el `offset` especificado.
+Falla si se produce un acceso fuera de los límites.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let offset = 0;
 let value = 123;
@@ -209,15 +242,17 @@ StableMemory.storeNat16(offset, value);
 StableMemory.loadNat16(offset) // => 123
 ```
 
-## Value `loadNat64`
-``` motoko no-repl
+## Valor `loadNat64`
+
+```motoko no-repl
 let loadNat64 : (offset : Nat64) -> Nat64
 ```
 
-Loads a `Nat64` value from stable memory at the given `offset`.
-Traps on an out-of-bounds access.
+Carga un valor `Nat64` desde la memoria estable en el `offset` especificado.
+Falla si se produce un acceso fuera de los límites.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let offset = 0;
 let value = 123;
@@ -225,15 +260,17 @@ StableMemory.storeNat64(offset, value);
 StableMemory.loadNat64(offset) // => 123
 ```
 
-## Value `storeNat64`
-``` motoko no-repl
+## Valor `storeNat64`
+
+```motoko no-repl
 let storeNat64 : (offset : Nat64, value : Nat64) -> ()
 ```
 
-Stores a `Nat64` value in stable memory at the given `offset`.
-Traps on an out-of-bounds access.
+Almacena un valor `Nat64` en la memoria estable en el `offset` especificado.
+Falla si se produce un acceso fuera de los límites.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let offset = 0;
 let value = 123;
@@ -241,15 +278,17 @@ StableMemory.storeNat64(offset, value);
 StableMemory.loadNat64(offset) // => 123
 ```
 
-## Value `loadInt32`
-``` motoko no-repl
+## Valor `loadInt32`
+
+```motoko no-repl
 let loadInt32 : (offset : Nat64) -> Int32
 ```
 
-Loads an `Int32` value from stable memory at the given `offset`.
-Traps on an out-of-bounds access.
+Carga un valor `Int32` desde la memoria estable en el `offset` especificado.
+Falla si se produce un acceso fuera de los límites.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let offset = 0;
 let value = 123;
@@ -257,15 +296,17 @@ StableMemory.storeInt32(offset, value);
 StableMemory.loadInt32(offset) // => 123
 ```
 
-## Value `storeInt32`
-``` motoko no-repl
+## Valor `storeInt32`
+
+```motoko no-repl
 let storeInt32 : (offset : Nat64, value : Int32) -> ()
 ```
 
-Stores an `Int32` value in stable memory at the given `offset`.
-Traps on an out-of-bounds access.
+Almacena un valor `Int32` en la memoria estable en el `offset` especificado.
+Falla si se produce un acceso fuera de los límites.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let offset = 0;
 let value = 123;
@@ -273,15 +314,17 @@ StableMemory.storeInt32(offset, value);
 StableMemory.loadInt32(offset) // => 123
 ```
 
-## Value `loadInt8`
-``` motoko no-repl
+## Valor `loadInt8`
+
+```motoko no-repl
 let loadInt8 : (offset : Nat64) -> Int8
 ```
 
-Loads an `Int8` value from stable memory at the given `offset`.
-Traps on an out-of-bounds access.
+Carga un valor `Int8` desde la memoria estable en el `offset` especificado.
+Falla si se produce un acceso fuera de los límites.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let offset = 0;
 let value = 123;
@@ -289,15 +332,17 @@ StableMemory.storeInt8(offset, value);
 StableMemory.loadInt8(offset) // => 123
 ```
 
-## Value `storeInt8`
-``` motoko no-repl
+## Valor `storeInt8`
+
+```motoko no-repl
 let storeInt8 : (offset : Nat64, value : Int8) -> ()
 ```
 
-Stores an `Int8` value in stable memory at the given `offset`.
-Traps on an out-of-bounds access.
+Almacena un valor `Int8` en la memoria estable en el `offset` especificado.
+Falla si se produce un acceso fuera de los límites.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let offset = 0;
 let value = 123;
@@ -305,15 +350,17 @@ StableMemory.storeInt8(offset, value);
 StableMemory.loadInt8(offset) // => 123
 ```
 
-## Value `loadInt16`
-``` motoko no-repl
+## Valor `loadInt16`
+
+```motoko no-repl
 let loadInt16 : (offset : Nat64) -> Int16
 ```
 
-Loads an `Int16` value from stable memory at the given `offset`.
-Traps on an out-of-bounds access.
+Carga un valor `Int16` desde la memoria estable en el `offset` especificado.
+Falla si se produce un acceso fuera de los límites.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let offset = 0;
 let value = 123;
@@ -321,15 +368,17 @@ StableMemory.storeInt16(offset, value);
 StableMemory.loadInt16(offset) // => 123
 ```
 
-## Value `storeInt16`
-``` motoko no-repl
+## Valor `storeInt16`
+
+```motoko no-repl
 let storeInt16 : (offset : Nat64, value : Int16) -> ()
 ```
 
-Stores an `Int16` value in stable memory at the given `offset`.
-Traps on an out-of-bounds access.
+Almacena un valor `Int16` en la memoria estable en el `offset` especificado.
+Falla si se produce un acceso fuera de los límites.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let offset = 0;
 let value = 123;
@@ -337,15 +386,17 @@ StableMemory.storeInt16(offset, value);
 StableMemory.loadInt16(offset) // => 123
 ```
 
-## Value `loadInt64`
-``` motoko no-repl
+## Valor `loadInt64`
+
+```motoko no-repl
 let loadInt64 : (offset : Nat64) -> Int64
 ```
 
-Loads an `Int64` value from stable memory at the given `offset`.
-Traps on an out-of-bounds access.
+Carga un valor `Int64` desde la memoria estable en el `offset` especificado.
+Falla si se produce un acceso fuera de los límites.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let offset = 0;
 let value = 123;
@@ -353,15 +404,17 @@ StableMemory.storeInt64(offset, value);
 StableMemory.loadInt64(offset) // => 123
 ```
 
-## Value `storeInt64`
-``` motoko no-repl
+## Valor `storeInt64`
+
+```motoko no-repl
 let storeInt64 : (offset : Nat64, value : Int64) -> ()
 ```
 
-Stores an `Int64` value in stable memory at the given `offset`.
-Traps on an out-of-bounds access.
+Almacena un valor `Int64` en la memoria estable en el `offset` especificado.
+Falla si se produce un acceso fuera de los límites.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let offset = 0;
 let value = 123;
@@ -369,15 +422,17 @@ StableMemory.storeInt64(offset, value);
 StableMemory.loadInt64(offset) // => 123
 ```
 
-## Value `loadFloat`
-``` motoko no-repl
+## Valor `loadFloat`
+
+```motoko no-repl
 let loadFloat : (offset : Nat64) -> Float
 ```
 
-Loads a `Float` value from stable memory at the given `offset`.
-Traps on an out-of-bounds access.
+Carga un valor `Float` desde la memoria estable en el `offset` especificado.
+Falla si se produce un acceso fuera de los límites.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let offset = 0;
 let value = 1.25;
@@ -385,15 +440,17 @@ StableMemory.storeFloat(offset, value);
 StableMemory.loadFloat(offset) // => 1.25
 ```
 
-## Value `storeFloat`
-``` motoko no-repl
+## Valor `storeFloat`
+
+```motoko no-repl
 let storeFloat : (offset : Nat64, value : Float) -> ()
 ```
 
-Stores a `Float` value in stable memory at the given `offset`.
-Traps on an out-of-bounds access.
+Almacena un valor `Float` en la memoria estable en el `offset` especificado.
+Falla si se produce un acceso fuera de los límites.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let offset = 0;
 let value = 1.25;
@@ -401,15 +458,17 @@ StableMemory.storeFloat(offset, value);
 StableMemory.loadFloat(offset) // => 1.25
 ```
 
-## Value `loadBlob`
-``` motoko no-repl
+## Valor `loadBlob`
+
+```motoko no-repl
 let loadBlob : (offset : Nat64, size : Nat) -> Blob
 ```
 
-Load `size` bytes starting from `offset` as a `Blob`.
-Traps on an out-of-bounds access.
+Carga `size` bytes comenzando desde `offset` como un `Blob`. Falla si se produce
+un acceso fuera de los límites.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 import Blob "mo:base/Blob";
 
@@ -420,15 +479,17 @@ StableMemory.storeBlob(offset, value);
 Blob.toArray(StableMemory.loadBlob(offset, size)) // => [1, 2, 3]
 ```
 
-## Value `storeBlob`
-``` motoko no-repl
+## Valor `storeBlob`
+
+```motoko no-repl
 let storeBlob : (offset : Nat64, value : Blob) -> ()
 ```
 
-Write bytes of `blob` beginning at `offset`.
-Traps on an out-of-bounds access.
+Escribe los bytes de `blob` a partir de `offset`. Falla si se produce un acceso
+fuera de los límites.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 import Blob "mo:base/Blob";
 

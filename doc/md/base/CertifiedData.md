@@ -1,26 +1,32 @@
 # CertifiedData
-Certified data.
 
-The Internet Computer allows canister smart contracts to store a small amount of data during
-update method processing so that during query call processing, the canister can obtain
-a certificate about that data.
+Datos certificados.
 
-This module provides a _low-level_ interface to this API, aimed at advanced
-users and library implementors. See the Internet Computer Functional
-Specification and corresponding documentation for how to use this to make query
-calls to your canister tamperproof.
+Internet Computer permite que los contratos inteligentes de canister almacenen
+una pequeña cantidad de datos durante el procesamiento del método de
+actualización para que, durante el procesamiento de la llamada de consulta, el
+canister pueda obtener un certificado sobre esos datos.
 
-## Value `set`
-``` motoko no-repl
+Este módulo proporciona una interfaz _de bajo nivel_ a esta API, dirigida a
+usuarios avanzados e implementadores de bibliotecas. Consulta la Especificación
+Funcional de Internet Computer y la documentación correspondiente para saber
+cómo utilizar esto para hacer llamadas de consulta a tu canister a prueba de
+manipulaciones.
+
+## Valor `set`
+
+```motoko no-repl
 let set : (data : Blob) -> ()
 ```
 
-Set the certified data.
+Establece los datos certificados.
 
-Must be called from an update method, else traps.
-Must be passed a blob of at most 32 bytes, else traps.
+Debe ser llamado desde un método de actualización, de lo contrario, se
+producirán trampas. Debe pasarse un blob de hasta 32 bytes, de lo contrario, se
+producirán trampas.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 import CertifiedData "mo:base/CertifiedData";
 import Blob "mo:base/Blob";
@@ -32,26 +38,29 @@ let blob = Blob.fromArray(array);
 CertifiedData.set(blob);
 ```
 
-See a full example on how to use certified variables here: https://github.com/dfinity/examples/tree/master/motoko/cert-var
+Consulta un ejemplo completo sobre cómo utilizar variables certificadas aquí:
+https://github.com/dfinity/examples/tree/master/motoko/cert-var
 
+## Valor `getCertificate`
 
-## Value `getCertificate`
-``` motoko no-repl
+```motoko no-repl
 let getCertificate : () -> ?Blob
 ```
 
-Gets a certificate
+Obtiene un certificado.
 
-Returns `null` if no certificate is available, e.g. when processing an
-update call or inter-canister call. This returns a non-`null` value only
-when processing a query call.
+Devuelve `null` si no hay un certificado disponible, por ejemplo, al procesar
+una llamada de actualización o una llamada entre canisters. Esto devuelve un
+valor no nulo solo cuando se procesa una llamada de consulta.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 import CertifiedData "mo:base/CertifiedData";
 // Must be in a query call
 
 CertifiedData.getCertificate();
 ```
-See a full example on how to use certified variables here: https://github.com/dfinity/examples/tree/master/motoko/cert-var
 
+Consulta un ejemplo completo sobre cómo utilizar variables certificadas aquí:
+https://github.com/dfinity/examples/tree/master/motoko/cert-var

@@ -1,22 +1,30 @@
 # ExperimentalInternetComputer
-Low-level interface to the Internet Computer.
 
-**WARNING:** This low-level API is **experimental** and likely to change or even disappear.
+Interfaz de bajo nivel para el Internet Computer.
 
-## Value `call`
-``` motoko no-repl
+**ADVERTENCIA:** Esta API de bajo nivel es **experimental** y es probable que
+cambie o incluso desaparezca.
+
+## Valor `call`
+
+```motoko no-repl
 let call : (canister : Principal, name : Text, data : Blob) -> async (reply : Blob)
 ```
 
-Calls ``canister``'s update or query function, `name`, with the binary contents of `data` as IC argument.
-Returns the response to the call, an IC _reply_ or _reject_, as a Motoko future:
+Llama a la función de actualización o consulta del `canister`, `name`, con el
+contenido binario de `data` como argumento de IC. Devuelve la respuesta a la
+llamada, una respuesta o rechazo de IC, como un futuro de Motoko:
 
-* The message data of an IC reply determines the binary contents of `reply`.
-* The error code and textual message data of an IC reject determines the future's `Error` value.
+- Los datos del mensaje de una respuesta de IC determinan el contenido binario
+  de `reply`.
+- El código de error y los datos de mensaje de texto de un rechazo de IC
+  determinan el valor `Error` del futuro.
 
-Note: `call` is an asynchronous function and can only be applied in an asynchronous context.
+Nota: `call` es una función asíncrona y solo se puede aplicar en un contexto
+asíncrono.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 import IC "mo:base/ExperimentalInternetComputer";
 import Principal "mo:base/Principal";
@@ -26,26 +34,32 @@ let method = "decimals";
 let input = ();
 type OutputType = { decimals : Nat32 };
 
-let rawReply = await IC.call(ledger, method, to_candid(input)); // serialized Candid
+let rawReply = await IC.call(ledger, method, to_candid(input)); // Candid serializado
 let output : ?OutputType = from_candid(rawReply); // { decimals = 8 }
 ```
 
-[Learn more about Candid serialization](https://internetcomputer.org/docs/current/motoko/main/reference/language-manual#candid-serialization)
+[Aprende más sobre la serialización de Candid](https://internetcomputer.org/docs/current/motoko/main/reference/language-manual#candid-serialization)
 
-## Function `countInstructions`
-``` motoko no-repl
+## Función `countInstructions`
+
+```motoko no-repl
 func countInstructions(comp : () -> ()) : Nat64
 ```
 
-Given computation, `comp`, counts the number of actual and (for IC system calls) notional WebAssembly
-instructions performed during the execution of `comp()`.
+Dada una computación, `comp`, cuenta el número de instrucciones reales y (para
+llamadas del sistema de IC) instrucciones notacionales de WebAssembly realizadas
+durante la ejecución de `comp()`.
 
-More precisely, returns the difference between the state of the IC instruction counter (_performance counter_ `0`) before and after executing `comp()`
-(see [Performance Counter](https://internetcomputer.org/docs/current/references/ic-interface-spec#system-api-performance-counter)).
+Más precisamente, devuelve la diferencia entre el estado del contador de
+instrucciones de IC (_contador de rendimiento_ `0`) antes y después de ejecutar
+`comp()` (consultar
+[Performance Counter](https://internetcomputer.org/docs/current/references/ic-interface-spec#system-api-performance-counter)).
 
-NB: `countInstructions(comp)` will _not_ account for any deferred garbage collection costs incurred by `comp()`.
+NB: `countInstructions(comp)` no tendrá en cuenta los costos de recolección de
+basura diferida incurridos por `comp()`.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 import IC "mo:base/ExperimentalInternetComputer";
 
@@ -54,27 +68,35 @@ let count = IC.countInstructions(func() {
 });
 ```
 
-## Value `performanceCounter`
-``` motoko no-repl
+## Valor `performanceCounter`
+
+```motoko no-repl
 let performanceCounter : (counter : Nat32) -> (value : Nat64)
 ```
 
-Returns the current value of IC _performance counter_ `counter`.
+Devuelve el valor actual del _contador de rendimiento_ de IC `counter`.
 
-* Counter `0` is the _current execution instruction counter_, counting instructions only since the beginning of the current IC message.
-  This counter is reset to value `0` on shared function entry and every `await`.
-  It is therefore only suitable for measuring the cost of synchronous code.
+- El contador `0` es el _contador de instrucciones de ejecución actual_, que
+  cuenta solo las instrucciones desde el inicio del mensaje de IC actual. Este
+  contador se restablece al valor `0` en la entrada de la función compartida y
+  en cada `await`. Por lo tanto, solo es adecuado para medir el costo de código
+  síncrono.
 
-* Counter `1` is the _call context instruction counter_  for the current shared function call.
-  For replicated message executing, this excludes the cost of nested IC calls (even to the current canister).
-  For non-replicated messages, such as composite queries, it includes the cost of nested calls.
-  The current value of this counter is preserved across `awaits` (unlike counter `0`).
+- El contador `1` es el _contador de instrucciones de contexto de llamada_ para
+  la llamada actual de la función compartida. Para mensajes replicados en
+  ejecución, esto excluye el costo de llamadas anidadas de IC (incluso al
+  canister actual). Para mensajes no replicados, como consultas compuestas,
+  incluye el costo de llamadas anidadas. El valor actual de este contador se
+  conserva a través de `awaits` (a diferencia del contador `0`).
 
-* The function (currently) traps if `counter` >= 2.
+- La función (actualmente) genera una excepción si `counter` >= 2.
 
-Consult [Performance Counter](https://internetcomputer.org/docs/current/references/ic-interface-spec#system-api-performance-counter) for details.
+Consultar
+[Performance Counter](https://internetcomputer.org/docs/current/references/ic-interface-spec#system-api-performance-counter)
+para más detalles.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 import IC "mo:base/ExperimentalInternetComputer";
 
@@ -83,11 +105,13 @@ work();
 let diff : Nat64 = IC.performanceCounter(1) - c1;
 ```
 
-## Function `replyDeadline`
-``` motoko no-repl
+## Función `replyDeadline`
+
+```motoko no-repl
 func replyDeadline() : Nat
 ```
 
-Returns the time (in nanoseconds from the epoch start) by when the update message should
-reply to the best effort message so that it can be received by the requesting canister.
-Queries and non-best-effort update messages return zero.
+Devuelve el tiempo (en nanosegundos desde el inicio de la época) en el que el
+mensaje de actualización debe responder al mensaje de mejor esfuerzo para que
+pueda ser recibido por el canister solicitante. Las consultas y los mensajes de
+actualización no de mejor esfuerzo devuelven cero.
