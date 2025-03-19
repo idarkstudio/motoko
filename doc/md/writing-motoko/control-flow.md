@@ -2,43 +2,58 @@
 sidebar_position: 8
 ---
 
-# Control flow
+# Control de flujo (flow control)
 
+Existen dos categorías clave de control de flujo:
 
+- **Declarativo**: La estructura de algún valor guía tanto el control como la
+  selección de la siguiente expresión a evaluar, como en las expresiones `if` y
+  `switch`.
 
-There are two key categories of control flow:
+- **Imperativo**: El control cambia abruptamente según el comando del
+  programador, abandonando el control de flujo regular. Ejemplos son `break` y
+  `continue`, pero también `return` y `throw`.
 
--   **Declarative** : The structure of some value guides both control and the selection of the next expression to evaluate, such as in `if` and `switch` expressions.
+El control de flujo imperativo a menudo va de la mano con cambios de estado y
+otros efectos secundarios, como el manejo de errores y la entrada/salida.
 
--   **Imperative** : Control changes abruptly according to a programmer’s command, abandoning regular control flow. Examples are `break` and `continue`, but also `return` and `throw`.
+## Retorno temprano de `func`
 
-Imperative control flow often goes hand-in-hand with state changes and other side effects, such as error handling and input/output.
+Normalmente, el resultado de una función es el valor de su cuerpo. A veces,
+durante la evaluación del cuerpo, el resultado está disponible antes de que
+termine la evaluación. En tales situaciones, se puede utilizar la construcción
+`return <exp>` para abandonar el resto de la computación y salir inmediatamente
+de la función con un resultado. De manera similar, donde esté permitido, se
+puede usar `throw` para abandonar una computación con un error.
 
-## Early `return` from `func`
-
-Typically, the result of a function is the value of its body. Sometimes, during evaluation of the body, the result is available before the end of evaluation. In such situations the `return <exp>` construct can be used to abandon the rest of the computation and immediately exit the function with a result. Similarly, where permitted, `throw` may be used to abandon a computation with an error.
-
-When a function has unit result type, the shorthand `return` may be used instead of the equivalent `return ()`.
+Cuando una función tiene un tipo de resultado unitario, se puede utilizar la
+forma abreviada `return` en lugar de `return ()` equivalente.
 
 ## Loops and labels
 
-Motoko provides several kinds of repetition constructs, including:
+Motoko proporciona varios tipos de estructuras de repetición, incluyendo:
 
--   `for` expressions for iterating over members of structured data.
+- Expresiones `for` para iterar sobre miembros de datos estructurados.
 
--   `loop` expressions for programmatic repetition, optionally with termination condition.
+- Expresiones `loop` para repetición programática, opcionalmente con una
+  condición de terminación.
 
--   `while` loops for programmatic repetition with entry condition.
+- Bucles `while` para repetición programática con una condición de entrada.
 
-Any of these can be prefixed with a `label <name>` qualifier to give the loop a symbolic name. Named loops are useful for imperatively changing control flow to continue from the entry or exit of the named loop, such as:
+Cualquiera de estos puede ser precedido por un calificador `label <nombre>` para
+darle al bucle un nombre simbólico. Los bucles con nombre son útiles para
+cambiar el flujo de control de manera imperativa para continuar desde la entrada
+o salida del bucle con nombre, como:
 
--   Re-entering the loop with `continue <name>`.
+- Reingresar al bucle con `continue <nombre>`.
 
--   Exiting the loop altogether with `break <name>`.
+- Salir completamente del bucle con `break <nombre>`.
 
-In the following example, the `for` expression loops over characters of some text and abandons iteration as soon as an exclamation sign is encountered.
+En el siguiente ejemplo, la expresión `for` itera sobre los caracteres de un
+texto y abandona la iteración tan pronto como se encuentra un signo de
+exclamación.
 
-``` motoko
+```motoko
 import Debug "mo:base/Debug";
 label letters for (c in "ran!!dom".chars()) {
   Debug.print(debug_show(c));
@@ -49,17 +64,27 @@ label letters for (c in "ran!!dom".chars()) {
 
 ### Labeled expressions
 
-There are two other facets to `label`​s that are less mainstream, but come in handy in certain situations:
+Hay otros dos aspectos de las etiquetas (`label`) que son menos comunes, pero
+que resultan útiles en ciertas situaciones:
 
--   `label`​s can be typed.
+- Las `label` pueden tener tipos.
 
--   Any expression, not just loops, can be named by prefixing it with a label. `break` allows one to short-circuit the expression’s evaluation by providing an immediate value for its result. This is similar to exiting a function early using `return`, but without the overhead of declaring and calling a function.
+- Cualquier expresión, no solo los bucles, puede ser nombrada prefijándola con
+  una etiqueta. `break` permite cortocircuitar la evaluación de la expresión al
+  proporcionar un valor inmediato para su resultado. Esto es similar a salir de
+  una función tempranamente usando `return`, pero sin la sobrecarga de declarar
+  y llamar a una función.
 
-The syntax for type-annotated labels is `label <name> : <type> <expr>`, signifying that any expression can be exited using a `break <name> <alt-expr>` construct that returns the value of `<alt-expr>` as the value of `<expr>`, short-circuiting evaluation of `<expr>`.
+La sintaxis para etiquetas con anotación de tipos es
+`label <nombre> : <tipo> <expr>`, lo que significa que cualquier expresión puede
+ser salida usando una construcción `break <nombre> <expr-alternativa>` que
+devuelve el valor de `<expr-alternativa>` como el valor de `<expr>`,
+cortocircuitando la evaluación de `<expr>`.
 
-Judicious use of these constructs allows the programmer to focus on the primary program logic and handle exceptional case via `break`.
+El uso juicioso de estas construcciones permite al programador centrarse en la
+lógica principal del programa y manejar casos excepcionales mediante `break`.
 
-``` motoko
+```motoko
 import Text "mo:base/Text";
 import Iter "mo:base/Iter";
 
@@ -77,56 +102,86 @@ let address = label exit : ?(Text, Host) {
 }
 ```
 
-Labeled common expressions don’t allow `continue`. In terms of typing, both `<expr>` and `<alt-expr>`​'s types must conform with the label’s declared `<type>`. If a label is only given a `<name>`, then its `<type>` defaults to unit (`()`). Similarly a `break` without an `<alt-expr>` is shorthand for the value unit (`()`).
+Las expresiones comunes etiquetadas no permiten `continue`. En términos de
+tipado, tanto `<expr>` como `<expr-alternativa>` deben ajustarse al tipo
+declarado de la etiqueta (`<tipo>`). Si a una etiqueta solo se le da un
+`<nombre>`, entonces su `<tipo>` por defecto es unitario (`()`). De manera
+similar, un `break` sin una `<expr-alternativa>` es una abreviatura para el
+valor unitario (`()`).
 
-## Option blocks and null breaks
+## Bloques de opciones y rupturas con `null`
 
-Motoko lets you opt in to `null` values, tracking possible occurrences of `null` values using option types of the form `?T`. This is both to encourage you to avoid using `null` values when possible, and to consider the possibility of `null` values when necessary. Motoko simplifies the handling of option types with some dedicated syntax: option blocks and null breaks.
+Motoko te permite optar por usar valores `null`, rastreando posibles ocurrencias
+de valores `null` utilizando tipos de opción de la forma `?T`. Esto es tanto
+para animarte a evitar el uso de valores `null` cuando sea posible, como para
+considerar la posibilidad de valores `null` cuando sea necesario. Motoko
+simplifica el manejo de tipos de opción con una sintaxis dedicada: bloques de
+opciones y rupturas con `null`.
 
-The option block, `do ? <block>`, produces a value of type `?T`, when block `<block>` has type `T` and, importantly, introduces the possibility of a break from `<block>`. Within a `do ? <block>`, the null break `<exp> !`, tests whether the result of the expression, `<exp>`, of unrelated option type, `?U`, is `null`. If the result `<exp>` is `null`, control immediately exits the `do ? <block>` with value `null`. Otherwise, the result of `<exp>` must be an option value `?v`, and evaluation of `<exp> !` proceeds with its contents, `v` of type `U`.
+El bloque de opción, `do ? <bloque>`, produce un valor de tipo `?T` cuando el
+bloque `<bloque>` tiene tipo `T` y, lo que es más importante, introduce la
+posibilidad de una ruptura desde `<bloque>`. Dentro de un `do ? <bloque>`, la
+ruptura con `null` `<exp> !` verifica si el resultado de la expresión, `<exp>`,
+de tipo de opción no relacionado, `?U`, es `null`. Si el resultado de `<exp>` es
+`null`, el control sale inmediatamente del `do ? <bloque>` con el valor `null`.
+De lo contrario, el resultado de `<exp>` debe ser un valor de opción `?v`, y la
+evaluación de `<exp> !` procede con su contenido, `v` de tipo `U`.
 
-The following example defines a simple function that evaluates expressions built from natural numbers, division and a zero test, encoded as a variant type:
+El siguiente ejemplo define una función simple que evalúa expresiones
+construidas a partir de números naturales, división y una prueba de cero,
+codificada como un tipo variante:
 
 <!--
 TODO: make interactive
 -->
 
-``` motoko file=../examples/option-block.mo
+```motoko file=../examples/option-block.mo
+
 ```
 
-To guard against division by `0` without trapping, the `eval` function returns an option result, using `null` to indicate failure.
+Para protegerse contra la división por `0` sin atrapar, la función `eval`
+devuelve un resultado opcional, utilizando `null` para indicar un fallo.
 
-Each recursive call is checked for `null` using `!`, immediately exiting the outer `do ? block`, and then the function itself, when a result is `null`.
+Cada llamada recursiva se verifica si es `null` usando `!`, saliendo
+inmediatamente del bloque externo `do ?`, y luego de la función misma, cuando el
+resultado es `null`.
 
-## Repetition with `loop`
+## Repetición con `loop`
 
-The simplest way to indefinitely repeat a sequence of imperative expressions is by using a `loop` construct:
+La forma más sencilla de repetir indefinidamente una secuencia de expresiones
+imperativas es utilizando la construcción `loop`:
 
-``` motoko no-repl
+```motoko no-repl
 loop { <expr1>; <expr2>; ... }
 ```
 
-The loop can only be abandoned with a `return` or `break` construct.
+El bucle solo puede ser abandonado con una construcción `return` o `break`.
 
-A re-entry condition can be affixed to allow a conditional repetition of the loop with `loop <body> while <cond>`.
+Se puede agregar una condición de reingreso para permitir una repetición
+condicional del bucle con `loop <body> while <cond>`.
 
-The body of such a loop is always executed at least once.
+El cuerpo de dicho bucle siempre se ejecuta al menos una vez.
 
-## `while` loops with precondition
+## Bucles `while` con precondición
 
-Sometimes an entry condition is needed to guard each iteration of a loop. For this kind of repetition use the `while <cond> <body>` form of loop:
+A veces se necesita una condición de entrada para proteger cada iteración de un
+bucle. Para este tipo de repetición, utiliza la forma `while <cond> <body>` del
+bucle:
 
-``` motoko no-repl
+```motoko no-repl
 while (earned < need) { earned += earn() };
 ```
 
-Unlike a `loop`, the body of a `while` loop may never be executed.
+A diferencia de un `loop`, el cuerpo de un bucle `while` puede que nunca se
+ejecute.
 
-## `for` loops for iteration
+## Bucles `for` para iteración
 
-An iteration over elements of some homogeneous collection can be performed using a `for` loop. The values are drawn from an iterator and bound to the loop pattern in turn.
+Una iteración sobre elementos de una colección homogénea se puede realizar
+utilizando un bucle `for`. Los valores se extraen de un iterador y se enlazan
+con el patrón del bucle en cada iteración.
 
-``` motoko
+```motoko
 let carsInStock = [
   ("Buick", 2020, 23.000),
   ("Toyota", 2019, 17.500),
@@ -139,13 +194,15 @@ for ((model, year, price) in carsInStock.values()) {
 inventory
 ```
 
-## Using `range` with a `for` loop
+## Usando `range` con un bucle `for`
 
-The `range` function produces an iterator of type `Iter<Nat>` with the given lower and upper bound, inclusive.
+La función `range` produce un iterador de tipo `Iter<Nat>` con el límite
+inferior y superior dados, inclusivos.
 
-The following loop example prints the numbers `0` through `10` over its eleven iterations:
+El siguiente ejemplo de bucle imprime los números `0` a `10` en sus once
+iteraciones:
 
-``` motoko
+```motoko
 import Iter "mo:base/Iter";
 import Debug "mo:base/Debug";
 var i = 0;
@@ -157,50 +214,59 @@ for (j in Iter.range(0, 10)) {
 assert(i == 11);
 ```
 
-More generally, the function `range` is a `class` that constructs iterators over sequences of natural numbers. Each such iterator has type `Iter<Nat>`.
+Más generalmente, la función `range` es una `class` que construye iteradores
+sobre secuencias de números naturales. Cada iterador de este tipo tiene el tipo
+`Iter<Nat>`.
 
-As a constructor function, `range` has a function type:
+Como una función constructora, `range` tiene un tipo de función:
 
-``` motoko no-repl
+```motoko no-repl
 (lower : Nat, upper : Int) -> Iter<Nat>
 ```
 
-`Iter<Nat>` is an iterator object type with a `next` method that produces optional elements, each of type `?Nat`:
+`Iter<Nat>` es un tipo de objeto iterador con un método `next` que produce
+elementos opcionales, cada uno de tipo `?Nat`:
 
-``` motoko no-repl
+```motoko no-repl
 type Iter<A> = {next : () -> ?A};
 ```
 
-For each invocation, `next` returns an optional element of type `?Nat`.
+Para cada invocación, `next` devuelve un elemento opcional de tipo `?Nat`.
 
-The value `null` indicates that the iteration sequence has terminated.
+El valor `null` indica que la secuencia de iteración ha terminado.
 
-Until reaching `null`, each non-`null` value, of the form `?n` for some number `n`, contains the next successive element in the iteration sequence.
+Hasta llegar a `null`, cada valor no nulo, de la forma `?n` para algún número
+`n`, contiene el siguiente elemento sucesivo en la secuencia de iteración.
 
-## Using `revRange`
+## Usando `revRange`
 
-The function `revRange` is a `class` that constructs iterators, each of type `Iter<Int>`. As a constructor function, it has a function type:
+La función `revRange` es una `class` que construye iteradores, cada uno de tipo
+`Iter<Int>`. Como una función constructora, tiene un tipo de función:
 
-``` motoko no-repl
+```motoko no-repl
 (upper : Int, lower : Int) -> Iter<Int>
 ```
 
-Unlike `range`, the `revRange` function descends in its iteration sequence, from an initial upper bound to a final lower bound.
+A diferencia de `range`, la función `revRange` desciende en su secuencia de
+iteración, desde un límite superior inicial hasta un límite inferior final.
 
-## Using iterators of specific data structures
+## Usando iteradores de estructuras de datos específicas
 
-Many built-in data structures come with pre-defined iterators. Below table lists them
+Muchas estructuras de datos integradas vienen con iteradores predefinidos. La
+siguiente tabla los enumera:
 
-| Type      | Name                  | Iterator | Elements                  | Element type |
-|-----------|-----------------------|----------|---------------------------|--------------|
-| `[T]`     | Array of `T`​s         | `vals`   | The array’s members       | `T`          |
-| `[T]`     | Array of `T`​s         | `keys`   | The array’s valid indices | [`Nat`](../base/Nat.md)        |
-| `[var T]` | Mutable array of `T`​s | `vals`   | The array’s members       | `T`          |
-| `[var T]` | Mutable array of `T`​s | `keys`   | The array’s valid indices | [`Nat`](../base/Nat.md)        |
-| [`Text`](../base/Text.md)    | Text                  | `chars`  | The text’s characters     | `Char`       |
-| [`Blob`](../base/Blob.md)    | Blob                  | `vals`   | The blob’s bytes          | [`Nat8`](../base/Nat8.md)       |
+| Tipo                      | Nombre                   | Iterador | Elementos                       | Tipo de elemento          |
+| ------------------------- | ------------------------ | -------- | ------------------------------- | ------------------------- |
+| `[T]`                     | Arreglo de `T`​s         | `vals`   | Los miembros del arreglo        | `T`                       |
+| `[T]`                     | Arreglo de `T`​s         | `keys`   | Los índices válidos del arreglo | [`Nat`](../base/Nat.md)   |
+| `[var T]`                 | Arreglo mutable de `T`​s | `vals`   | Los miembros del arreglo        | `T`                       |
+| `[var T]`                 | Arreglo mutable de `T`​s | `keys`   | Los índices válidos del arreglo | [`Nat`](../base/Nat.md)   |
+| [`Text`](../base/Text.md) | Texto                    | `chars`  | Los caracteres del texto        | `Char`                    |
+| [`Blob`](../base/Blob.md) | Blob                     | `vals`   | Los bytes del blob              | [`Nat8`](../base/Nat8.md) |
 
-
-User-defined data structures can define their own iterators. As long they conform with the `Iter<A>` type for some element type `A`, these behave like the built-in ones and can be consumed with ordinary `for`-loops.
+Las estructuras de datos definidas por el usuario pueden definir sus propios
+iteradores. Siempre que se ajusten al tipo `Iter<A>` para algún tipo de elemento
+`A`, estos se comportan como los integrados y pueden consumirse con bucles `for`
+ordinarios.
 
 <img src="https://github.com/user-attachments/assets/844ca364-4d71-42b3-aaec-4a6c3509ee2e" alt="Logo" width="150" height="150" />

@@ -2,19 +2,22 @@
 sidebar_position: 17
 ---
 
-# Mutable state
+# Estado mutable
 
+Cada actor en Motoko puede usar, pero nunca compartir directamente, estado
+mutable interno.
 
+Los datos inmutables pueden ser [compartidos entre actores](sharing.md), y
+también manejados a través de los puntos de entrada externos de cada uno, que
+funcionan como funciones compartibles. A diferencia de los datos compartibles,
+una invariante clave del diseño de Motoko es que los datos mutables se mantienen
+privados para el actor que los asigna y nunca se comparten de forma remota.
 
-Each actor in Motoko may use, but may never directly share, internal mutable state.
+## Variables inmutables vs mutables
 
-Immutable data can be [shared among actors](sharing.md), and also handled through each other's external entry points which serve as shareable functions. Unlike shareable data, a key Motoko design invariant is that mutable data is kept private to the actor that allocates it and is never shared remotely.
+La sintaxis `var` declara variables mutables en un bloque de declaración:
 
-## Immutable vs mutable variables
-
-The `var` syntax declares mutable variables in a declaration block:
-
-``` motoko name=init
+```motoko name=init
 let text  : Text = "abc";
 let num  : Nat = 30;
 
@@ -22,141 +25,204 @@ var pair : (Text, Nat) = (text, num);
 var text2 : Text = text;
 ```
 
-The declaration list above declares four variables. The first two variables (`text` and `num`) are lexically-scoped, immutable variables. The final two variables (`pair` and `text2`) are lexically-scoped, mutable variables.
+La lista de declaraciones anterior declara cuatro variables. Las dos primeras
+variables (`text` y `num`) son variables inmutables con alcance léxico. Las dos
+variables finales (`pair` y `text2`) son variables mutables con alcance léxico.
 
-## Assignment to mutable memory
+## Asignación a memoria mutable
 
-Mutable variables permit assignment and immutable variables do not.
+Las variables mutables permiten la asignación y las variables inmutables no.
 
-If you try to assign new values to either [`Text`](../base/Text.md) or `num` above, you will get static type errors because these variables are immutable.
+Si intentas asignar nuevos valores a [`Text`](../base/Text.md) o `num`
+anteriores, obtendrás errores de tipo estático porque estas variables son
+inmutables.
 
-You may freely update the value of mutable variables `pair` and `text2` using the syntax for assignment, written as `:=`, as follows:
+Puedes actualizar libremente el valor de las variables mutables `pair` y `text2`
+utilizando la sintaxis de asignación, escrita como `:=`, de la siguiente manera:
 
-``` motoko no-repl
+```motoko no-repl
 text2 := text2 # "xyz";
 pair := (text2, pair.1);
 pair
 ```
 
-In the example above, each variable is updated based on applying a simple update rule to their current values. Likewise, an actor processes some calls by performing updates on its private mutable variables, using the same assignment syntax as above.
+En el ejemplo anterior, cada variable se actualiza en función de aplicar una
+regla de actualización simple a sus valores actuales. Del mismo modo, un actor
+procesa algunas llamadas realizando actualizaciones en sus variables mutables
+privadas, utilizando la misma sintaxis de asignación que se muestra arriba.
 
-### Special assignment operations
+### Operaciones de asignación especial
 
-The assignment operation `:=` is general and works for all types.
+La operación de asignación `:=` es general y funciona para todos los tipos.
 
-Motoko includes special assignment operations that combine assignment with a binary operation. The assigned value uses the binary operation on a given operand and the current contents of the assigned variable.
+Motoko incluye operaciones de asignación especial que combinan la asignación con
+una operación binaria. El valor asignado utiliza la operación binaria en un
+operando dado y el contenido actual de la variable asignada.
 
-For example, numbers permit a combination of assignment and addition:
+Por ejemplo, los números permiten una combinación de asignación y suma:
 
-``` motoko
+```motoko
 var num2 = 2;
 num2 += 40;
 num2
 ```
 
-After the second line, the variable `num2` holds `42`, as one would expect.
+Después de la segunda línea, la variable `num2` contiene `42`, como se
+esperaría.
 
-Motoko includes other combinations as well. For example, we can rewrite the line above that updates `text2` more concisely as:
+Motoko también incluye otras combinaciones. Por ejemplo, podemos reescribir la
+línea anterior que actualiza `text2` de manera más concisa como:
 
-``` motoko no-repl
+```motoko no-repl
 text2 #= "xyz";
 text2
 ```
 
-As with `+=`, this combined form avoids repeating the assigned variable’s name on the right hand side of the special assignment operator `#=`.
+Como con `+=`, esta forma combinada evita repetir el nombre de la variable
+asignada en el lado derecho del operador de asignación especial `#=`.
 
-The full table of [assignment operators](../reference/language-manual#assignment-operators) lists numerical, logical, and textual operations over appropriate types number, boolean and text values, respectively.
+La tabla completa de
+[operadores de asignación](../reference/language-manual#assignment-operators)
+enumera operaciones numéricas, lógicas y de texto sobre tipos apropiados como
+números, booleanos y valores de texto, respectivamente.
 
-## Reading from mutable memory
+## Lectura desde memoria mutable
 
-Once you have updated each variable, you must read from the mutable contents. This does not require a special syntax.
+Una vez que hayas actualizado cada variable, debes leer desde los contenidos
+mutables. Esto no requiere una sintaxis especial.
 
-Each use of a mutable variable looks like the use of an immutable variable, but does not act like one. In fact, its meaning is more complex. As in many other language, the syntax of each use hides the memory effect that accesses the memory cell identified by that variable and gets its current value. Other languages from functional traditions generally expose these effects syntactically.
+Cada uso de una variable mutable se ve como el uso de una variable inmutable,
+pero no actúa como tal. De hecho, su significado es más complejo. Como en muchos
+otros lenguajes, la sintaxis de cada uso oculta el efecto de memoria que accede
+a la celda de memoria identificada por esa variable y obtiene su valor actual.
+Otros lenguajes de tradiciones funcionales generalmente exponen estos efectos
+sintácticamente.
 
-## `var` vs `let` bound variables
+## Variables vinculadas con `var` vs `let`
 
-Consider the following two variable declarations, which look similar:
+Considera las siguientes dos declaraciones de variables, que se ven similares:
 
-``` motoko
+```motoko
 let x : Nat = 0
 ```
 
-``` motoko
+```motoko
 var x : Nat = 0
 ```
 
-The only difference in their syntax is the use of keyword `let` versus `var` to define the variable `x`, which in each case the program initializes to `0`.
+La única diferencia en su sintaxis es el uso de la palabra clave `let` frente a
+`var` para definir la variable `x`, que en cada caso el programa inicializa en
+`0`.
 
-However, these programs carry different meanings, and in the context of larger programs, the difference in meanings will impact the meaning of each occurrence of `x`.
+Sin embargo, estos programas tienen significados diferentes, y en el contexto de
+programas más grandes, la diferencia en los significados afectará el significado
+de cada aparición de `x`.
 
-For the first program, which uses `let`, each such occurrence means `0`. Replacing each occurrence with `0` will not change the meaning of the program.
+Para el primer programa, que usa `let`, cada aparición de `x` significa `0`.
+Reemplazar cada aparición con `0` no cambiará el significado del programa.
 
-For the second program, which uses `var`, each occurrence means “read and produce the current value of the mutable memory cell named `x`.” In this case, each occurrence’s value is determined by the dynamic state of the contents of the mutable memory cell named `x`.
+Para el segundo programa, que usa `var`, cada aparición significa "lee y produce
+el valor actual de la celda de memoria mutable llamada `x`". En este caso, el
+valor de cada aparición está determinado por el estado dinámico del contenido de
+la celda de memoria mutable llamada `x`.
 
-As one can see from the definitions above, there is a fundamental contrast between the meanings of `let`-bound and `var`-bound variables.
+Como se puede ver en las definiciones anteriores, existe un contraste
+fundamental entre los significados de las variables vinculadas con `let` y las
+vinculadas con `var`.
 
-In large programs, both kinds of variables can be useful, and neither kind serves as a good replacement for the other. However, `let`-bound variables are more fundamental.
+En programas grandes, ambos tipos de variables pueden ser útiles, y ninguno de
+los dos sirve como un buen reemplazo para el otro. Sin embargo, las variables
+vinculadas con `let` son más fundamentales.
 
-For instance, instead of declaring `x` as a mutable variable initially holding `0`, you could instead use `y`, an immutable variable that denotes a mutable array with one entry holding `0`:
+Por ejemplo, en lugar de declarar `x` como una variable mutable que inicialmente
+contiene `0`, podrías usar `y`, una variable inmutable que denota un arreglo
+mutable con una entrada que contiene `0`:
 
-``` motoko
+```motoko
 var x : Nat       = 0 ;
 let y : [var Nat] = [var 0] ;
 ```
 
-The read and write syntax required for this encoding reuses that of mutable arrays, which is not as readable as that of `var`-bound variables. As such, the reads and writes of variable `x` will be easier to read than those of variable `y`.
+La sintaxis de lectura y escritura requerida para esta codificación reutiliza la
+de los arreglos mutables, lo cual no es tan legible como la de las variables
+vinculadas con `var`. Por ello, las lecturas y escrituras de la variable `x`
+serán más fáciles de leer que las de la variable `y`.
 
-For this practical reason and others, `var`-bound variables are a core aspect of the language's design.
+Por esta razón práctica y otras, las variables vinculadas con `var` son un
+aspecto central del diseño del lenguaje.
 
-## Immutable arrays
+## Arreglos inmutables
 
-Before discussing [mutable arrays](#mutable-arrays), we introduce immutable arrays, which share the same projection syntax but do not permit mutable updates after allocation.
+Antes de discutir los [arreglos (arrays) mutables](#arreglos-mutables),
+presentamos los arreglos inmutables, que comparten la misma sintaxis de
+proyección pero no permiten actualizaciones mutables después de la asignación.
 
-### Allocate an immutable array of constants
+### Asignar un arreglo inmutable de constantes
 
-``` motoko
+```motoko
 let a : [Nat] = [1, 2, 3] ;
 ```
 
-The array `a` above holds three natural numbers, and has type `[Nat]`. In general, the type of an immutable array is `[_]`, using square brackets around the type of the array’s elements, which must share a single common type.
+El array `a` anterior contiene tres números naturales y tiene el tipo `[Nat]`.
+En general, el tipo de un array inmutable es `[_]`, utilizando corchetes
+cuadrados alrededor del tipo de los elementos del array, los cuales deben
+compartir un único tipo común.
 
-### Read from an array index
+### Leer desde un índice de un array
 
-You can read from an array using the usual bracket syntax of `[` and `]` around the index you want to access:
+Puedes leer desde un array utilizando la sintaxis habitual de corchetes `[` y
+`]` alrededor del índice que deseas acceder:
 
-``` motoko no-repl
+```motoko no-repl
 let x : Nat = a[2] + a[0] ;
 ```
 
-Every array access in Motoko is safe. Accesses that are out of bounds will not access memory unsafely, but instead will cause the program to trap as with an [assertion](../getting-started/basic-concepts#traps) failure.
+Cada acceso a un arreglo en Motoko es seguro. Los accesos que están fuera de los
+límites no accederán a la memoria de manera insegura, sino que harán que el
+programa falle como con una falla de
+[assertion](../getting-started/basic-concepts#errores-traps).
 
-## The [`Array`](../base/Array.md) module
+## El módulo [`Array`](../base/Array.md)
 
-The Motoko standard library provides basic operations for immutable and mutable arrays. It can be imported as follows:
+La biblioteca estándar de Motoko proporciona operaciones básicas para arreglos
+inmutables y mutables. Puede ser importada de la siguiente manera:
 
-``` motoko no-repl
+```motoko no-repl
 import Array "mo:base/Array";
 ```
 
-For more information about using arrays, see the [array](../base/Array.md) library descriptions.
+Para obtener más información sobre el uso de arreglos, consulta las
+descripciones de la biblioteca [array](../base/Array.md).
 
-### Allocate an immutable array with varying content
+### Asignar un arreglo inmutable con contenido variable
 
-Each new array allocated by a program will contain a varying number of elements. Without mutation, you need a way to specify this family of elements all at once in the argument to allocation.
+Cada nuevo arreglo asignado por un programa contendrá un número variable de
+elementos. Sin mutación, necesitas una forma de especificar esta familia de
+elementos de una vez en el argumento de asignación.
 
-To accommodate this need, the Motoko language provides the higher-order array allocation function `Array.tabulate`, which allocates a new array by consulting a user-provided generation function, `gen`,for each element.
+Para satisfacer esta necesidad, el lenguaje Motoko proporciona la función de
+asignación de arreglos de orden superior `Array.tabulate`, que asigna un nuevo
+arreglo consultando una función de generación proporcionada por el usuario,
+`gen`, para cada elemento.
 
-``` motoko no-repl
+```motoko no-repl
 func tabulate<T>(size : Nat,  gen : Nat -> T) : [T]
 ```
 
-Function `gen` specifies the array as a function value of arrow type `Nat → T`, where `T` is the final array element type.
+La función `gen` especifica el arreglo como un valor de función de tipo flecha
+`Nat → T`, donde `T` es el tipo final de los elementos del arreglo.
 
-The function `gen` actually functions as the array during its initialization. It receives the index of the array element and produces the element of type `T` that should reside at that index in the array. The allocated output array populates itself based on this specification.
+La función `gen` en realidad funciona como el arreglo durante su inicialización.
+Recibe el índice del elemento del arreglo y produce el elemento de tipo `T` que
+debe residir en ese índice del arreglo. El arreglo de salida asignado se popula
+en función de esta especificación.
 
-For instance, you can first allocate `array1` consisting of some initial constants, then functionally update some of the indices by changing them in a pure, functional way, to produce `array2`, a second array that does not destroy the first.
+Por ejemplo, puedes primero asignar `array1` que consiste en algunas constantes
+iniciales, luego actualizar funcionalmente algunos de los índices cambiándolos
+de manera pura y funcional, para producir `array2`, un segundo arreglo que no
+destruye el primero.
 
-``` motoko no-repl
+```motoko no-repl
 let array1 : [Nat] = [1, 2, 3, 4, 6, 7, 8] ;
 
 let array2 : [Nat] = Array.tabulate<Nat>(7, func(i:Nat) : Nat {
@@ -165,57 +231,83 @@ let array2 : [Nat] = Array.tabulate<Nat>(7, func(i:Nat) : Nat {
   }) ;
 ```
 
-Even though we changed `array1` into `array2` in a functional sense, notice that both arrays and both variables are immutable.
+Aunque cambiamos `array1` a `array2` en un sentido funcional, observa que ambos
+arreglos y ambas variables son inmutables.
 
-## Mutable arrays
+## Arreglos mutables
 
-Each mutable array in Motoko introduces private mutable actor state.
+Cada arreglo mutable en Motoko introduce un estado mutable privado del actor.
 
-Because Motoko’s type system enforces that remote actors do not share their mutable state, the Motoko type system introduces a firm distinction between mutable and immutable arrays that impacts typing, subtyping, and the language abstractions for asynchronous communication.
+Debido a que el sistema de tipos de Motoko asegura que los actores remotos no
+compartan su estado mutable, el sistema de tipos de Motoko introduce una
+distinción clara entre arreglos mutables e inmutables que impacta en la
+tipificación, subtipificación y las abstracciones del lenguaje para la
+comunicación asíncrona.
 
-Locally, the mutable arrays can not be used in places that expect immutable ones, since Motoko’s definition of [subtyping](../reference/language-manual#subtyping) for arrays correctly distinguishes those cases for the purposes of type soundness. Additionally, in terms of actor communication, immutable arrays are safe to send and share, while mutable arrays can not be shared or otherwise sent in messages. Unlike immutable arrays, mutable arrays have non-shareable types.
+Localmente, los arreglos mutables no pueden usarse en lugares donde se esperan
+arreglos inmutables, ya que la definición de Motoko de
+[subtipificación](../reference/language-manual#subtyping) para arreglos
+distingue correctamente estos casos para garantizar la solidez del tipo. Además,
+en términos de comunicación entre actores, los arreglos inmutables son seguros
+para enviar y compartir, mientras que los arreglos mutables no pueden
+compartirse ni enviarse en mensajes. A diferencia de los arreglos inmutables,
+los arreglos mutables tienen tipos no compartibles.
 
-### Allocate a mutable array of constants
+### Asignar un arreglo mutable de constantes
 
-To indicate allocation of mutable arrays, the mutable array syntax `[var _]` uses the `var` keyword in both the expression and type forms:
+Para indicar la asignación de arreglos mutables, la sintaxis de arreglos
+mutables `[var _]` utiliza la palabra clave `var` tanto en las expresiones como
+en las formas de tipo:
 
-``` motoko
+```motoko
 let a : [var Nat] = [var 1, 2, 3] ;
 ```
 
-As above, the array `a` above holds three natural numbers, but has type `[var Nat]`.
+Como se mencionó anteriormente, el arreglo `a` contiene tres números naturales,
+pero tiene el tipo `[var Nat]`.
 
-### Allocate a mutable array with dynamic size
+### Asignar un arreglo mutable con tamaño dinámico
 
-To allocate mutable arrays of non-constant size, use the `Array.init` base library function and supply an initial value:
+Para asignar arreglos mutables de tamaño no constante, utiliza la función
+`Array.init` de la biblioteca base y proporciona un valor inicial:
 
-``` motoko no-repl
+```motoko no-repl
 func init<T>(size : Nat,  x : T) : [var T]
 ```
 
-For example:
+Por ejemplo:
 
-``` motoko no-repl
+```motoko no-repl
 var size : Nat = 42 ;
 let x : [var Nat] = Array.init<Nat>(size, 3);
 ```
 
-The variable `size` does not need to be constant here. The array will have `size` number of entries, each holding the initial value `3`.
+La variable `size` no necesita ser constante aquí. El arreglo tendrá `size`
+número de entradas, cada una con el valor inicial `3`.
 
-### Mutable updates
+### Actualizaciones mutables
 
-Mutable arrays, each with type form `[var _]`, permit mutable updates via assignment to an individual element. In this case, element index `2` gets updated from holding `3` to instead hold value `42`:
+Los arreglos mutables, cada uno con la forma de tipo `[var _]`, permiten
+actualizaciones mutables mediante la asignación a un elemento individual. En
+este caso, el elemento con índice `2` se actualiza de contener `3` a contener el
+valor `42`:
 
-``` motoko
+```motoko
 let a : [var Nat] = [var 1, 2, 3];
 a[2] := 42;
 a
 ```
 
-### Subtyping does not permit mutable to be used as immutable
+### La subtipificación no permite que lo mutable se use como inmutable
 
-Subtyping in Motoko does not permit us to use a mutable array of type `[var Nat]` in places that expect an immutable one of type `[Nat]`.
+La subtipificación en Motoko no permite que usemos un arreglo mutable de tipo
+`[var Nat]` en lugares que esperan uno inmutable de tipo `[Nat]`.
 
-There are two reasons for this. First, as with all mutable state, mutable arrays require different rules for sound subtyping. In particular, mutable arrays have a less flexible subtyping definition, necessarily. Second, Motoko forbids uses of mutable arrays across [asynchronous communication](actors-async.md), where mutable state is never shared.
+Hay dos razones para esto. Primero, al igual que con todo estado mutable, los
+arreglos mutables requieren reglas diferentes para una subtipificación sólida.
+En particular, los arreglos mutables tienen una definición de subtipificación
+menos flexible, necesariamente. Segundo, Motoko prohíbe el uso de arreglos
+mutables en la [comunicación asíncrona](actors-async.md), donde el estado
+mutable nunca se comparte.
 
 <img src="https://github.com/user-attachments/assets/844ca364-4d71-42b3-aaec-4a6c3509ee2e" alt="Logo" width="150" height="150" />

@@ -2,45 +2,68 @@
 sidebar_position: 23
 ---
 
-# Sharing data and behavior
+# Compartiendo datos y comportamiento
 
+En Motoko, el estado mutable siempre es privado para un actor. Sin embargo, dos
+actores pueden compartir datos a través de mensajes, y esos mensajes pueden
+hacer referencia a actores, incluyéndose a sí mismos y entre sí. Además, los
+mensajes pueden hacer referencia a funciones individuales, si esas funciones son
+`shared`.
 
+A través de estos mecanismos, dos actores pueden coordinar su comportamiento
+mediante el paso de mensajes asíncronos.
 
-In Motoko, mutable state is always private to an actor. However, two actors can share message data, and those messages can refer to actors, including themselves and one another. Additionally, messages can refer to individual functions, if those functions are `shared`.
+## Patrón publicador-suscriptor con actores
 
-Through these mechanisms, two actors can coordinate their behavior through asynchronous message passing.
+Los ejemplos en esta sección ilustran cómo los actores comparten sus funciones,
+centrándose en variaciones del
+[patrón publicador-suscriptor](https://es.wikipedia.org/wiki/Publicador-suscriptor).
+En el patrón publicador-suscriptor, un actor **publicador** mantiene una lista
+de actores **suscriptores** a los que notificar cuando ocurre algo notable en el
+estado del publicador. Por ejemplo, si el actor publicador publica un nuevo
+artículo, los actores suscriptores son notificados de que hay un nuevo artículo
+disponible.
 
-## Publisher-subscriber pattern with actors
+El siguiente ejemplo utiliza dos actores en Motoko para construir variaciones de
+la relación publicador-suscriptor.
 
-The examples in this section illustrate how actors share their functions by focusing on variations of the [publish-subscribe pattern](https://en.wikipedia.org/wiki/Publish-subscribe_pattern). In the publish-subscribe pattern, a **publishing** actor records a list of **subscriber** actors to notify when something notable occurs in the publisher’s state. For example, if the publisher actor publishes a new article, the subscriber actors are notified that a new article is available.
+Para ver el código completo de un proyecto funcional que utiliza este patrón,
+consulta el ejemplo
+[pubsub](https://github.com/dfinity/examples/tree/master/motoko/pubsub) en el
+[repositorio de ejemplos](https://github.com/dfinity/examples).
 
-The example below uses two actors in Motoko to build variations of the publisher-subscriber relationship.
+### Actor suscriptor
 
-To see the complete code for a working project that uses this pattern, see the [pubsub](https://github.com/dfinity/examples/tree/master/motoko/pubsub) example in the [examples repository](https://github.com/dfinity/examples).
+El siguiente tipo de actor `Subscriber` proporciona una posible interfaz para
+que el actor suscriptor exponga y el actor publicador pueda llamar:
 
-### Subscriber actor
-
-The following `Subscriber` actor type provides a possible interface for the subscriber actor to expose and the publisher actor to call:
-
-``` motoko name=tsub
+```motoko name=tsub
 type Subscriber = actor {
   notify : () -> ()
 };
 ```
 
--   The `Publisher` uses this type to define a data structure to store its subscribers as data.
+- El `Publisher` utiliza este tipo para definir una estructura de datos para
+  almacenar sus suscriptores como datos.
 
--   Each `Subscriber` actor exposes a `notify` update function as described in the `Subscriber` actor type signature above.
+- Cada actor `Subscriber` expone una función de actualización `notify` como se
+  describe en la firma del tipo de actor `Subscriber` anterior.
 
-Note that sub-typing enables the `Subscriber` actor to include additional methods that are not listed in this type definition.
+Ten en cuenta que la subtipificación permite que el actor `Subscriber` incluya
+métodos adicionales que no están listados en esta definición de tipo.
 
-For simplicity, assume that the `notify` function accepts relevant notification data and returns some new status message about the subscriber to the publisher. For example, the subscriber might return a change to its subscription settings based on the notification data.
+Para simplificar, supongamos que la función `notify` acepta datos relevantes de
+notificación y devuelve algún mensaje de estado nuevo sobre el suscriptor al
+publicador. Por ejemplo, el suscriptor podría devolver un cambio en sus
+configuraciones de suscripción basado en los datos de notificación.
 
-### Publisher actor
+### Actor publicador
 
-The publisher side of the code stores an array of subscribers. For simplicity, assume that each subscriber only subscribes itself once using a `subscribe` function:
+El lado del publicador del código almacena un arreglo de suscriptores. Para
+simplificar, supongamos que cada suscriptor solo se suscribe una vez utilizando
+una función `subscribe`:
 
-``` motoko no-repl
+```motoko no-repl
 import Array "mo:base/Array";
 
 persistent actor Publisher {
@@ -59,21 +82,26 @@ persistent actor Publisher {
 }
 ```
 
-Later, when some unspecified external agent invokes the `publish` function, all of the subscribers receive the `notify` message as defined in the `Subscriber` type given above.
+Más tarde, cuando algún agente externo no especificado invoca la función
+`publish`, todos los suscriptores reciben el mensaje `notify` tal como se define
+en el tipo `Subscriber` mencionado anteriormente.
 
-### Subscriber methods
+### Métodos del suscriptor
 
-In the simplest case, the subscriber actor has the following methods:
+En el caso más simple, el actor suscriptor tiene los siguientes métodos:
 
--   Subscribe to notifications from the publisher using the `init` method.
+- Suscribirse a las notificaciones del publicador utilizando el método `init`.
 
--   Receive notification as one of the subscribed actors, as specified by the `notify` function in the `Subscriber` type given above.
+- Recibir notificaciones como uno de los actores suscritos, como se especifica
+  en la función `notify` del tipo `Subscriber` mencionado anteriormente.
 
--   Permit queries to the accumulated state, which in this sample code is simply a `get` method for the number of notifications received and stored in the `count` variable.
+- Permitir consultas al estado acumulado, que en este código de ejemplo es
+  simplemente un método `get` para obtener el número de notificaciones recibidas
+  y almacenadas en la variable `count`.
 
-The following code illustrates implementing these methods:
+El siguiente código ilustra la implementación de estos métodos:
 
-``` motoko no-repl
+```motoko no-repl
 persistent actor Subscriber {
 
   var count : Nat = 0;
@@ -92,47 +120,80 @@ persistent actor Subscriber {
 }
 ```
 
-The actor assumes, but does not enforce, that its `init` function is only ever called once. In the `init` function, the `Subscriber` actor passes a reference to itself of type `actor { notify : () -> () };`.
+El actor asume, pero no exige, que su función `init` solo se llama una vez. En
+la función `init`, el actor `Subscriber` pasa una referencia a sí mismo de tipo
+`actor { notify : () -> () };`.
 
-If called more than once, the actor will subscribe itself multiple times and will receive multiple duplicate notifications from the publisher. This fragility is the consequence of the basic publisher-subscriber design shown above. A more advanced publisher actor could check for duplicate subscriber actors and ignore them.
+Si se llama más de una vez, el actor se suscribirá múltiples veces y recibirá
+múltiples notificaciones duplicadas del publicador. Esta fragilidad es
+consecuencia del diseño básico del patrón publicador-suscriptor mostrado
+anteriormente. Un actor publicador más avanzado podría verificar la existencia
+de suscriptores duplicados e ignorarlos.
 
-## Sharing functions among actors
+## Compartiendo funciones entre actores
 
-In Motoko, a `shared` actor function can be sent in a message to another actor and then later called by that actor or by another actor.
+En Motoko, una función `shared` de un actor puede enviarse en un mensaje a otro
+actor y luego ser llamada por ese actor o por otro actor.
 
-The code shown above has been simplified for illustrative purposes. The full version offers additional features to the publisher-subscriber relationship, and uses shared functions to make this relationship more flexible.
+El código mostrado anteriormente se ha simplificado con fines ilustrativos. La
+versión completa ofrece características adicionales a la relación
+publicador-suscriptor y utiliza funciones compartidas para hacer esta relación
+más flexible.
 
-For instance, the notification function is always designated as `notify`. A more flexible design would only fix the type of `notify`, and permit the subscriber to choose any of its `shared` functions.
+Por ejemplo, la función de notificación siempre se designa como `notify`. Un
+diseño más flexible solo fijaría el tipo de `notify` y permitiría al suscriptor
+elegir cualquiera de sus funciones `shared`.
 
-See the [the full example](https://github.com/dfinity/examples/tree/master/motoko/pub-sub) for details.
+Consulta el
+[ejemplo completo](https://github.com/dfinity/examples/tree/master/motoko/pub-sub)
+para más detalles.
 
-In particular, suppose that the subscriber wants to avoid being locked into a certain naming scheme for its interface. What really matters is that the publisher can call some function that the subscriber chooses.
+En particular, supongamos que el suscriptor quiere evitar quedar atado a un
+esquema de nombres específico para su interfaz. Lo que realmente importa es que
+el publicador pueda llamar a alguna función que el suscriptor elija.
 
-### The `shared` keyword
+### La palabra clave `shared`
 
-To permit this flexibility, an actor needs to share a single function that permits remote invocation from another actor, not merely a reference to itself.
+Para permitir esta flexibilidad, un actor necesita compartir una única función
+que permita la invocación remota desde otro actor, no simplemente una referencia
+a sí mismo.
 
-The ability to share a function requires that it be pre-designated as `shared` and the type system enforces that these functions follow certain rules around the types of data that these functions accept as arguments and return as result. In particular, the data that can be transmitted across shared functions must have a shared type consisting of immutable plain data, actor references or references to shared functions. Local functions, proper objects with methods and mutable arrays are excluded.
+La capacidad de compartir una función requiere que esta esté pre-designada como
+`shared`, y el sistema de tipos exige que estas funciones sigan ciertas reglas
+en torno a los tipos de datos que aceptan como argumentos y devuelven como
+resultado. En particular, los datos que se pueden transmitir a través de
+funciones compartidas deben tener un tipo compartido que consista en datos
+planos inmutables, referencias a actores o referencias a funciones compartidas.
+Las funciones locales, los objetos con métodos y los arreglos mutables están
+excluidos.
 
-Motoko lets you omit this keyword for public actor methods since implicitly, any public function of an actor must be `shared`, whether marked explicitly or not.
+Motoko te permite omitir esta palabra clave para los métodos públicos de un
+actor, ya que, implícitamente, cualquier función pública de un actor debe ser
+`shared`, ya sea que esté marcada explícitamente o no.
 
-Using the `shared` function type, we can extend the example above to be more flexible. For example:
+Utilizando el tipo de función `shared`, podemos extender el ejemplo anterior
+para que sea más flexible. Por ejemplo:
 
-``` motoko
+```motoko
 type SubscribeMessage = { callback : shared () -> (); };
 ```
 
-This type differs from the original in that it describes a message record type with a single field called `callback`. The original type first shown above describes an actor type with a single method called `notify`:
+Este tipo difiere del original en que describe un tipo de registro de mensaje
+con un único campo llamado `callback`. El tipo original mostrado anteriormente
+describe un tipo de actor con un único método llamado `notify`:
 
-``` motoko
+```motoko
 type Subscriber = actor { notify : () -> () };
 ```
 
-Notably, the `actor` keyword means that this latter type is not an ordinary record with fields but rather an actor with at least one method, which must be called `notify`.
+Notablemente, la palabra clave `actor` significa que este último tipo no es un
+registro ordinario con campos, sino más bien un actor con al menos un método,
+que debe llamarse `notify`.
 
-By using the `SubscribeMessage` type instead, the `Subscriber` actor can choose another name for their `notify` method:
+Al utilizar el tipo `SubscribeMessage` en su lugar, el actor `Subscriber` puede
+elegir otro nombre para su método `notify`:
 
-``` motoko no-repl
+```motoko no-repl
 persistent actor Subscriber {
 
   var count : Nat = 0;
@@ -151,11 +212,14 @@ persistent actor Subscriber {
 }
 ```
 
-Compared to the original version, the only lines that change are those that rename `notify` to `incr`, and form the new `subscribe` message payload using the expression `{callback = incr}`.
+En comparación con la versión original, las únicas líneas que cambian son
+aquellas que renombran `notify` a `incr` y forman la nueva carga útil del
+mensaje `subscribe` utilizando la expresión `{callback = incr}`.
 
-Likewise, we can update the publisher to have a matching interface:
+Del mismo modo, podemos actualizar el publicador para tener una interfaz
+coincidente:
 
-``` motoko no-repl
+```motoko no-repl
 import Array "mo:base/Array";
 
 persistent actor Publisher {

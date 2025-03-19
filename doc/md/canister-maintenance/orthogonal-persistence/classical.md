@@ -2,22 +2,38 @@
 sidebar_position: 3
 ---
 
-# Classical orthogonal persistence
+# Persistencia ortogonal clásica
 
-Classical orthogonal persistence is the old implementation of Motoko's orthogonal persistence. It is currently still the default option, as enhanced orthogonal persistence is in the beta-testing stage.
+La persistencia ortogonal clásica es la implementación antigua de la
+persistencia ortogonal de Motoko. Actualmente sigue siendo la opción
+predeterminada, ya que la persistencia ortogonal mejorada está en fase de
+pruebas beta.
 
-On an upgrade, the classical orthogonal persistence mechanism serializes all stable data to the stable memory and then deserializes it back to the main memory. This has several downsides:
+En una actualización, el mecanismo de persistencia ortogonal clásica serializa
+todos los datos estables a la memoria estable y luego los deserializa de vuelta
+a la memoria principal. Esto tiene varias desventajas:
 
-* At maximum, 2 GiB of heap data can be persisted across upgrades. This is because of an implementation restriction. Note that in practice, the supported amount of stable data can be way lower. 
-* Shared immutable heap objects can duplicated, leading to potential state explosion on upgrades.
-* Deeply nested structures can lead to a call stack overflow.
-* The serialization and deserialization is expensive and can hit IC's instruction limits.
-* There is no inbuilt stable compatibility check in the runtime system. If users ignore the `dfx` upgrade warning, data may be lost or an upgrade fails.
+- Como máximo, se pueden persistir 2 GiB de datos del heap a través de
+  actualizaciones. Esto se debe a una restricción de implementación. Ten en
+  cuenta que, en la práctica, la cantidad de datos estables admitidos puede ser
+  mucho menor.
+- Los objetos compartidos inmutables en el heap pueden duplicarse, lo que lleva
+  a una posible explosión de estado en las actualizaciones.
+- Las estructuras profundamente anidadas pueden provocar un desbordamiento de la
+  pila de llamadas.
+- La serialización y deserialización es costosa y puede alcanzar los límites de
+  instrucciones de IC.
+- No hay una verificación de compatibilidad estable integrada en el sistema de
+  tiempo de ejecución. Si los usuarios ignoran la advertencia de actualización
+  de `dfx`, los datos pueden perderse o la actualización puede fallar.
 
-:::danger
-All these issues can lead to a stuck canister that can no longer be upgraded.
-It is therefore absolutely necessary to thoroughly test how much data an upgrade of your application can handle and then conservatively limit the data held by that canister.
-Moreover, it is good to have a backup possibility to rescue data even if upgrades fail, e.g. by controller-privileged data query calls.
-:::
+:::danger Todos estos problemas pueden llevar a un canister atascado que ya no
+puede ser actualizado. Por lo tanto, es absolutamente necesario probar
+exhaustivamente cuántos datos puede manejar una actualización de tu aplicación y
+luego limitar de manera conservadora los datos retenidos por ese canister.
+Además, es bueno tener una posibilidad de respaldo para rescatar datos incluso
+si las actualizaciones fallan, por ejemplo, mediante llamadas de consulta de
+datos con privilegios de controlador. :::
 
-These issues are solved by [enhanced orthogonal persistence](enhanced.md).
+Estos problemas se resuelven con la
+[persistencia ortogonal mejorada](enhanced.md).

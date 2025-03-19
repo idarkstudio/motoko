@@ -2,28 +2,41 @@
 sidebar_position: 28
 ---
 
-# Abstracting asynchronous code
+# Abstracción de código asíncrono
 
+Las funciones son un mecanismo de abstracción que te permite nombrar una
+computación y reutilizar esa computación en diferentes ubicaciones dentro de tu
+código simplemente invocando el nombre de esa función. Cuando la función toma
+parámetros, puedes personalizar la computación para diferentes sitios de llamada
+proporcionando diferentes argumentos.
 
-Functions are an abstraction mechanism, allowing you to name a computation and re-use that computation in different locations within your code simply by invoking the name of that function. When the function takes parameters, you can tailor the computation to different call sites by providing different arguments.
+Los programadores a menudo mejoran su código refactorizando patrones comunes de
+código en una única función reutilizable.
 
-Programmers often improve their code by re-factoring common patterns of code into
-a single, reusable function.
+En Motoko, es posible que desees refactorizar código que involucra operaciones
+asíncronas, como enviar mensajes o esperar futuros. El sistema de tipos de
+Motoko te impide usar una función ordinaria para esto, ya que las funciones
+ordinarias no tienen permiso para enviar mensajes ni esperar. Sin embargo,
+puedes definir una función asíncrona local que contenga el código asíncrono y
+luego reemplazar todas las ocurrencias del patrón con una llamada a esa función.
+Dado que estas llamadas devuelven futuros, cada llamada debe estar envuelta en
+un `await` para extraer el resultado de su futuro.
 
-In Motoko, you might want to refactor code that involves asynchronous operations such as sending messages or awaiting futures.
-Motoko's type system prevents you from using an ordinary function for this because ordinary functions are not allowed to send messages nor await.
-You can, however, define a local, asynchronous function containing the asynchronous code, and then replace all occurrences of the pattern by a call to that function. Since these calls return futures, each call must be enclosed in an `await` to extract its future's result.
+Aunque esto puede funcionar, tiene algunos inconvenientes y riesgos:
 
-Though this can work, it has some overhead and pitfalls:
-- Each call of the function involves sending an additional message to the actor itself.
+- Cada llamada a la función implica enviar un mensaje adicional al propio actor.
 
-- Every call must be awaited, significantly adding to the cost of the code it abstracts.
+- Cada llamada debe ser esperada (`await`), lo que aumenta significativamente el
+  costo del código que abstrae.
 
-- Each await involves suspending the execution of the awaiter until a reply is available, allowing more interleavings, and thus more interference, with the execution of other concurrent messages.
+- Cada `await` implica suspender la ejecución del que espera hasta que una
+  respuesta esté disponible, permitiendo más intercalaciones y, por lo tanto,
+  más interferencia con la ejecución de otros mensajes concurrentes.
 
-Consider the following code that does some logging to a remote canister.
+Considera el siguiente código que realiza un registro de logs en un canister
+remoto.
 
-``` motoko
+```motoko
 persistent actor class (Logger : actor { log : Text -> async () }) {
 
   var logging = true;
@@ -37,11 +50,12 @@ persistent actor class (Logger : actor { log : Text -> async () }) {
 }
 ```
 
-To avoid repetition of the logging logic, it would be nice to refactor this code to use a helper function `maybeLog`.
-The `maybeLog` function needs to be asynchronous because communicating with the `Logger` canister involves sending a message.
+Para evitar la repetición de la lógica de registro, sería ideal refactorizar
+este código para usar una función auxiliar `maybeLog`. La función `maybeLog`
+necesita ser asíncrona porque comunicarse con el canister `Logger` implica
+enviar un mensaje.
 
-
-``` motoko
+```motoko
 persistent actor class (Logger : actor { log : Text -> async () }) {
 
   var logging = true;
@@ -59,13 +73,18 @@ persistent actor class (Logger : actor { log : Text -> async () }) {
 }
 ```
 
-While this typechecks and runs, the code for `doStuff()` is now much less efficient than the original code, since each call to `maybeLog` function involves an additional `await` that suspends the execution of `doStuff()`, even when the `logging` flag is `false`.
-The semantics of this code is also slightly different, since the value of the logging variable could, in principle, change between the call to `maybeLog` and the execution of its body, depending on the rest of the actor code.
+Aunque este código se comprueba y ejecuta correctamente, el código para
+`doStuff()` ahora es mucho menos eficiente que el original, ya que cada llamada
+a la función `maybeLog` implica un `await` adicional que suspende la ejecución
+de `doStuff()`, incluso cuando la bandera `logging` es `false`. La semántica de
+este código también es ligeramente diferente, ya que el valor de la variable
+`logging` podría, en principio, cambiar entre la llamada a `maybeLog` y la
+ejecución de su cuerpo, dependiendo del resto del código del actor.
 
-A safer refactoring passes the current state of the `logging` variable with each call:
+Una refactorización más segura pasa el estado actual de la variable `logging`
+con cada llamada:
 
-
-``` motoko
+```motoko
 persistent actor class (Logger : actor { log : Text -> async () }) {
 
   var logging = true;
@@ -82,26 +101,46 @@ persistent actor class (Logger : actor { log : Text -> async () }) {
   }
 }
 ```
-## Computation types
 
-To avoid the overhead and dangers of additional awaits, Motoko offers computation types, `async* T`, that, like future types, `async T`, can abstract asynchronous tasks.
+## Tipos de computación
 
-Just as an `async` expression is used to create a future (by scheduling the execution of its body), an `async*` expression is used to create a computation (by delaying the execution of its body).
-Similar to how `await` is used to consume the result of a future, `await*` is used to produce the result of a computation (by demanding another execution of its body).
+Para evitar la sobrecarga y los peligros de los `await` adicionales, Motoko
+ofrece tipos de computación, `async* T`, que, al igual que los tipos de futuro,
+`async T`, pueden abstraer tareas asíncronas.
 
-From a typing perspective, futures and computations are very similar. Where they differ is in their dynamic behavior: a future is a stateful object that holds the result of a scheduled, asynchronous task while a computation is just an inert value describing a task.
+Al igual que una expresión `async` se utiliza para crear un futuro (programando
+la ejecución de su cuerpo), una expresión `async*` se utiliza para crear una
+computación (retrasando la ejecución de su cuerpo). De manera similar a cómo se
+usa `await` para consumir el resultado de un futuro, `await*` se utiliza para
+producir el resultado de una computación (exigiendo otra ejecución de su
+cuerpo).
 
-Unlike `await` on a future, `await*` on a computation does not suspend the awaiter, it just immediately executes the computation much like an ordinary function call.
-This means that awaiting an `async*` value only suspends its execution (to complete asynchronously), if the body of the `async*` does a proper `await`.
-The `*` on these expressions is meant to indicate that the computation may involve 0 or more ordinary `await` expressions, and thus may be interleaved with the execution of other messages.
+Desde una perspectiva de tipificación, los futuros y las computaciones son muy
+similares. Donde difieren es en su comportamiento dinámico: un futuro es un
+objeto con estado que contiene el resultado de una tarea asíncrona programada,
+mientras que una computación es simplemente un valor inerte que describe una
+tarea.
 
-To create an `async*` value, you can just use an `async*` expression, but more typically, you'll declare a local function that returns an `async*` type.
+A diferencia de `await` en un futuro, `await*` en una computación no suspende al
+que espera, simplemente ejecuta la computación de inmediato, como una llamada a
+una función ordinaria. Esto significa que esperar (`await*`) un valor `async*`
+solo suspende su ejecución (para completarse de manera asíncrona) si el cuerpo
+de `async*` realiza un `await` propiamente dicho. El `*` en estas expresiones
+está destinado a indicar que la computación puede involucrar 0 o más expresiones
+`await` ordinarias y, por lo tanto, puede entrelazarse con la ejecución de otros
+mensajes.
 
-To compute the result of an `async*` computation, you just use an `await*`.
+Para crear un valor `async*`, puedes usar una expresión `async*`, pero más
+típicamente, declararás una función local que devuelve un tipo `async*`.
 
-Here's how we can refactor our original class to be clearer, efficient and have the same meaning, using computations instead of futures:
+Para calcular el resultado de una computación `async*`, simplemente usas un
+`await*`.
 
-``` motoko
+Aquí se muestra cómo podemos refactorizar nuestra clase original para que sea
+más clara, eficiente y tenga el mismo significado, utilizando computaciones en
+lugar de futuros:
+
+```motoko
 persistent actor class (Logger : actor { log : Text -> async () }) {
 
   var logging = true;
@@ -119,65 +158,75 @@ persistent actor class (Logger : actor { log : Text -> async () }) {
 }
 ```
 
-One notable difference between `async` and `async*` expressions is that the former are eager, while the latter are not.
-This means that calling the async version of `maybeLog` will eagerly schedule its body to run, even if the `async` result (a future) of the call is never `await`ed.
-Awaiting the same future another time will always produce the original result: the message is executed just once.
+Una diferencia notable entre las expresiones `async` y `async*` es que las
+primeras son ansiosas (eager), mientras que las segundas no lo son. Esto
+significa que llamar a la versión `async` de `maybeLog` programará ansiosamente
+la ejecución de su cuerpo, incluso si el resultado `async` (un futuro) de la
+llamada nunca se espera (`await`). Esperar el mismo futuro otra vez siempre
+producirá el resultado original: el mensaje se ejecuta solo una vez.
 
-On the other hand, calling the `async*` version of `maybeLog` will do nothing unless the result is `await*`-ed, and `await*`-ing the same computation several times will repeat
-the computation each time.
+Por otro lado, llamar a la versión `async*` de `maybeLog` no hará nada a menos
+que el resultado se espere (`await*`), y esperar (`await*`) la misma computación
+varias veces repetirá la computación cada vez.
 
-For another example, suppose we define a
-clap function with the side-effect of printing "clap".
+Para otro ejemplo, supongamos que definimos una función `clap` con el efecto
+secundario de imprimir "clap".
 
-``` motoko no-repl
+```motoko no-repl
 import Debug "mo:base/Debug"
 func clap() { Debug.print("clap") }
 ```
 
-Now, using futures, this code will clap once:
+Ahora, utilizando futuros, este código aplaudirá una vez:
 
-``` motoko no-repl
+```motoko no-repl
 let future = async { clap() };
 ```
 
-This remains the case, no matter how often you await `future`.
-For example:
+Este sigue siendo el caso, sin importar cuántas veces esperes `future`. Por
+ejemplo:
 
-``` motoko no-repl
+```motoko no-repl
 let future = async { clap() };
 await future;
 await future;
 ```
 
-Using computations, on the other hand, the following definition has no effect on its own:
+Usando computaciones, por otro lado, la siguiente definición no tiene efecto por
+sí misma:
 
-``` motoko no-repl
+```motoko no-repl
 let computation = async* { clap() };
 ```
-But, the following example will clap twice:
 
-``` motoko no-repl
+Pero, el siguiente ejemplo aplaudirá dos veces:
+
+```motoko no-repl
 let computation = async* { clap() };
 await* computation;
 await* computation;
 ```
-
-
 
 :::danger
 
-You should use `async*`/`await*` with care. An ordinary `await` is a commit point in Motoko: all your state changes will be committed at the `await` before suspension.
-An `await*`, on the other hand, is not a commit point (since its body may not await at all, or commit at some indefinite point).
-This means that traps within the awaited computation may roll back the state of the actor to the last commit point *before* the `await*`, not to the state at the `await*` itself.
+Debes usar `async*`/`await*` con cuidado. Un `await` ordinario es un punto de
+confirmación (commit) en Motoko: todos los cambios de estado se confirmarán en
+el `await` antes de la suspensión. Un `await*`, por otro lado, no es un punto de
+confirmación (ya que su cuerpo puede no esperar en absoluto, o confirmarse en
+algún punto indefinido). Esto significa que los errores (traps) dentro de la
+computación esperada pueden revertir el estado del actor al último punto de
+confirmación _antes_ del `await*`, no al estado en el `await*` en sí.
 
 :::
 
-See the language manual for more details on the [`async*` type](../reference/language-manual#async-type-1), the [`async*` expression](../reference/language-manual#async-1) and the
-[`await*` expression](../reference/language-manual#await-1).
+Consulta el manual del lenguaje para más detalles sobre el
+[tipo `async*`](../reference/language-manual#async-type-1), la
+[expresión `async*`](../reference/language-manual#async-1) y la
+[expresión `await*`](../reference/language-manual#await-1).
 
+## Paquetes de Mops para computaciones
 
-## Mops packages for computations
-
-- [`star`](https://mops.one/star): Used for handling asynchronous behavior and traps using `async*` functions.
+- [`star`](https://mops.one/star): Se utiliza para manejar comportamientos
+  asíncronos y errores (traps) usando funciones `async*`.
 
 <img src="https://github.com/user-attachments/assets/844ca364-4d71-42b3-aaec-4a6c3509ee2e" alt="Logo" width="150" height="150" />

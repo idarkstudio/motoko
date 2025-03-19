@@ -2,51 +2,61 @@
 sidebar_position: 2
 ---
 
-# Motoko formatting tools
+# Herramientas de formateo de Motoko
 
+El complemento Motoko Prettier se puede utilizar para formatear y validar
+archivos de código fuente de Motoko. Se puede utilizar a través de la
+[CLI de Prettier](https://prettier.io/docs/en/cli.html) o a través de VS Code.
 
+Alternativamente, el paquete de Node.js
+[`mo-fmt`](https://www.npmjs.com/package/mo-fmt) es una herramienta de formateo
+de Motoko independiente.
 
-The Motoko Prettier plugin can be used to format and validate Motoko source code files. It can be used through the [Prettier CLI](https://prettier.io/docs/en/cli.html) or through VS Code.
+## Complemento Motoko Prettier
 
-Alternatively, the Node.js package [`mo-fmt`](https://www.npmjs.com/package/mo-fmt) is a standalone Motoko formatter tool.
+### Instalación
 
-## Motoko Prettier plugin
+Para instalar el complemento Motoko Prettier, primero descarga e instala
+[Node.js](https://nodejs.org/es/download/).
 
-### Installation
+Luego, crea un nuevo proyecto Motoko o navega hasta un directorio de proyecto
+existente.
+[Aprende más sobre cómo crear un proyecto Motoko](../getting-started/quickstart.md).
 
-To install the Motoko Prettier plugin, first download and install [Node.js](https://nodejs.org/en/download/).
-
-Then, create a new Motoko project or navigate into an existing project directory. [Learn more about creating a Motoko project](../getting-started/quickstart.md).
-
-Then, run the following command in the project directory:
+Después, ejecuta el siguiente comando en el directorio del proyecto:
 
 ```sh
 npm install --save-dev prettier prettier-plugin-motoko
 ```
 
-### Using the Prettier CLI
+### Usando la CLI de Prettier
 
-You can format Motoko files through the Prettier CLI using the command:
+Puedes formatear archivos de Motoko a través de la CLI de Prettier usando el
+siguiente comando:
 
 ```sh
 npx prettier --write --plugin=prettier-plugin-motoko **/*.mo
 ```
 
-To validate if your Motoko files are formatted properly, use the following command:
+Para validar si tus archivos de Motoko están formateados correctamente, usa el
+siguiente comando:
 
 ```sh
 npx prettier --check --plugin=prettier-plugin-motoko **/*.mo
 ```
 
-### Using VS Code
+### Usando VS Code
 
-The Motoko Prettier plugin works out of the box with the [Motoko extension for VS Code](https://marketplace.visualstudio.com/items?itemName=dfinity-foundation.vscode-motoko).
+El plugin de Motoko Prettier funciona de forma nativa con la
+[extension de Motoko para VS Code](https://marketplace.visualstudio.com/items?itemName=dfinity-foundation.vscode-motoko).
 
-It is also compatible with the the [Prettier extension](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode).
+También es compatible con la
+[extension Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode).
 
-### Ignoring code
+### Ignorando código
 
-You can set code to be skipped from formatting or being validated by using a `prettier-ignore` comment:
+Puedes configurar código para que sea ignorado del formateo o de la validación
+usando un comentario `prettier-ignore`:
 
 ```motoko no-repl
 // prettier-ignore
@@ -57,26 +67,27 @@ func formatted<B>(b : B) { b };
 
 ## `mo-fmt`
 
-### Installation
+### Instalación
 
-To install `mo-fmt`, run the following command:
+Para instalar `mo-fmt`, ejecuta el siguiente comando:
 
 ```
 npm install mo-fmt
 ```
 
-Then, format and validate the format of Motoko code files, run the commands:
+Luego, para formatear y validar el formato de los archivos de código de Motoko,
+ejecuta los comandos:
 
 ```
 mo-fmt **/*
 mo-fmt -c **/*
 ```
 
-## References
+## Referencias
 
 - [Motoko Prettier plugin GitHub repo](https://github.com/dfinity/prettier-plugin-motoko/)
 
-- [Motoko extension for VS Code](https://marketplace.visualstudio.com/items?itemName=dfinity-foundation.vscode-motoko)
+- [Extension de Motoko para VS Code](https://marketplace.visualstudio.com/items?itemName=dfinity-foundation.vscode-motoko)
 
 - [`mo-fmt`](https://www.npmjs.com/package/mo-fmt)
 

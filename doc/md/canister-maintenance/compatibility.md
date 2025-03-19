@@ -2,262 +2,347 @@
 sidebar_position: 4
 ---
 
-# Verifying upgrade compatibility
+# Verificación de compatibilidad en actualizaciones
 
+Al actualizar un canister, es importante verificar que la actualización pueda
+proceder sin:
 
+- Introducir un cambio incompatible en las declaraciones estables.
+- Romper clientes debido a un cambio en la interfaz Candid.
 
-When upgrading a canister, it is important to verify that the upgrade can proceed without:
+`dfx` verifica estas propiedades estáticamente antes de intentar la
+actualización. Además, con la
+[persistencia ortogonal mejorada](orthogonal-persistence/enhanced.md), Motoko
+rechaza cambios incompatibles en las declaraciones estables.
 
--   Introducing an incompatible change in stable declarations.
--   Breaking clients due to a Candid interface change.
+## Ejemplo de actualización
 
-`dfx` checks these properties statically before attempting the upgrade.
-Moreover, with [enhanced orthogonal persistence](orthogonal-persistence/enhanced.md), Motoko rejects incompatible changes of stable declarations.
+El siguiente es un ejemplo simple de cómo declarar un contador con estado:
 
-## Upgrade example
+```motoko no-repl file=../examples/count-v0.mo
 
-The following is a simple example of how to declare a stateful counter:
-
-``` motoko no-repl file=../examples/count-v0.mo
 ```
 
-Importantly, in this example, when the counter is upgraded, its state is lost.
-This is because actor variables are by default `transient`, meaning they get reinitialized on an upgrade.
-The above actor is equivalent to using the `transient` declaration:
+Importante, en este ejemplo, cuando el contador se actualiza, se pierde su
+estado. Esto se debe a que las variables del actor son, por defecto,
+`transient`, lo que significa que se reinicializan en una actualización. El
+actor anterior es equivalente a usar la declaración `transient`:
 
-``` motoko no-repl file=../examples/count-v0transient.mo
+```motoko no-repl file=../examples/count-v0transient.mo
+
 ```
 
+Para solucionar esto, puedes declarar una variable `stable` que se mantenga en
+las actualizaciones:
 
-To fix this, you can declare a `stable` variable that is retained across upgrades:
+```motoko no-repl file=../examples/count-v1stable.mo
 
-
-``` motoko no-repl file=../examples/count-v1stable.mo
 ```
 
-To make `stable` the default for all declarations and `transient` optional, you can prefix the actor declaration with the keyword `persistent`.
+Para hacer que `stable` sea el valor predeterminado para todas las declaraciones
+y `transient` opcional, puedes agregar la palabra clave `persistent` antes de la
+declaración del actor.
 
-``` motoko no-repl file=../examples/count-v1.mo
+```motoko no-repl file=../examples/count-v1.mo
+
 ```
 
-If the variable `state` were not declared `stable`, either explicitly or by applying `persistent` to the `actor` keyword, `state` would restart from `0` on upgrade.
+Si la variable `state` no se declarara como `stable`, ya sea explícitamente o
+aplicando `persistent` a la palabra clave `actor`, `state` se reiniciaría desde
+`0` en la actualización.
 
-## Evolving the stable declarations
+## Evolucionando las declaraciones estables
 
-Changing counter from `Nat` to `Int` is a compatible change in stable declarations. The counter value is retained during the upgrade.
+Cambiar el contador de `Nat` a `Int` es un cambio compatible en las
+declaraciones estables. El valor del contador se conserva durante la
+actualización.
 
-``` motoko no-repl file=../examples/count-v2.mo
+```motoko no-repl file=../examples/count-v2.mo
+
 ```
 
-## Stable type signatures
+## Firmas de tipos estables
 
-A stable type signature describes the stable content of a Motoko actor.
-You can think of this as the interior interface of the actor, that it presents to its future upgrades.
+Una firma de tipo estable describe el contenido estable de un actor de Motoko.
+Puedes pensar en esto como la interfaz interna del actor que presenta a sus
+futuras actualizaciones.
 
-For example, `v1`'s stable types:
+Por ejemplo, los tipos estables de `v1`:
 
-``` motoko no-repl file=../examples/count-v1.most
+```motoko no-repl file=../examples/count-v1.most
+
 ```
 
-An upgrade from `v1` to `v2`'s stable types consumes a [`Nat`](../base/Int.md) as an [`Int`](../base/Nat.md), which is valid because `Nat <: Int`, that is,  `Nat` is a subtype of `Int`.
+Una actualización de los tipos estables de `v1` a `v2` consume un
+[`Nat`](../base/Int.md) como un [`Int`](../base/Nat.md), lo cual es válido
+porque `Nat <: Int`, es decir, `Nat` es un subtipo de `Int`.
 
-``` motoko no-repl file=../examples/count-v2.most
+```motoko no-repl file=../examples/count-v2.most
+
 ```
 
-## Evolving the Candid interface
+## Evolucionando la interfaz Candid
 
-In this extension of the interface, old clients remain satisfied, while new ones get extra features such as the `decrement` function and the `read` query in this example.
+En esta extensión de la interfaz, los clientes antiguos siguen satisfechos,
+mientras que los nuevos obtienen características adicionales como la función
+`decrement` y la consulta `read` en este ejemplo.
 
-``` motoko no-repl file=../examples/count-v3.mo
+```motoko no-repl file=../examples/count-v3.mo
+
 ```
 
-## Dual interface evolution
+## Evolución de la interfaz dual
 
-An upgrade is safe provided that both the Candid interface and stable type signatures remain compatible:
-* Each stable variable must either be newly declared, dropped, or re-declared at a supertype of its old type.
-* The Candid interface evolves to a subtype.
+Una actualización es segura siempre que tanto la interfaz Candid como las firmas
+de tipos estables sigan siendo compatibles:
 
-Consider the following four versions of the counter example:
+- Cada variable estable debe ser declarada de nuevo, eliminada o redeclarada
+  como un supertipo de su tipo anterior.
+- La interfaz Candid evoluciona a un subtipo.
 
-Version `v0` with Candid interface `v0.did` and stable type interface `v0.most`:
+Considera las siguientes cuatro versiones del ejemplo del contador:
 
-``` candid file=../examples/count-v0.did
+Versión `v0` con la interfaz Candid `v0.did` y la interfaz de tipo estable
+`v0.most`:
+
+```candid file=../examples/count-v0.did
+
 ```
 
-``` motoko no-repl file=../examples/count-v0.most
+```motoko no-repl file=../examples/count-v0.most
+
 ```
 
-Version `v1` with Candid interface `v1.did` and stable type interface `v1.most`,
+Versión `v1` con la interfaz Candid `v1.did` y la interfaz de tipo estable
+`v1.most`,
 
-``` candid file=../examples/count-v1.did
+```candid file=../examples/count-v1.did
+
 ```
 
-``` motoko no-repl file=../examples/count-v1.most
+```motoko no-repl file=../examples/count-v1.most
+
 ```
 
-Version `v2` with Candid interface `v2.did` and stable type interface `v2.most`,
+Versión `v2` con la interfaz Candid `v2.did` y la interfaz de tipo estable
+`v2.most`,
 
-``` candid file=../examples/count-v2.did
+```candid file=../examples/count-v2.did
+
 ```
 
-``` motoko no-repl file=../examples/count-v2.most
+```motoko no-repl file=../examples/count-v2.most
+
 ```
 
-Version `v3` with Candid interface `v3.did` and stable type interface `v3.most`:
+Versión `v3` con la interfaz Candid `v3.did` y la interfaz de tipo estable
+`v3.most`:
 
-``` candid file=../examples/count-v3.did
+```candid file=../examples/count-v3.did
+
 ```
 
-``` motoko no-repl file=../examples/count-v3.most
+```motoko no-repl file=../examples/count-v3.most
+
 ```
 
-## Incompatible upgrade
+## Actualización incompatible
 
-Let's take a look at another example where the counter's type is again changed, this time from [`Int`](../base/Int.md) to [`Float`](../base/Float.md):
+Echemos un vistazo a otro ejemplo donde el tipo del contador se cambia
+nuevamente, esta vez de [`Int`](../base/Int.md) a [`Float`](../base/Float.md):
 
-``` motoko no-repl file=../examples/count-v4.mo
+```motoko no-repl file=../examples/count-v4.mo
+
 ```
 
-This version is neither compatible to stable type declarations, nor to the Candid interface.
-- Since `Int </: Float`, that is, `Int` is not a subtype of `Float`, the old type of `state`, `Int`, is not compatible with the new type, `Float`.
-  This means that the old value of `state`, an integer, cannot be used to initialize the new `state` field that now requires a float.
-- The change in the return type of `read` is also not safe.
-  If the change were accepted, then existing clients of the `read` method, that still expect to receive integers, would suddenly start receiving incompatible floats.
+Esta versión no es compatible ni con las declaraciones de tipos estables, ni con
+la interfaz Candid.
 
-With [enhanced orthogonal persistence](orthogonal-persistence/enhanced.md), Motoko actively rejects any upgrades that require type-incompatible state changes.
+- Dado que `Int </: Float`, es decir, `Int` no es un subtipo de `Float`, el tipo
+  anterior de `state`, `Int`, no es compatible con el nuevo tipo, `Float`. Esto
+  significa que el valor antiguo de `state`, un entero, no puede usarse para
+  inicializar el nuevo campo `state`, que ahora requiere un flotante.
+- El cambio en el tipo de retorno de `read` tampoco es seguro. Si el cambio
+  fuera aceptado, los clientes existentes del método `read`, que aún esperan
+  recibir enteros, de repente comenzarían a recibir flotantes incompatibles.
 
-This is to guarantee that the stable state is always kept safe.
+Con la [persistencia ortogonal mejorada](orthogonal-persistence/enhanced.md),
+Motoko rechaza activamente cualquier actualización que requiera cambios de
+estado incompatibles en cuanto a tipos.
+
+Esto es para garantizar que el estado estable siempre se mantenga seguro.
 
 ```
 Error from Canister ...: Canister called `ic0.trap` with message: RTS error: Memory-incompatible program upgrade.
 ```
 
-In addition to Motoko's runtime check, `dfx` raises a warning message for these incompatible changes, including the breaking Candid change.
+Además de la verificación en tiempo de ejecución de Motoko, `dfx` muestra un
+mensaje de advertencia para estos cambios incompatibles, incluido el cambio
+incompatible en Candid.
 
-Motoko tolerates Candid interface changes, since these are more likely to be intentional, breaking changes.
+Motoko tolera los cambios en la interfaz Candid, ya que es más probable que
+estos sean cambios intencionales y disruptivos.
 
-:::danger
-Versions of Motoko using [classical orthogonal persistence](orthogonal-persistence/classical.md) will drop the state and reinitialize the counter with `0.0`, if the `dfx` warning is ignored.
+:::danger Las versiones de Motoko que utilizan
+[persistencia ortogonal clásica](orthogonal-persistence/classical.md) eliminarán
+el estado y reinicializarán el contador con `0.0`, si se ignora la advertencia
+de `dfx`.
 
-For this reason, users should always heed any compatibility warnings issued by `dfx`.
-:::
+Por esta razón, los usuarios siempre deben prestar atención a las advertencias
+de compatibilidad emitidas por `dfx`. :::
 
+## Migración explícita
 
+### Migración explícita utilizando varias actualizaciones
 
-## Explicit migration
+Siempre existe una ruta de migración para cambiar la estructura del estado
+estable, incluso si un cambio de tipo directo no es compatible.
 
-### Explicit migration using several upgrades
-There is always a migration path to change structure of stable state, even if a direct type change is not compatible.
+Para este propósito, una migración instruida por el usuario se puede realizar en
+tres pasos:
 
-For this purpose, a user-instructed migration can be done in three steps:
+1. Introducir nuevas variables de los tipos deseados, manteniendo las
+   declaraciones antiguas.
+2. Escribir lógica para copiar el estado de las variables antiguas a las nuevas
+   durante la actualización.
 
-1. Introduce new variables of the desired types, while keeping the old declarations.
-2. Write logic to copy the state from the old variables to the new variables on upgrade.
+   Si bien el intento anterior de cambiar el estado de [`Int`](../base/Int.md) a
+   [`Nat`](../base/Float.md) no era válido, ahora puedes realizar el cambio
+   deseado de la siguiente manera:
 
-    While the previous attempt of changing state from [`Int`](../base/Int.md) to [`Nat`](../base/Float.md) was invalid, you now can realize the desired change as follows:
+   ```motoko no-repl file=../examples/count-v5.mo
 
-    ``` motoko no-repl file=../examples/count-v5.mo
-    ```
+   ```
 
-    To also keep the Candid interface, the `readFloat` has been added, while the old `read` is retired by keeping its declaration and raising a trap internally.
+Para mantener también la interfaz Candid, se ha agregado `readFloat`, mientras
+que el antiguo `read` se retira manteniendo su declaración y generando una
+trampa internamente.
 
-3. Drop the old declarations once all data has been migrated:
+3. Elimina las declaraciones antiguas una vez que todos los datos hayan sido
+   migrados:
 
-    ``` motoko no-repl file=../examples/count-v6.mo
-    ```
+   ```motoko no-repl file=../examples/count-v6.mo
 
-Alternatively, the type of `state` can be changed to `Any`, also implying that this variable is no longer used.
+   ```
 
-### Explicit migration using a migration function
+Alternativamente, el tipo de `state` puede cambiarse a `Any`, lo que implica
+también que esta variable ya no se utiliza.
 
-The previous approach of using several upgrades to migrate data is both tedious and
-obscure, mingling production with migration code.
+### Migración explícita utilizando una función de migración
 
-To ease data migration, Motoko now supports explicit migration using a separate data migration function.
-The code for the migration function is self-contained and can be placed in its own file.
+El enfoque anterior de usar varias actualizaciones para migrar datos es tedioso
+y poco claro, mezclando código de producción con código de migración.
 
-The migration function takes a record of stable fields as input and produces a record of stable fields as output.
+Para facilitar la migración de datos, Motoko ahora admite la migración explícita
+utilizando una función de migración de datos separada. El código para la función
+de migración es autónomo y puede colocarse en su propio archivo.
 
-The input fields extend or override the types of any stable fields in the actor's
-stable signature.
-The output fields must be declared in the actor's stable signature, and have types that can be consumed by the corresponding declaration in the stable signature.
+La función de migración toma un registro de campos estables como entrada y
+produce un registro de campos estables como salida.
 
-* All values for the input fields must
-be present and of compatible type in the old actor, otherwise the
-upgrade traps and rolls back.
-* The fields output by the migration
-function determine the values of the corresponding stable variables in the
-new actor.
-* All other stable variables of the actor, i.e. those neither consumed nor
-produced by the migration function are initialized in the usual way,
-either by transfer from the upgraded actor, if declared in that actor, or, if newly declared,
-by running the initialization expression in the field's declaration.
-* The migration function is only executed on an upgrade and ignored on a fresh installation of the actor in an empty canister.
+Los campos de entrada extienden o anulan los tipos de cualquier campo estable en
+la firma estable del actor. Los campos de salida deben declararse en la firma
+estable del actor y tener tipos que puedan ser consumidos por la declaración
+correspondiente en la firma estable.
 
-The migration function, when required, is declared
-using a parenthetical expression immediately preceding the actor or actor class declaration, for example:
+- Todos los valores para los campos de entrada deben estar presentes y ser de
+  tipo compatible en el actor antiguo; de lo contrario, la actualización falla
+  (trap) y se revierte.
+- Los campos generados por la función de migración determinan los valores de las
+  variables estables correspondientes en el nuevo actor.
+- Todas las demás variables estables del actor, es decir, aquellas que no son
+  consumidas ni producidas por la función de migración, se inicializan de la
+  manera habitual, ya sea por transferencia desde el actor actualizado, si están
+  declaradas en ese actor, o, si están recién declaradas, ejecutando la
+  expresión de inicialización en la declaración del campo.
+- La función de migración solo se ejecuta durante una actualización y se ignora
+  en una instalación nueva del actor en un canister vacío.
 
-``` motoko no-repl file=../examples/count-v7.mo
+La función de migración, cuando es necesaria, se declara utilizando una
+expresión entre paréntesis inmediatamente antes de la declaración del actor o
+clase de actor, por ejemplo:
+
+```motoko no-repl file=../examples/count-v7.mo
+
 ```
 
-The syntax employs Motoko's new parenthetical expressions to modify ugrade behaviour.
-Other parenthetical expressions of similar form, but with different field names and types, are used to modify other aspects of Motoko's execution.
+La sintaxis emplea las nuevas expresiones entre paréntesis de Motoko para
+modificar el comportamiento de la actualización. Otras expresiones entre
+paréntesis de forma similar, pero con diferentes nombres de campos y tipos, se
+utilizan para modificar otros aspectos de la ejecución de Motoko.
 
-You can read this as a directive to apply the indicated `migration` function
-just before upgrade.
+Puedes leer esto como una directiva para aplicar la función de `migration`
+indicada justo antes de la actualización.
 
-Employing a migration function offers another advantage: it lets you re-use the name of an
-existing field, even when its type has changed:
+El uso de una función de migración ofrece otra ventaja: te permite reutilizar el
+nombre de un campo existente, incluso cuando su tipo ha cambiado:
 
-``` motoko no-repl file=../examples/count-v8.mo
+```motoko no-repl file=../examples/count-v8.mo
+
 ```
 
-Here, we've put the migration code in a separate library:
+Aquí, hemos colocado el código de migración en una biblioteca separada:
 
-``` motoko no-repl file=../examples/Migration.mo
+```motoko no-repl file=../examples/Migration.mo
+
 ```
 
-The migration function can be selective and only consume or produce a subset of the old and new stable variables. Other stable variables can be declared as usual.
+La función de migración puede ser selectiva y solo consumir o producir un
+subconjunto de las variables estables antiguas y nuevas. Otras variables
+estables se pueden declarar como de costumbre.
 
-For example, here, with the same migration function, we also declare a new stable variable, `lastModified` that records the time of the last update,
-without having to mention that field in the migration function:
+Por ejemplo, aquí, con la misma función de migración, también declaramos una
+nueva variable estable, `lastModified`, que registra la hora de la última
+actualización, sin tener que mencionar ese campo en la función de migración.
 
-``` motoko no-repl file=../examples/count-v9.mo
+```motoko no-repl file=../examples/count-v9.mo
+
 ```
 
-The stable signature of an actor with a migration function now consists of two ordinary stable signatures, the pre-signature (before the upgrade), and the post-signature (after the upgrade).
+La firma estable de un actor con una función de migración ahora consiste en dos
+firmas estables ordinarias, la pre-firma (antes de la actualización) y la
+post-firma (después de la actualización).
 
+Por ejemplo, esta es la firma combinada del ejemplo anterior:
 
-For example, this is the combined signature of the previous example:
+```motoko no-repl file=../examples/count-v9.most
 
-``` motoko no-repl file=../examples/count-v9.most
 ```
 
-The second signature is determined solely by the actor's stable variable declarations.
-The first signature contains the field declarations from the migration function's input, together with any distinctly named stable variables declared in the actor.
+La segunda firma está determinada únicamente por las declaraciones de variables
+estables del actor. La primera firma contiene las declaraciones de campos de
+entrada de la función de migración, junto con cualquier variable estable
+declarada con un nombre distinto en el actor.
 
-For compatibility, when performing an upgrade, the (post) signature of the old code must be compatible with the (pre) signature of the new code.
+Para garantizar la compatibilidad, al realizar una actualización, la firma
+(posterior) del código antiguo debe ser compatible con la firma (anterior) del
+nuevo código.
 
-The migration function can be deleted or adjusted on the next upgrade.
+La función de migración se puede eliminar o ajustar en la próxima actualización.
 
-## Upgrade tooling
+## Herramientas de actualización
 
-`dfx` incorporates an upgrade check. For this purpose, it uses the Motoko compiler (`moc`) that supports:
+`dfx` incorpora una verificación de actualización. Para este propósito, utiliza
+el compilador de Motoko (`moc`) que admite:
 
--   `moc --stable-types …​`: Emits stable types to a `.most` file.
+- `moc --stable-types …​`: Emite tipos estables a un archivo `.most`.
 
--   `moc --stable-compatible <pre> <post>`: Checks two `.most` files for upgrade compatibility.
+- `moc --stable-compatible <pre> <post>`: Verifica la compatibilidad de
+  actualización entre dos archivos `.most`.
 
-Motoko embeds `.did` and `.most` files as Wasm custom sections for use by `dfx` or other tools.
+Motoko incrusta archivos `.did` y `.most` como secciones personalizadas de Wasm
+para su uso por `dfx` u otras herramientas.
 
-To upgrade e.g. from `cur.wasm` to `nxt.wasm`, `dfx` checks that both the Candid interface and stable variables are compatible:
+Para actualizar, por ejemplo, de `cur.wasm` a `nxt.wasm`, `dfx` verifica que
+tanto la interfaz Candid como las variables estables sean compatibles:
 
 ```
 didc check nxt.did cur.did  // nxt <: cur
 moc --stable-compatible cur.most nxt.most  // cur <<: nxt
 ```
 
-Using the versions above, the upgrade from `v3` to `v4` fails this check:
+Usando las versiones anteriores, la actualización de `v3` a `v4` falla en esta
+verificación:
 
 ```
 > moc --stable-compatible v3.most v4.most
@@ -267,29 +352,38 @@ cannot be consumed at new type
   var Float
 ```
 
-With [enhanced orthogonal persistence](orthogonal-persistence/enhanced.md), compatibility errors of stable variables are always detected in the runtime system and if failing, the upgrade is safely rolled back.
+Con la [persistencia ortogonal mejorada](orthogonal-persistence/enhanced.md),
+los errores de compatibilidad de las variables estables siempre se detectan en
+el sistema de tiempo de ejecución y, si fallan, la actualización se revierte de
+manera segura.
 
-:::danger
-With [classical orthogonal persistence](orthogonal-persistence/classical.md), however, an upgrade attempt from `v2.wasm` to `v3.wasm` is unpredictable and may lead to partial or complete data loss if the `dfx` warning is ignored.
-:::
+:::danger Sin embargo, con la
+[persistencia ortogonal clásica](orthogonal-persistence/classical.md), un
+intento de actualización de `v2.wasm` a `v3.wasm` es impredecible y puede
+provocar una pérdida parcial o total de datos si se ignora la advertencia de
+`dfx`. :::
 
-## Adding record fields
+## Agregar campos a registros
 
-A common, real-world example of an incompatible upgrade can be found [on the forum](https://forum.dfinity.org/t/questions-about-data-structures-and-migrations/822/12?u=claudio/).
+Un ejemplo común y real de una actualización incompatible se puede encontrar
+[en el foro](https://forum.dfinity.org/t/questions-about-data-structures-and-migrations/822/12?u=claudio/).
 
-In that example, a user was attempting to add a field to the record payload of an array, by upgrading from stable type interface:
+En ese ejemplo, un usuario intentaba agregar un campo al registro de carga útil
+de un arreglo, actualizando desde la interfaz de tipo estable:
 
-``` motoko no-repl file=../examples/Card-v0.mo
+```motoko no-repl file=../examples/Card-v0.mo
+
 ```
 
-to *incompatible* stable type interface:
+para _incompatible_ interfaz de tipo estable:
 
-``` motoko no-repl file=../examples/Card-v1.mo
+```motoko no-repl file=../examples/Card-v1.mo
+
 ```
 
-### Problem
+### Problema
 
-When trying this upgrade, `dfx` issues the following warning:
+Al intentar esta actualización, `dfx` emite la siguiente advertencia:
 
 ```
 Stable interface compatibility check issued an ERROR for canister ...
@@ -302,34 +396,54 @@ cannot be consumed at new type
 
 Do you want to proceed? yes/No
 ```
-It is recommended not to continue, as you will lose the state in older versions of Motoko that use [classical orthogonal persistence](orthogonal-persistence/classical.md).
-Upgrading with [enhanced orthogonal persistence](orthogonal-persistence/enhanced.md) will trap and roll back, keeping the old state.
 
-Adding a new record field to the type of existing stable variable is not supported. The reason is simple: The upgrade would need to supply values for the new field out of thin air. In this example, the upgrade would need to conjure up some value for the `description` field of every existing `card` in `map`. Moreover, allowing adding optional fields is also a problem, as a record can be shared from various variables with different static types, some of them already declaring the added field or adding a same-named optional field with a potentially different type (and/or different semantics).
+Se recomienda no continuar, ya que perderás el estado en versiones anteriores de
+Motoko que utilizan
+[persistencia ortogonal clásica](orthogonal-persistence/classical.md). La
+actualización con
+[persistencia ortogonal mejorada](orthogonal-persistence/enhanced.md) fallará
+(trap) y se revertirá, manteniendo el estado anterior.
 
-To resolve this issue, some form of  [explicit data migration](#explicit-migration) is needed.
+Agregar un nuevo campo de registro al tipo de una variable estable existente no
+está soportado. La razón es simple: La actualización necesitaría proporcionar
+valores para el nuevo campo de la nada. En este ejemplo, la actualización
+necesitaría inventar algún valor para el campo `description` de cada `card`
+existente en `map`. Además, permitir agregar campos opcionales también es un
+problema, ya que un registro puede ser compartido desde varias variables con
+diferentes tipos estáticos, algunas de las cuales ya declaran el campo agregado
+o agregan un campo opcional con el mismo nombre pero con un tipo potencialmente
+diferente (y/o una semántica diferente).
 
+Para resolver este problema, se necesita alguna forma de
+[migración explícita de datos](#explicit-migration).
 
-We present two solutions, the first using a sequence of simple upgrades, and a second, recommended solution, that uses a single upgrade with a migration function.
+Presentamos dos soluciones, la primera utilizando una secuencia de
+actualizaciones simples, y una segunda solución recomendada, que utiliza una
+sola actualización con una función de migración.
 
-### Solution 1 using two plain upgrades
+### Solución 1 utilizando dos actualizaciones simples
 
-1. You must keep the old variable `map` with the same structural type. However, you are allowed to change type alias name (`Card` to `OldCard`).
-2. You can introduce a new variable `newMap` and copy the old state to the new one, initializing the new field as needed.
-3. Then, upgrade to this new version.
+1. Debes mantener la variable antigua `map` con el mismo tipo estructural. Sin
+   embargo, puedes cambiar el nombre del alias de tipo (`Card` a `OldCard`).
+2. Puedes introducir una nueva variable `newMap` y copiar el estado antiguo al
+   nuevo, inicializando el nuevo campo según sea necesario.
+3. Luego, actualiza a esta nueva versión.
 
-``` motoko no-repl file=../examples/Card-v1a.mo
+```motoko no-repl file=../examples/Card-v1a.mo
+
 ```
 
-4. **After** we have successfully upgraded to this new version, we can upgrade once more to a version, that drops the old `map`.
+4. **Después** de haber actualizado con éxito a esta nueva versión, podemos
+   actualizar una vez más a una versión que elimine el antiguo `map`.
 
+```motoko no-repl file=../examples/Card-v1b.mo
 
-``` motoko no-repl file=../examples/Card-v1b.mo
 ```
 
-`dfx` will issue a warning that `map` will be dropped.
+`dfx` emitirá una advertencia de que `map` será eliminado.
 
-Make sure, you have previously migrated the old state to `newMap` before applying this final reduced version.
+Asegúrate de haber migrado previamente el estado antiguo a `newMap` antes de
+aplicar esta versión final reducida.
 
 ```
 Stable interface compatibility check issued a WARNING for canister ...
@@ -338,30 +452,38 @@ Stable interface compatibility check issued a WARNING for canister ...
  will be discarded. This may cause data loss. Are you sure?
 ```
 
-### Solution 2 using a migration function and single upgrade
+### Solución 2 utilizando una función de migración y una sola actualización
 
-Instead of the previous two step solution, we can upgrade in one step using a migration function.
+En lugar de la solución anterior de dos pasos, podemos actualizar en un solo
+paso utilizando una función de migración.
 
-1. Define a migration module and function that transforms the old stable variable, at its current type, into the new stable variable at its new type.
+1. Define un módulo de migración y una función que transforme la variable
+   estable antigua, en su tipo actual, en la nueva variable estable en su nuevo
+   tipo.
 
+```motoko no-repl file=../examples/CardMigration.mo
 
-``` motoko no-repl file=../examples/CardMigration.mo
 ```
 
-2. Specify the migration function as the migration expression of your actor declaration:
+2. Especifica la función de migración como la expresión de migración de tu
+   declaración de actor:
 
+```motoko no-repl file=../examples/Card-v1c.mo
 
-``` motoko no-repl file=../examples/Card-v1c.mo
 ```
 
-**After** we have successfully upgraded to this new version, we can also upgrade once more to a version that drops the migration code.
+**Después** de haber actualizado con éxito a esta nueva versión, también podemos
+actualizar una vez más a una versión que elimine el código de migración.
 
+```motoko no-repl file=../examples/Card-v1d.mo
 
-``` motoko no-repl file=../examples/Card-v1d.mo
 ```
 
-However, removing or adjusting the migration code can also be delayed to the next, proper upgrade that fixes bugs or extends functionality.
+Sin embargo, eliminar o ajustar el código de migración también se puede posponer
+hasta la próxima actualización adecuada que solucione errores o amplíe la
+funcionalidad.
 
-Note that with this solution, there is no need to rename `map` to `newMap` and the migration code is nicely isolated from the main code.
+Ten en cuenta que con esta solución, no es necesario cambiar el nombre de `map`
+a `newMap` y el código de migración está aislado del código principal.
 
 <img src="https://github.com/user-attachments/assets/844ca364-4d71-42b3-aaec-4a6c3509ee2e" alt="Logo" width="150" height="150" />

@@ -2,68 +2,92 @@
 sidebar_position: 25
 ---
 
-# System capability
+# Capacidad del sistema (`system` capability)
 
-The `system` capability in Motoko is used to control access to sensitive system functions and prevent potential misuse of these functions.
-It serves as a safety mechanism to ensure that developers are explicitly aware when they are using or granting access to powerful system-level operations.
+La capacidad del sistema (`system` capability) en Motoko se utiliza para
+controlar el acceso a funciones sensibles del sistema y prevenir el uso indebido
+de estas funciones. Sirve como un mecanismo de seguridad para garantizar que los
+desarrolladores sean explícitamente conscientes cuando están utilizando o
+otorgando acceso a operaciones de nivel del sistema con gran poder.
 
-Specifically, the system capability is required for calling sensitive functions such as:
+Específicamente, la capacidad del sistema es requerida para llamar a funciones
+sensibles como:
 
-1. `ExperimentalCycles.add`: This function is used for cycle management, which is crucial for controlling the computational resources on the Internet Computer.
+1. `ExperimentalCycles.add`: Esta función se utiliza para la gestión de ciclos,
+   lo cual es crucial para controlar los recursos computacionales en Internet
+   Computer.
 
-2. `Timer.setTimer`: This function is used for scheduling future computations, which can have significant impacts on system resources and behavior.
+2. `Timer.setTimer`: Esta función se utiliza para programar cálculos futuros, lo
+   que puede tener un impacto significativo en los recursos y el comportamiento
+   del sistema.
 
-The introduction of the system capability helps address a security concern where, in previous versions of Motoko, third-party library functions could make silent calls
-to these sensitive functions without providing any indication to the caller.
-This could potentially lead to unexpected behavior or resource usage.
+La introducción de la capacidad del sistema ayuda a abordar una preocupación de
+seguridad en la que, en versiones anteriores de Motoko, las funciones de
+bibliotecas de terceros podían hacer llamadas silenciosas a estas funciones
+sensibles sin proporcionar ninguna indicación al llamador. Esto podría
+potencialmente llevar a comportamientos inesperados o al uso de recursos no
+deseado.
 
-By requiring explicit declaration and passing of the system capability, Motoko now ensures that developers are fully aware when they are using or allowing the use of these powerful system functions.
-This helps prevent accidental misuse and makes the code's intentions clearer, enhancing both security and code readability.
+Al requerir una declaración explícita y el paso de la capacidad del sistema,
+Motoko ahora asegura que los desarrolladores estén completamente conscientes
+cuando están utilizando o permitiendo el uso de estas funciones poderosas del
+sistema. Esto ayuda a prevenir el uso accidental y hace que las intenciones del
+código sean más claras, mejorando tanto la seguridad como la legibilidad del
+código.
 
-It's important to note that while the system capability allows the use of these sensitive functions, it doesn't automatically grant unlimited access to all system resources.
-It's a type-level mechanism to control and make explicit the use of specific system functions, rather than a comprehensive permission system.
+Es importante destacar que, aunque la capacidad del sistema permite el uso de
+estas funciones sensibles, no otorga automáticamente acceso ilimitado a todos
+los recursos del sistema. Es un mecanismo a nivel de tipo para controlar y hacer
+explícito el uso de funciones específicas del sistema, en lugar de ser un
+sistema de permisos completo.
 
-The system capability was introduced in Motoko version 0.11.0.
-The key change is the introduction of the `system` pseudo-type parameter and argument.
-For instance, `ExperimentalCycles.add` has been revised from having type `Nat -> ()` to having type `<system>Nat -> ()`,
-reflecting the new system capability requirement.
+La capacidad del sistema se introdujo en la versión 0.11.0 de Motoko. El cambio
+clave es la introducción del parámetro y argumento pseudo-tipo `system`. Por
+ejemplo, `ExperimentalCycles.add` ha sido revisada para pasar de tener el tipo
+`Nat -> ()` a tener el tipo `<system>Nat -> ()`, reflejando el nuevo requisito
+de capacidad del sistema.
 
-To use system capabilities in your code, you must now explicitly declare them when required,
-and should explicitly supply them when granting permission to a callee.
+Para utilizar capacidades del sistema en tu código, ahora debes declararlas
+explícitamente cuando sea necesario, y debes proporcionarlas explícitamente
+cuando otorgues permiso a un llamado.
 
-Functions that need to use system capabilities must include the `system` pseudo-type parameter.
-It's important to note that `system`, if specified, must be the first parameter in function or class declarations.
+Las funciones que necesitan usar capacidades del sistema deben incluir el
+parámetro pseudo-tipo `system`. Es importante destacar que `system`, si se
+especifica, debe ser el primer parámetro en declaraciones de funciones o clases.
 
-For example:
+Por ejemplo:
 
-``` motoko no-repl
+```motoko no-repl
 func splitCycles<system>() {
   let amount = ExperimentalCycles.balance() / 2;
   ExperimentalCycles.add(amount); // generates a warning
 }
 ```
 
-To suppress warnings about implicit system capability usage, you can
-explicitly pass the `system` capability at call sites too:
+Para suprimir las advertencias sobre el uso implícito de la capacidad del
+sistema, también puedes pasar explícitamente la capacidad `system` en los sitios
+de llamada:
 
-``` motoko no-repl
+```motoko no-repl
 func splitCycles<system>() {
   let amount = ExperimentalCycles.balance() / 2;
   ExperimentalCycles.add<system>(amount); // accepted without warning
 }
 ```
 
-System capabilities are available in specific contexts, such as within
-actor expression or actor class bodies, non-query shared functions,
-asynchronous functions, async expressions, local functions or classes
-declared with the `system` pseudo-type parameter, and the preupgrade
-and postupgrade system functions.
+Las capacidades del sistema están disponibles en contextos específicos, como
+dentro de expresiones de actores o cuerpos de clases de actores, funciones
+compartidas no consultables, funciones asíncronas, expresiones asíncronas,
+funciones locales o clases declaradas con el parámetro pseudo-tipo `system`, y
+las funciones del sistema preupgrade y postupgrade.
 
-However, they are not available in query methods, composite query
-methods, or functions that don't declare their need of system capability.
+Sin embargo, no están disponibles en métodos de consulta, métodos de consulta
+compuestos o funciones que no declaran su necesidad de la capacidad del sistema.
 
-For more details, see the [language manual](../reference/language-manual#type-arguments).
+Para obtener más detalles, consulta el
+[manual de lenguaje](../reference/language-manual#type-arguments).
 
-For details on migrating code from earlier Motoko versions, see this [guide](../migration-guides/0.11.0-migration-guide).
+Para obtener detalles sobre la migración de código desde versiones anteriores de
+Motoko, consulta esta [guía](../migration-guides/0.11.0-migration-guide).
 
 <img src="https://github.com/user-attachments/assets/844ca364-4d71-42b3-aaec-4a6c3509ee2e" alt="Logo" width="150" height="150" />

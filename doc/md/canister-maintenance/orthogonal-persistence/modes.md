@@ -2,10 +2,24 @@
 sidebar_position: 1
 ---
 
-# Persistence modes
+# Modos de persistencia
 
-Motoko features two implementations for orthogonal persistence:
+Motoko cuenta con dos implementaciones para la persistencia ortogonal:
 
-* [Enhanced orthogonal persistence](enhanced.md), currently in beta stage, provides very fast upgrades, scaling independently of the heap size. This is realized by retaining the entire Wasm main memory on an upgrade and simply performing a type-driven upgrade safety check. By using 64-bit address space, it is designed to scale beyond 4 GiB and in the future, offer the same capacity like stable memory.
+- [Persistencia ortogonal mejorada](enhanced.md), actualmente en etapa beta,
+  proporciona actualizaciones muy rápidas, escalando de forma independiente del
+  tamaño del montón. Esto se logra al retener toda la memoria principal de Wasm
+  en una actualización y simplemente realizar una verificación de seguridad de
+  actualización basada en tipos. Al utilizar un espacio de direcciones de 64
+  bits, está diseñado para escalar más allá de 4 GiB y en el futuro, ofrecer la
+  misma capacidad que la memoria estable.
 
-* [Classical orthogonal persistence](classical.md) is the old implementation of orthogonal persistence that will be superseded by enhanced orthogonal persistence. On an upgrade, the runtime system first serializes the persistent data to stable memory and then deserializes it back again to main memory. While this is both inefficient and unscalable, it exhibits problems on shared immutable data (potentially leading to state explosion), deep structures (call stack overflow) and larger heaps (the implementation limits the stable data to at most 2 GiB).
+- [Persistencia ortogonal clásica](classical.md) es la antigua implementación de
+  la persistencia ortogonal que será reemplazada por la persistencia ortogonal
+  mejorada. En una actualización, el sistema de tiempo de ejecución primero
+  serializa los datos persistentes en la memoria estable y luego los deserializa
+  nuevamente en la memoria principal. Si bien esto es ineficiente y no
+  escalable, presenta problemas en datos inmutables compartidos (lo que
+  potencialmente conduce a una explosión de estado), estructuras profundas
+  (desbordamiento de la pila de llamadas) y montones más grandes (la
+  implementación limita los datos estables a un máximo de 2 GiB).

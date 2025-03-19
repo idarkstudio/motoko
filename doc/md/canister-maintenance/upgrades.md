@@ -2,105 +2,187 @@
 sidebar_position: 3
 ---
 
-# Stable variables and upgrade methods
+# Variables estables y métodos de actualización
 
+Una característica clave de Motoko es su capacidad para persistir
+automáticamente el estado del programa sin instrucciones explícitas del usuario,
+lo que se conoce como **persistencia ortogonal**. Esto no solo cubre la
+persistencia entre transacciones, sino que también incluye actualizaciones de
+canisters. Para este propósito, Motoko cuenta con un compilador y un sistema de
+tiempo de ejecución personalizados que gestionan las actualizaciones de manera
+sofisticada, de modo que una nueva versión del programa pueda retomar el estado
+dejado por una versión anterior. Como resultado, la persistencia de datos en
+Motoko no solo es simple, sino que también previene la corrupción o pérdida de
+datos, al mismo tiempo que es eficiente. No se requiere una base de datos, una
+API de memoria estable o estructuras de datos estables para retener el estado
+entre actualizaciones. En su lugar, una simple palabra clave `stable` es
+suficiente para declarar una estructura de datos de forma arbitraria como
+persistente, incluso si la estructura utiliza compartición, tiene una
+complejidad profunda o contiene ciclos.
 
+Esto es sustancialmente diferente a otros lenguajes compatibles con IC, que
+utilizan implementaciones de lenguajes estándar que no están diseñadas con la
+persistencia ortogonal en mente: reorganizan estructuras de memoria de manera no
+controlada durante la recompilación o en tiempo de ejecución. Como alternativa,
+en otros lenguajes, los programadores deben usar explícitamente memoria estable
+o estructuras de datos estables especiales para rescatar sus datos entre
+actualizaciones. A diferencia de Motoko, este enfoque no solo es engorroso, sino
+también inseguro e ineficiente. En comparación con el uso de estructuras de
+datos estables, la persistencia ortogonal de Motoko permite un modelado de datos
+más natural y un acceso a datos significativamente más rápido, lo que finalmente
+resulta en programas más eficientes.
 
-One key feature of Motoko is its ability to automatically persist the program's state without explicit user instruction, called **orthogonal persistence**. This not only covers persistence across transactions but also includes canister upgrades. For this purpose, Motoko features a bespoke compiler and runtime system that manages upgrades in a sophisticated way such that a new program version can pick up the state left behind by a previous program version. As a result, Motoko data persistence is not simple but also prevents data corruption or loss, while being efficient at the same time. No database, stable memory API, or stable data structure is required to retain state across upgrades. Instead, a simple `stable` keyword is sufficient to declare an data structure of arbitrary shape persistent, even if the structure uses sharing, has a deep complexity, or contains cycles.
+## Declaración de variables estables
 
-This is substantially different to other languages supported on the IC, which use off-the-shelf language implementations that are not designed for orthogonal persistence in mind: They rearrange memory structures in an uncontrolled manner on re-compilation or at runtime. As an alternative, in other languages, programmers have to explicitly use stable memory or special stable data structures to rescue their data between upgrades. Contrary to Motoko, this approach is not only cumbersome, but also unsafe and inefficient. Compared to using stable data structures, Motoko's orthogonal persistence allows more natural data modeling and significantly faster data access, eventually resulting in more efficient programs.
+En un actor, puedes configurar qué parte del programa se considera persistente,
+es decir, que sobrevive a las actualizaciones, y qué parte es efímera, es decir,
+que se restablece en las actualizaciones.
 
-## Declaring stable variables
+Más precisamente, cada declaración de variable `let` o `var` en un actor puede
+especificar si la variable es `stable` o `transient`. Si no proporcionas un
+modificador, la variable se considera `transient` por defecto.
 
-In an actor, you can configure which part of the program is considered to be persistent, i.e. survives upgrades, and which part are ephemeral, i.e. are reset on upgrades.
+La semántica de los modificadores es la siguiente:
 
-More precisely, each `let` and `var` variable declaration in an actor can specify whether the variable is `stable` or `transient`. If you don’t provide a modifier, the variable is assumed to be `transient` by default.
-
-
-The semantics of the modifiers is as follows:
-* `stable` means that all values directly or indirectly reachable from that stable actor variable are considered persistent and automatically retained across upgrades. This is the primary choice for most of the program's state.
-* `transient` means that the variable is re-initialized on upgrade, such that the values referenced by this transient variable can be discarded, unless the values are transitively reachable by other variables that are stable. `transient` is only used for temporary state or references to high-order types, such as local function references, see [stable types](#stable-types).
+- `stable` significa que todos los valores directa o indirectamente accesibles
+  desde esa variable estable del actor se consideran persistentes y se retienen
+  automáticamente entre actualizaciones. Esta es la opción principal para la
+  mayor parte del estado del programa.
+- `transient` significa que la variable se reinicializa en la actualización, de
+  modo que los valores referenciados por esta variable transitoria pueden
+  descartarse, a menos que los valores sean transitivamente accesibles a través
+  de otras variables que sean estables. `transient` solo se usa para estados
+  temporales o referencias a tipos de alto orden, como referencias a funciones
+  locales, consulta [tipos estables](#stable-types).
 
 :::note
 
-Previous versions of Motoko (up to version 0.13.4) used the keyword `flexible` instead of `transient`. Both keywords are accepted interchangeably but the legacy `flexible` keyword may be deprecated in the future.
+Las versiones anteriores de Motoko (hasta la versión 0.13.4) usaban la palabra
+clave `flexible` en lugar de `transient`. Ambas palabras clave se aceptan
+indistintamente, pero la palabra clave heredada `flexible` puede quedar obsoleta
+en el futuro.
 
 :::note
 
-The following is a simple example of how to declare a stable counter that can be upgraded while preserving the counter’s value:
+El siguiente es un ejemplo simple de cómo declarar un contador estable que puede
+ser actualizado mientras se preserva el valor del contador:
 
-``` motoko file=../examples/StableCounter.mo
+```motoko file=../examples/StableCounter.mo
+
 ```
 
-Starting with Motoko v0.13.5, if you prefix the `actor` keyword with the keyword `persistent`, then all `let` and `var` declarations of the actor or actor class are implicitly declared `stable`. Only `transient` variables will need an explicit `transient` declaration.
-Using a `persistent` actor can help avoid unintended data loss. It is the recommended declaration syntax for actors and actor classes. The non-`persistent` declaration is provided for backwards compatibility.
+A partir de Motoko v0.13.5, si prefijas la palabra clave `actor` con la palabra
+clave `persistent`, entonces todas las declaraciones `let` y `var` del actor o
+clase de actor se declaran implícitamente como `stable`. Solo las variables
+`transient` necesitarán una declaración explícita de `transient`. El uso de un
+actor `persistent` puede ayudar a evitar la pérdida de datos no deseada. Es la
+sintaxis de declaración recomendada para actores y clases de actores. La
+declaración no `persistent` se proporciona para garantizar la compatibilidad con
+versiones anteriores.
 
-Since Motoko v0.13.5, the recommended way to declare `StableCounter` above is:
+Desde Motoko v0.13.5, la forma recomendada de declarar `StableCounter` es:
 
-``` motoko file=../examples/PersistentCounter.mo
+```motoko file=../examples/PersistentCounter.mo
+
 ```
 
 :::note
 
-You can only use the `stable`, `transient` (or legacy `flexible`) modifier on `let` and `var` declarations that are **actor fields**. You cannot use these modifiers anywhere else in your program.
+Solo puedes usar el modificador `stable`, `transient` (o el legado `flexible`)
+en las declaraciones `let` y `var` que son **campos de actores**. No puedes usar
+estos modificadores en ningún otro lugar de tu programa.
 
 :::
 
+Cuando compilas y despliegas un canister por primera vez, todas las variables
+transitorias y estables en el actor se inicializan en secuencia. Cuando
+despliegas un canister en modo `upgrade`, todas las variables estables que
+existían en la versión anterior del actor se pre-inicializan con sus valores
+antiguos. Después de que las variables estables se inicializan con sus valores
+anteriores, las variables transitorias restantes y las nuevas variables estables
+se inicializan en secuencia.
 
-When you first compile and deploy a canister, all transient and stable variables in the actor are initialized in sequence. When you deploy a canister using the `upgrade` mode, all stable variables that existed in the previous version of the actor are pre-initialized with their old values. After the stable variables are initialized with their previous values, the remaining transient and newly-added stable variables are initialized in sequence.
+:::danger No olvides declarar las variables como `stable` si deben sobrevivir a
+las actualizaciones del canister, ya que el valor predeterminado es `transient`
+si no se declara ningún modificador. Una precaución simple es declarar todo el
+actor o clase de actor como `persistent`. :::
 
-:::danger
-Do not forget to declare variables `stable` if they should survive canister upgrades as the default is `transient` if no modifier is declared.
-A simple precaution is declare the entire actor or actor class `persistent`.
-:::
+## Modos de persistencia
 
-## Persistence modes
+Motoko actualmente cuenta con dos implementaciones para la persistencia
+ortogonal, consulta [modos de persistencia](orthogonal-persistence/modes.md).
 
-Motoko currently features two implementations for orthogonal persistence, see [persistence modes](orthogonal-persistence/modes.md).
+## Tipos estables
 
-## Stable types
+Debido a que el compilador debe asegurarse de que las variables estables sean
+compatibles con y significativas en el programa de reemplazo después de una
+actualización, cada variable `stable` debe tener un tipo estable. Un tipo es
+estable si el tipo obtenido al ignorar cualquier modificador `var` dentro de él
+es compartido.
 
-Because the compiler must ensure that stable variables are both compatible with and meaningful in the replacement program after an upgrade, every `stable` variable must have a stable type. A type is stable if the type obtained by ignoring any `var` modifiers within it is shared.
-
-The only difference between stable types and shared types is the former’s support for mutation. Like shared types, stable types are restricted to first-order data, excluding local functions and structures built from local functions (such as class instances). This exclusion of functions is required because the meaning of a function value, consisting of both data and code, cannot easily be preserved across an upgrade. The meaning of plain data, mutable or not, can be.
+La única diferencia entre los tipos estables y los tipos compartidos es el
+soporte de los primeros para la mutación. Al igual que los tipos compartidos,
+los tipos estables están restringidos a datos de primer orden, excluyendo
+funciones locales y estructuras construidas a partir de funciones locales (como
+instancias de clases). Esta exclusión de funciones es necesaria porque el
+significado de un valor de función, que consiste en datos y código, no puede
+preservarse fácilmente a través de una actualización. El significado de los
+datos simples, mutables o no, sí puede preservarse.
 
 :::note
 
-In general, classes are not stable because they can contain local functions. However, a plain record of stable data is a special case of object types that are stable. Moreover, references to actors and shared functions are also stable, allowing you to preserve their values across upgrades. For example, you can preserve the state record of a set of actors or shared function callbacks subscribing to a service.
+En general, las clases no son estables porque pueden contener funciones locales.
+Sin embargo, un registro simple de datos estables es un caso especial de tipos
+de objetos que son estables. Además, las referencias a actores y funciones
+compartidas también son estables, lo que te permite preservar sus valores entre
+actualizaciones. Por ejemplo, puedes preservar el registro de estado de un
+conjunto de actores o devoluciones de llamada de funciones compartidas suscritas
+a un servicio.
 
 :::
 
-## Converting non-stable types into stable types
+## Conversión de tipos no estables a tipos estables
 
-For variables that do not have a stable type, there are two options for making them stable:
+Para las variables que no tienen un tipo estable, existen dos opciones para
+hacerlas estables:
 
-1. Use a `stable` module for the type, such as:
+1. Usar un módulo `stable` para el tipo, como:
 
-  - [StableBuffer](https://github.com/canscale/StableBuffer)
-  - [StableHashMap](https://github.com/canscale/StableHashMap)
-  - [StableRBTree](https://github.com/canscale/StableRBTree)
+- [StableBuffer](https://github.com/canscale/StableBuffer)
+- [StableHashMap](https://github.com/canscale/StableHashMap)
+- [StableRBTree](https://github.com/canscale/StableRBTree)
 
-:::note
-Unlike stable data structures in the Rust CDK, these modules do not use stable memory but rely on orthogonal persistence. The adjective "stable" only denotes a stable type in Motoko.
-:::
+:::note A diferencia de las estructuras de datos estables en el Rust CDK, estos
+módulos no usan memoria estable, sino que dependen de la persistencia ortogonal.
+El adjetivo "estable" solo denota un tipo estable en Motoko. :::
 
-2. Extract the state in a stable type, and wrap it in the non-stable type.
+2. Extraer el estado en un tipo estable y envolverlo en el tipo no estable.
 
-For example, the stable type `TemperatureSeries` covers the persistent data, while the non-stable type `Weather` wraps this with additional methods (local function types).
+Por ejemplo, el tipo estable `TemperatureSeries` cubre los datos persistentes,
+mientras que el tipo no estable `Weather` lo envuelve con métodos adicionales
+(tipos de funciones locales).
 
+```motoko no-repl file=../examples/WeatherActor.mo
 
-``` motoko no-repl file=../examples/WeatherActor.mo
 ```
 
-3. __Discouraged and not recommended__: [Pre- and post-upgrade hooks](#preupgrade-and-postupgrade-system-methods) allow copying non-stable types to stable types during upgrades. This approach is error-prone and does not scale for large data. **Per best practices, using these methods should be avoided if possible.** Conceptually, it also does not align well with the idea of orthogonal persistence.
+3. **Desaconsejado y no recomendado**:
+   [Ganchos de pre y post actualización](#preupgrade-and-postupgrade-system-methods)
+   permiten copiar tipos no estables a tipos estables durante las
+   actualizaciones. Este enfoque es propenso a errores y no escala para grandes
+   cantidades de datos. **Según las mejores prácticas, el uso de estos métodos
+   debe evitarse si es posible.** Conceptualemente, tampoco se alinea bien con
+   la idea de persistencia ortogonal.
 
-## Stable type signatures
+## Firmas de tipos estables
 
-The collection of stable variable declarations in an actor can be summarized in a stable signature.
+La colección de declaraciones de variables estables en un actor puede resumirse
+en una firma estable.
 
-The textual representation of an actor’s stable signature resembles the internals of a Motoko actor type:
+La representación textual de la firma estable de un actor se asemeja a las
+internas de un tipo de actor en Motoko:
 
-``` motoko no-repl
+```motoko no-repl
 actor {
   stable x : Nat;
   stable var y : Int;
@@ -108,133 +190,197 @@ actor {
 };
 ```
 
-It specifies the names, types and mutability of the actor’s stable fields, possibly preceded by relevant Motoko type declarations.
+Especifica los nombres, tipos y mutabilidad de los campos estables del actor,
+posiblemente precedidos por declaraciones de tipos relevantes de Motoko.
 
 :::tip
 
-You can emit the stable signature of the main actor or actor class to a `.most` file using `moc` compiler option `--stable-types`. You should never need to author your own `.most` file.
+Puedes emitir la firma estable del actor principal o de la clase de actor a un
+archivo `.most` usando la opción del compilador `moc` `--stable-types`. Nunca
+deberías necesitar escribir tu propio archivo `.most`.
 
 :::
 
-A stable signature `<stab-sig1>` is stable-compatible with signature `<stab-sig2>`, if for each stable field `<id> : T` in `<stab-sig1>` one of the following conditions hold:
+Una firma estable `<stab-sig1>` es compatible en estabilidad con la firma
+`<stab-sig2>`, si para cada campo estable `<id> : T` en `<stab-sig1>` se cumple
+una de las siguientes condiciones:
 
-- `<stab-sig2>` does not contain a stable field `<id>`.
-- `<stab-sig>` has a matching stable field `<id> : U` with `T <: U`.
+- `<stab-sig2>` no contiene un campo estable `<id>`.
+- `<stab-sig>` tiene un campo estable coincidente `<id> : U` con `T <: U`.
 
-Note that `<stab-sig2>` may contain additional fields or abandon fields of `<stab-sig1>`. Mutability can be different for matching fields.
+Ten en cuenta que `<stab-sig2>` puede contener campos adicionales o abandonar
+campos de `<stab-sig1>`. La mutabilidad puede ser diferente para campos
+coincidentes.
 
-`<stab-sig1>` is the signature of an older version while `<stab-sig2>` is the signature of a newer version.
+`<stab-sig1>` es la firma de una versión anterior, mientras que `<stab-sig2>` es
+la firma de una versión más nueva.
 
-The subtyping condition on stable fields ensures that the final value of some field can be consumed as the initial value of that field in the upgraded code.
+La condición de subtipificación en los campos estables asegura que el valor
+final de algún campo pueda consumirse como el valor inicial de ese campo en el
+código actualizado.
 
 :::tip
 
-You can check the stable-compatibility of two `.most` files containing stable signatures, using `moc` compiler option `--stable-compatible file1.most file2.most`.
+Puedes verificar la compatibilidad en estabilidad de dos archivos `.most` que
+contienen firmas estables, utilizando la opción del compilador `moc`
+`--stable-compatible file1.most file2.most`.
 
 :::
 
+## Seguridad en las actualizaciones
 
-## Upgrade safety
+Al actualizar un canister, es importante verificar que la actualización pueda
+proceder sin:
 
-When upgrading a canister, it is important to verify that the upgrade can proceed without:
+- Introducir un cambio incompatible en las declaraciones estables.
+- Romper clientes debido a un cambio en la interfaz Candid.
 
--   Introducing an incompatible change in stable declarations.
--   Breaking clients due to a Candid interface change.
+Con [persistencia ortogonal mejorada](orthogonal-persistence/enhanced.md),
+Motoko rechaza cambios incompatibles en las declaraciones estables durante un
+intento de actualización. Además, `dfx` verifica las dos condiciones antes de
+intentar la actualización y advierte a los usuarios en consecuencia.
 
-With [enhanced orthogonal persistence](orthogonal-persistence/enhanced.md), Motoko rejects incompatible changes of stable declarations during upgrade attempt.
-Moreover, `dfx` checks the two conditions before attempting the upgrade and warns users correspondingly.
+Una actualización de canister en Motoko es segura siempre que:
 
-A Motoko canister upgrade is safe provided:
+- La interfaz Candid del canister evolucione a un subtipo de Candid.
+- La firma estable de Motoko del canister evolucione a una compatible en
+  estabilidad.
 
--  The canister’s Candid interface evolves to a Candid subtype.
--  The canister’s Motoko stable signature evolves to a stable-compatible one.
-
-:::danger
-With [classical orthogonal persistence](orthogonal-persistence/classical.md), the upgrade can still fail due to resource constraints. This is problematic as the canister can then not be upgraded. It is therefore strongly advised to test the scalability of upgrades well. Enhanced orthogonal persistence will abandon this issue.
-:::
+:::danger Con
+[persistencia ortogonal clásica](orthogonal-persistence/classical.md), la
+actualización aún puede fallar debido a restricciones de recursos. Esto es
+problemático, ya que el canister no puede ser actualizado. Por lo tanto, se
+recomienda encarecidamente probar la escalabilidad de las actualizaciones. La
+persistencia ortogonal mejorada abandonará este problema. :::
 
 :::tip
 
-You can check valid Candid subtyping between two services described in `.did` files using the [`didc` tool](https://github.com/dfinity/candid) with argument `check file1.did file2.did`.
+Puedes verificar la subtipificación válida de Candid entre dos servicios
+descritos en archivos `.did` utilizando la herramienta
+[`didc`](https://github.com/dfinity/candid) con el argumento
+`check file1.did file2.did`.
 
 :::
 
-## Upgrading a deployed actor or canister
+## Actualización de un actor o canister desplegado
 
-After you have deployed a Motoko actor with the appropriate `stable` variables, you can use the `dfx deploy` command to upgrade an already deployed version. For information about upgrading a deployed canister, see [upgrade a canister smart contract](https://internetcomputer.org/docs/current/developer-docs/smart-contracts/maintain/upgrade).
+Después de haber desplegado un actor de Motoko con las variables `stable`
+apropiadas, puedes usar el comando `dfx deploy` para actualizar una versión ya
+desplegada. Para obtener información sobre cómo actualizar un canister
+desplegado, consulta
+[actualizar un contrato inteligente de canister](https://internetcomputer.org/docs/current/developer-docs/smart-contracts/maintain/upgrade).
 
-`dfx deploy` checks that the interface is compatible, and if not, shows this message and asks if you want to continue:
+`dfx deploy` verifica que la interfaz sea compatible, y si no lo es, muestra
+este mensaje y pregunta si deseas continuar:
 
 ```
 You are making a BREAKING change. Other canisters or frontend clients relying on your canister may stop working.
 ```
 
-In addition, Motoko with enhanced orthogonal persistence implements extra safe guard in the runtime system to ensure that the stable data is compatible, to exclude any data corruption or misinterpretation. Moreover, `dfx` also warns about dropping stable variables.
+Además, Motoko con persistencia ortogonal mejorada implementa una protección
+adicional en el sistema de tiempo de ejecución para garantizar que los datos
+estables sean compatibles, evitando cualquier corrupción o mala interpretación
+de los datos. Además, `dfx` también advierte sobre la eliminación de variables
+estables.
 
-## Data migration
+## Migración de datos
 
-Often, data representation changes with a new program version. For orthogonal persistence, it is important the language is able to allow flexible data migration to the new version.
+A menudo, la representación de los datos cambia con una nueva versión del
+programa. Para la persistencia ortogonal, es importante que el lenguaje permita
+una migración flexible de datos a la nueva versión.
 
-Motoko supports two kinds of data migrations: Implicit migration and explicit migration.
+Motoko admite dos tipos de migraciones de datos: migración implícita y migración
+explícita.
 
-### Implicit migration
+### Migración implícita
 
-This is automatically supported when the new program version is stable-compatible with the old version. The runtime system of Motoko then automatically handles the migration on upgrade.
+Esto se admite automáticamente cuando la nueva versión del programa es
+compatible en estabilidad con la versión anterior. El sistema de tiempo de
+ejecución de Motoko maneja automáticamente la migración durante la
+actualización.
 
-More precisely, the following changes can be implicitly migrated:
-* Adding or removing actor fields.
-* Changing the mutability of an actor field.
-* Removing record fields.
-* Adding variant fields.
-* Changing `Nat` to `Int`.
-* Shared function parameter contravariance and return type covariance.
-* Any change that is allowed by the Motoko's subtyping rule.
+Más precisamente, los siguientes cambios pueden migrarse implícitamente:
 
-### Explicit migration
+- Agregar o eliminar campos de actores.
+- Cambiar la mutabilidad de un campo de actor.
+- Eliminar campos de registros.
+- Agregar campos de variantes.
+- Cambiar `Nat` a `Int`.
+- Contravarianza de parámetros de funciones compartidas y covarianza de tipos de
+  retorno.
+- Cualquier cambio permitido por la regla de subtipificación de Motoko.
 
-More complex migration patterns that require non-trivial data transformations are possible, but require additional coding and care by the user.
+### Migración explícita
 
-One way to replace some stable variables by a new set with different types is to use a sequence of upgrades to transform the state as desired:
+Patrones de migración más complejos que requieren transformaciones de datos no
+triviales son posibles, pero requieren codificación adicional y cuidado por
+parte del usuario.
 
-For this purpose, a three step approach is taken:
-1. Introduce new variables of the desired types, while keeping the old declarations.
-2. Write logic to copy the state from the old variables to the new variables on upgrade.
-3. Drop the old declarations once all data has been migrated.
+Una forma de reemplazar algunas variables estables por un nuevo conjunto con
+tipos diferentes es usar una secuencia de actualizaciones para transformar el
+estado según se desee:
 
-A cleaner, more maintainable solution is to declare an explicit migration expression that is used
-to transform a subset of existing stable variables into a subset of replacement stable variables.
+Para este propósito, se sigue un enfoque de tres pasos:
 
-Both of these data migration paths are supported by static and dynamic checks that prevent data loss or corruption.
-Of course, a user may still lose data due to coding errors, so should tread carefully.
+1. Introducir nuevas variables de los tipos deseados, manteniendo las
+   declaraciones antiguas.
+2. Escribir lógica para copiar el estado de las variables antiguas a las nuevas
+   durante la actualización.
+3. Eliminar las declaraciones antiguas una vez que todos los datos se hayan
+   migrado.
 
-For more information, see the [example of explicit migration](compatibility.md#explicit-migration) and the
-reference material on [migration expressions](../../reference/language-manual#migration-expressions).
+Una solución más limpia y mantenible es declarar una expresión de migración
+explícita que se utilice para transformar un subconjunto de variables estables
+existentes en un subconjunto de variables estables de reemplazo.
 
-## Legacy features
+Ambos caminos de migración de datos son compatibles con verificaciones estáticas
+y dinámicas que evitan la pérdida o corrupción de datos. Por supuesto, un
+usuario aún puede perder datos debido a errores de codificación, por lo que debe
+proceder con cuidado.
 
-The following aspects are retained for historical reasons and backwards compatibility:
+Para obtener más información, consulta el
+[ejemplo de migración explícita](compatibility.md#explicit-migration) y el
+material de referencia sobre
+[expresiones de migración](../../reference/language-manual#migration-expressions).
 
-### Pre-upgrade and post-upgrade system methods
+## Características heredadas
 
-:::danger
-Using the pre- and post-upgrade system methods is discouraged. It is error-prone and can render a canister unusable. In particular, if a `preupgrade` method traps and cannot be prevented from trapping by other means, then your canister may be left in a state in which it can no longer be upgraded.  Per best practices, using these methods should be avoided if possible.
-:::
+Los siguientes aspectos se conservan por razones históricas y compatibilidad
+hacia atrás:
 
-Motoko supports user-defined upgrade hooks that run immediately before and after an upgrade. These upgrade hooks allow triggering additional logic on upgrade.
-These hooks are declared as `system` functions with special names, `preugrade` and `postupgrade`. Both functions must have type `: () → ()`.
+### Métodos del sistema pre-upgrade y post-upgrade
 
-:::danger
-If `preupgrade` raises a trap, hits the instruction limit, or hits another IC computing limit, the upgrade can no longer succeed and the canister is stuck with the existing version.
-:::
+:::danger El uso de los métodos del sistema pre-upgrade y post-upgrade está
+desaconsejado. Es propenso a errores y puede dejar un canister inutilizable. En
+particular, si un método `preupgrade` falla (trap) y no se puede evitar que
+falle por otros medios, entonces tu canister puede quedar en un estado en el que
+ya no se puede actualizar. Según las mejores prácticas, se debe evitar el uso de
+estos métodos si es posible. :::
 
-:::tip
-`postupgrade` is not needed, as the equal effect can be achieved by introducing initializing expressions in the actor, e.g. non-stable `let` expressions or expression statements.
-:::
+Motoko admite ganchos de actualización definidos por el usuario que se ejecutan
+inmediatamente antes y después de una actualización. Estos ganchos de
+actualización permiten activar lógica adicional durante la actualización. Estos
+ganchos se declaran como funciones `system` con nombres especiales, `preupgrade`
+y `postupgrade`. Ambas funciones deben tener el tipo `: () → ()`.
 
-### Stable memory and stable regions
+:::danger Si `preupgrade` genera un error (trap), alcanza el límite de
+instrucciones o alcanza otro límite de computación de IC, la actualización ya no
+puede tener éxito y el canister se queda atascado con la versión existente. :::
 
-Stable memory was introduced on the IC to allow upgrades in languages that do not implement orthogonal persistence of the main memory. This is the case with Motoko's classical persistence as well as other languages besides Motoko.
+:::tip `postupgrade` no es necesario, ya que se puede lograr el mismo efecto
+introduciendo expresiones de inicialización en el actor, por ejemplo,
+expresiones `let` no estables o declaraciones de expresiones. :::
 
-Stable memory and stable regions can still be used in combination with orthogonal persistence, although there is little practical need for this with enhanced orthogonal persistence and the future large main memory capacity on the IC.
+### Memoria estable y regiones estables
+
+La memoria estable se introdujo en IC para permitir actualizaciones en lenguajes
+que no implementan la persistencia ortogonal de la memoria principal. Este es el
+caso de la persistencia clásica de Motoko, así como de otros lenguajes además de
+Motoko.
+
+La memoria estable y las regiones estables aún pueden usarse en combinación con
+la persistencia ortogonal, aunque hay poca necesidad práctica de esto con la
+persistencia ortogonal mejorada y la futura gran capacidad de memoria principal
+en IC.
 
 <img src="https://github.com/user-attachments/assets/844ca364-4d71-42b3-aaec-4a6c3509ee2e" alt="Logo" width="150" height="150" />

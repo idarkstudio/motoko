@@ -4,26 +4,31 @@ sidebar_position: 7
 
 # Candid UI
 
+El lenguaje de descripción de la interfaz del canister, comúnmente conocido como
+Candid o más generalmente como IDL, proporciona un lenguaje común para
+especificar la firma de un contrato inteligente de canister.
 
+Candid proporciona una forma unificada de interactuar con contratos inteligentes
+de canister que están escritos en diferentes lenguajes o accedidos utilizando
+diferentes herramientas. Por ejemplo, Candid proporciona una vista consistente
+de un servicio, ya sea que el programa subyacente sea nativo de Rust, JavaScript
+o cualquier otro lenguaje de programación. Candid también permite que diferentes
+herramientas, como la interfaz de línea de comandos `dfx` y la aplicación
+Network Nervous System, compartan una descripción común para un servicio.
 
-The canister interface description language, often referred to as Candid or more generally as the IDL, provides a common language for specifying the signature of a canister smart contract.
+Basado en la firma de tipo del actor, Candid también proporciona una interfaz
+web que te permite llamar a funciones de canister para pruebas y depuración.
 
-Candid provides a unified way for you to interact with canister smart contracts that are written in different languages or accessed using different tools.
-For example, Candid provides a consistent view of a service whether the underlying program is native Rust, JavaScript, or any other programming language.
-Candid also enables different tools, such as the `dfx` command-line interface and the Network Nervous System dapp, to share a common description for a service.
+## Usando Candid UI
 
-Based on the type signature of the actor, Candid also provides a web interface that allows you to call canister functions for testing and debugging.
-
-## Using Candid UI
-
-To learn how to use Candid, check out the documentation here:
+Para aprender cómo usar Candid, consulta la documentación aquí:
 
 - [Candid UI](https://internetcomputer.org/docs/current/developer-docs/smart-contracts/candid).
 
-- [What is Candid?](https://internetcomputer.org/docs/current/developer-docs/smart-contracts/candid/candid-concepts).
+- [¿Qué es Candid?](https://internetcomputer.org/docs/current/developer-docs/smart-contracts/candid/candid-concepts).
 
-- [Using Candid](https://internetcomputer.org/docs/current/developer-docs/smart-contracts/candid/candid-howto).
+- [Usando Candid](https://internetcomputer.org/docs/current/developer-docs/smart-contracts/candid/candid-howto).
 
-- [Candid specification](https://github.com/dfinity/candid/blob/master/spec/Candid.md).
+- [Especificación de Candid](https://github.com/dfinity/candid/blob/master/spec/Candid.md).
 
 <img src="https://github.com/user-attachments/assets/844ca364-4d71-42b3-aaec-4a6c3509ee2e" alt="Logo" width="150" height="150" />

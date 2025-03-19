@@ -2,61 +2,77 @@
 sidebar_position: 25
 ---
 
-# Structural equality
+# Igualdad estructural
 
+La igualdad (`==`) — y por extensión la desigualdad (`!=`) — es **estructural**.
+Dos valores, `a` y `b`, son iguales, `a == b`, si tienen contenidos iguales,
+independientemente de la representación física o la identidad de esos valores en
+la memoria.
 
+Por ejemplo, las cadenas `"hello world"` y `"hello " # "world"` son iguales,
+aunque es muy probable que estén representadas por objetos diferentes en la
+memoria.
 
-Equality (`==`) — and by extension inequality (`!=`) — is **structural**. Two values, `a` and `b`, are equal, `a == b`. They have equal contents regardless of the physical representation or identity of those values in memory.
+La igualdad está definida solo en tipos `shared` o en tipos que no contienen:
 
-For example, the strings `"hello world"` and `"hello " #  "world"` are equal, even though they are most likely represented by different objects in memory.
+- Campos mutables.
 
-Equality is defined only on `shared` types or on types that don’t contain:
+- Arreglos mutables.
 
-- Mutable fields.
+- Funciones no compartidas.
 
-- Mutable arrays.
+- Componentes de tipo genérico.
 
-- Non-shared functions.
+Por ejemplo, podemos comparar arreglos de objetos:
 
-- Components of generic type.
-
-For example, we can compare arrays of objects:
-
-``` motoko run
+```motoko run
 let a = [ { x = 10 }, { x = 20 } ];
 let b = [ { x = 10 }, { x = 20 } ];
 a == b;
 ```
 
-Importantly, this does not compare by reference, but by value.
+Es importante destacar que esto no compara por referencia, sino por valor.
 
-## Subtyping
+## Subtipificación
 
-Equality respects subtyping, so `{ x = 10 } == { x = 10; y = 20 }` returns `true`.
+La igualdad respeta la subtipificación, por lo que
+`{ x = 10 } == { x = 10; y = 20 }` devuelve `true`.
 
-To accommodate subtyping, two values of different types are equal if they are equal at their most specific, common supertype, meaning they agree on their common structure. The compiler will warn in cases where this might lead to subtle unwanted behavior.
+Para acomodar la subtipificación, dos valores de tipos diferentes son iguales si
+son iguales en su supertipo común más específico, lo que significa que coinciden
+en su estructura común. El compilador emitirá una advertencia en casos donde
+esto pueda llevar a comportamientos no deseados sutiles.
 
-For example: `{ x = 10 } == { y = 20 }` will return `true` because the two values get compared at the empty record type. That’s unlikely the intention, so the compiler will emit a warning here.
+Por ejemplo: `{ x = 10 } == { y = 20 }` devolverá `true` porque los dos valores
+se comparan en el tipo de registro vacío. Es poco probable que esa sea la
+intención, por lo que el compilador emitirá una advertencia en este caso.
 
-``` motoko run
+```motoko run
 { x = 10 } == { y = 20 };
 ```
 
-## Generic types
+## Tipos genéricos
 
-It is not possible to declare that a generic type variable is `shared`, so equality can only be used on non-generic types. For example, the following expression generates a warning:
+No es posible declarar que una variable de tipo genérico sea `shared`, por lo
+que la igualdad solo se puede usar en tipos no genéricos. Por ejemplo, la
+siguiente expresión genera una advertencia:
 
-``` motoko run
+```motoko run
 func eq<A>(a : A, b : A) : Bool = a == b;
 ```
 
-Comparing these two at the `Any` type means this comparison will return `true` no matter its arguments, so this doesn’t work as one might hope.
+Comparar estos dos en el tipo `Any` significa que esta comparación siempre
+devolverá `true` sin importar sus argumentos, por lo que esto no funciona como
+uno podría esperar.
 
-If you run into this limitation in your code, you should accept a comparison function of type `(A, A) -> Bool` as an argument and use that to compare the values instead.
+Si te encuentras con esta limitación en tu código, debes aceptar una función de
+comparación de tipo `(A, A) -> Bool` como argumento y usarla para comparar los
+valores en su lugar.
 
-Let’s look at a list membership test for example. This first implementation **does not** work:
+Veamos un ejemplo de prueba de pertenencia en una lista. Esta primera
+implementación **no funciona**:
 
-``` motoko run
+```motoko run
 import List "mo:base/List";
 
 func contains<A>(element : A, list : List.List<A>) : Bool {
@@ -70,11 +86,14 @@ func contains<A>(element : A, list : List.List<A>) : Bool {
 assert(not contains(1, ?(0, null)));
 ```
 
-This assertion will trap because the compiler compares the type `A` at `Any` which is always `true`. As long as the list has at least one element, this version of `contains` will always return true.
+Esta afirmación generará una advertencia porque el compilador compara el tipo
+`A` con `Any`, lo cual siempre es `true`. Mientras la lista tenga al menos un
+elemento, esta versión de `contains` siempre devolverá `true`.
 
-This second implementation shows how to accept the comparison function explicitly instead:
+Esta segunda implementación muestra cómo aceptar explícitamente la función de
+comparación:
 
-``` motoko run
+```motoko run
 import List "mo:base/List";
 import Nat "mo:base/Nat";
 

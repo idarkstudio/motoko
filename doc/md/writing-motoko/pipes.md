@@ -2,44 +2,60 @@
 sidebar_position: 20
 ---
 
-# Piping values into expressions
+# Canalización de valores en expresiones
 
+A veces puede resultar difícil leer expresiones profundamente anidadas que
+involucran varias aplicaciones de funciones.
 
+```motoko file=../examples/Unpiped.mo#L1-L8
 
-It can sometimes be hard to read deeply nested expressions involving several function applications.
-
-``` motoko file=../examples/Unpiped.mo#L1-L8
 ```
 
-This expression takes the range of numbers `0`..`10`, converts it to a list, filters the list for multiples of three, then returns a record containing the result.
+Esta expresión toma el rango de números `0`..`10`, lo convierte en una lista,
+filtra la lista para obtener los múltiplos de tres y luego devuelve un registro
+que contiene el resultado.
 
-To make such expressions more readable, you can use Motoko's pipe operator `<exp1> |> <exp2>`.
-The operator evaluates the first argument `<exp1>`, and lets you refer to its value in `<exp2>` using the special placeholder expression `_`.
+Para hacer estas expresiones más legibles, puedes usar el operador de
+canalización de Motoko `<exp1> |> <exp2>`. El operador evalúa el primer
+argumento `<exp1>` y te permite referirte a su valor en `<exp2>` utilizando la
+expresión especial de marcador de posición `_`.
 
-Using this, you can write the former expression as:
+Usando esto, puedes escribir la expresión anterior de la siguiente manera:
 
-``` motoko file=../examples/Piped.mo#L1-L8
+```motoko file=../examples/Piped.mo#L1-L8
+
 ```
 
-Now, the textual order of operations corresponds to the explanation above. The pipe expression `<exp1> |> <exp2>` is just syntactic sugar for the following block binding `<exp1>` to a reserved placeholder identifier, `p`, before returning `<exp2>`:
+Ahora, el orden textual de las operaciones corresponde a la explicación
+anterior. La expresión de canalización `<exp1> |> <exp2>` es solo azúcar
+sintáctica para el siguiente bloque de enlace `<exp1>` a un identificador
+reservado de marcador de posición, `p`, antes de devolver `<exp2>`:
 
-``` bnf
+```bnf
 do { let p = <exp1>; <exp2> }
 ```
 
-The otherwise inaccessible placeholder identifier `p` can only referenced by the placeholder expression `_`. Multiple references to `_` are allowed and refer to the same value within the same pipe operation.
+La identificación de marcador de posición, de otro modo inaccesible, solo puede
+ser referenciada por la expresión de marcador de posición `_`. Se permiten
+múltiples referencias a `_` y se refieren al mismo valor dentro de la misma
+operación de canalización.
 
-Note that using `_` as an expression outside of a pipe operation, where it is undefined, is an error.
+Ten en cuenta que usar `_` como una expresión fuera de una operación de
+canalización, donde no está definido, es un error.
 
-For example, the following example produces the compile-time error "type error [M0057], unbound variable _":
+Por ejemplo, el siguiente ejemplo produce el error de tiempo de compilación
+"error de tipo [M0057], variable no vinculada \_":
 
-``` motoko no-repl
+```motoko no-repl
 let x = _;
 ```
 
-Internally, the compiler uses the reserved identifier `_` as the name for the placeholder called `p` above, so this `let` is just referencing an undefined variable.
+Internamente, el compilador utiliza el identificador reservado `_` como el
+nombre para el marcador de posición llamado `p` anteriormente, por lo que este
+`let` simplemente hace referencia a una variable no definida.
 
-
-See [the language manual page on pipes](../reference/language-manual#pipe-operators-and-placeholder-expressions) for more details.
+Consulta la
+[página del manual de lenguaje sobre canalizaciones](../reference/language-manual#pipe-operators-and-placeholder-expressions)
+para obtener más detalles.
 
 <img src="https://github.com/user-attachments/assets/844ca364-4d71-42b3-aaec-4a6c3509ee2e" alt="Logo" width="150" height="150" />

@@ -1,70 +1,80 @@
 # Bool
-Boolean type and operations.
 
-While boolean operators `_ and _` and `_ or _` are short-circuiting,
-avoiding computation of the right argument when possible, the functions
-`logand(_, _)` and `logor(_, _)` are *strict* and will always evaluate *both*
-of their arguments.
+Tipo booleano y operaciones.
 
-## Type `Bool`
-``` motoko no-repl
+Mientras los operadores booleanos `_ and _` y `_ or _` son de cortocircuito,
+evitando la computación del argumento derecho cuando es posible, las funciones
+`logand(_, _)` y `logor(_, _)` son _estrictas_ y siempre evaluarán _ambos_ de
+sus argumentos.
+
+## Tipo `Bool`
+
+```motoko no-repl
 type Bool = Prim.Types.Bool
 ```
 
-Booleans with constants `true` and `false`.
+Booleanos con las constantes `true` y `false`.
 
-## Function `toText`
-``` motoko no-repl
+## Función `toText`
+
+```motoko no-repl
 func toText(x : Bool) : Text
 ```
 
-Conversion.
+Conversión.
 
-## Function `logand`
-``` motoko no-repl
+## Función `logand`
+
+```motoko no-repl
 func logand(x : Bool, y : Bool) : Bool
 ```
 
-Returns `x and y`.
+Devuelve `x and y`.
 
-## Function `logor`
-``` motoko no-repl
+## Función `logor`
+
+```motoko no-repl
 func logor(x : Bool, y : Bool) : Bool
 ```
 
-Returns `x or y`.
+Devuelve `x or y`.
 
-## Function `logxor`
-``` motoko no-repl
+## Función `logxor`
+
+```motoko no-repl
 func logxor(x : Bool, y : Bool) : Bool
 ```
 
-Returns exclusive or of `x` and `y`, `x != y`.
+Devuelve el xor exclusivo de `x` y `y`, `x != y`.
 
-## Function `lognot`
-``` motoko no-repl
+## Función `lognot`
+
+```motoko no-repl
 func lognot(x : Bool) : Bool
 ```
 
-Returns `not x`.
+Devuelve `not x`.
 
-## Function `equal`
-``` motoko no-repl
+## Función `equal`
+
+```motoko no-repl
 func equal(x : Bool, y : Bool) : Bool
 ```
 
-Returns `x == y`.
+Devuelve `x == y`.
 
-## Function `notEqual`
-``` motoko no-repl
+## Función `notEqual`
+
+```motoko no-repl
 func notEqual(x : Bool, y : Bool) : Bool
 ```
 
-Returns `x != y`.
+Devuelve `x != y`.
 
-## Function `compare`
-``` motoko no-repl
+## Función `compare`
+
+```motoko no-repl
 func compare(x : Bool, y : Bool) : {#less; #equal; #greater}
 ```
 
-Returns the order of `x` and `y`, where `false < true`.
+Devuelve el orden de `x` y `y`, donde `false < true`.

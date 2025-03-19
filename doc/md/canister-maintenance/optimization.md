@@ -2,18 +2,20 @@
 sidebar_position: 2
 ---
 
-# Optimizing canisters
+# Optimización de canisters
 
+El compilador de Motoko produce binarios pequeños con código razonablemente
+eficiente, pero no es un compilador altamente optimizado. Es posible optimizar
+aún más los binarios de Motoko, tanto en tamaño de código como en uso de ciclos,
+utilizando herramientas adicionales como `wasm-opt`.
 
+## Usando `wasm-opt`
 
-The Motoko compiler produces small binaries with reasonably efficient code, but is not a highly optimized compiler.
-It is possible to further optimize Motoko binaries, both for code size and cycle usage, using additional tools such as `wasm-opt`.
+`Wasm-opt` es un optimizador general de Wasm que ahora está disponible en dfx,
+versiones 0.14.0 y posteriores.
 
-## Using `wasm-opt`
-
-`Wasm-opt` is a general purpose Wasm optimizer that is now available in dfx, versions 0.14.0 and newer.
-
-`Wasm-opt` can be used to enable canister optimizations through a configuration option in the project's `dfx.json` file, such as:
+`Wasm-opt` se puede utilizar para habilitar optimizaciones de canisters a través
+de una opción de configuración en el archivo `dfx.json` del proyecto, como:
 
 ```json
 {
@@ -25,13 +27,16 @@ It is possible to further optimize Motoko binaries, both for code size and cycle
 }
 ```
 
-### Optimization levels for cycle usage
+### Niveles de optimización para el uso de ciclos
 
-Using the `"optimize": "cycles"` option, you can expect a rough estimate of decreased cycles usage for Motoko canisters by around 10%.
+Utilizando la opción `"optimize": "cycles"`, puedes esperar una estimación
+aproximada de reducción en el uso de ciclos para los canisters de Motoko de
+alrededor del 10%.
 
-The `"optimize": "cycles"` option is the recommended default, as it maps to optimization level 3 in the `wasm-opt` package.
+La opción `"optimize": "cycles"` es la recomendada por defecto, ya que se
+corresponde con el nivel de optimización 3 en el paquete `wasm-opt`.
 
-The optimization levels for cycles usage are as follows:
+Los niveles de optimización para el uso de ciclos son los siguientes:
 
 ```
 O4
@@ -41,24 +46,30 @@ O1
 O0 (performs no optimizations)
 ```
 
-### Optimization levels for binary size
+### Niveles de optimización para el tamaño del binario
 
-To optimize the binary size instead, you can use the `"optimize": "size"` option. By using the size option, binary sizes can be reduced by roughly 16%.
+Para optimizar el tamaño del binario, puedes utilizar la opción
+`"optimize": "size"`. Al utilizar la opción de tamaño, los tamaños de los
+binarios pueden reducirse aproximadamente en un 16%.
 
-The optimization levels for binary size are as follows:
+Los niveles de optimización para el tamaño del binario son los siguientes:
 
 ```
 Oz (equivalent to “size”)
 Os
 ```
 
-Each optimization preserves the Internet Computer specific metadata sections of each canister.
+Cada optimización preserva las secciones de metadatos específicas de Internet
+Computer de cada canister.
 
-:::info
-Note that in certain cases the optimizations can increase the complexity of certain functions in your Wasm module such that they are rejected by the replica. If you run into this issue, it is recommended to use a less aggressive optimization level such that you do not exceed the complexity limit.
-:::
+:::info Ten en cuenta que en ciertos casos, las optimizaciones pueden aumentar
+la complejidad de ciertas funciones en tu módulo Wasm, lo que puede llevar a que
+sean rechazadas por la réplica. Si te encuentras con este problema, se
+recomienda utilizar un nivel de optimización menos agresivo para no exceder el
+límite de complejidad. :::
 
-More information on canister optimization and information on `wasm-opt` benchmark testing can be found [on this forum post](https://forum.dfinity.org/t/canister-optimizer-available-in-dfx-0-14-0/21157).
-
+Puedes encontrar más información sobre la optimización de canisters y sobre las
+pruebas de referencia de `wasm-opt` en
+[este post del foro](https://forum.dfinity.org/t/canister-optimizer-available-in-dfx-0-14-0/21157).
 
 <img src="https://github.com/user-attachments/assets/844ca364-4d71-42b3-aaec-4a6c3509ee2e" alt="Logo" width="150" height="150" />

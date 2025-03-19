@@ -2,21 +2,22 @@
 sidebar_position: 18
 ---
 
-# Object subtyping
+# Subtipificación de objetos
 
+**Subtipo de objetos**: En Motoko, los objetos tienen tipos que pueden
+relacionarse mediante subtipo. Los tipos con más campos son menos generales y
+son subtipos de tipos con menos campos. Considera los siguientes tipos generales
+y subtipos:
 
+- Más general:
 
-**Object subtyping** : In Motoko, objects have types that may relate by subtyping. Types with more fields are less general and are subtypes of types with fewer fields. Consider the following general types and subtypes:
-
--   Most general:
-
-``` motoko no-repl
+```motoko no-repl
 { bump : () -> Nat }
 ```
 
--   Middle generality:
+- Generalidad media:
 
-``` motoko no-repl
+```motoko no-repl
 {
   inc  : () -> () ;
   read : () -> Nat ;
@@ -24,9 +25,9 @@ sidebar_position: 18
 }
 ```
 
--   Least generality:
+- Menos general:
 
-``` motoko no-repl
+```motoko no-repl
 {
   inc  : () -> () ;
   read : () -> Nat ;
@@ -35,15 +36,22 @@ sidebar_position: 18
 }
 ```
 
-If a function expects to receive an object of the first type (`{ bump: () → Nat }`), any of the types given above will suffice since they are each equal to or a subtype of the most general type.
+Si una función espera recibir un objeto del primer tipo (`{ bump: () → Nat }`),
+cualquiera de los tipos dados anteriormente será suficiente, ya que cada uno es
+igual o un subtipo del tipo más general.
 
-However, if a function expects to receive an object of the last, least general type, the other two will *not* suffice, since they each lack the needed `write` operation, to which this function rightfully expects to have access.
+Sin embargo, si una función espera recibir un objeto del último tipo, el menos
+general, los otros dos **no** serán suficientes, ya que a cada uno le falta la
+operación `write` necesaria, a la que esta función espera legítimamente tener
+acceso.
 
-## Example
+## Ejemplo
 
-To illustrate the role and use of object subtyping in Motoko, consider implementing a simpler counter with a more general type that has fewer public operations:
+Para ilustrar el papel y el uso de la subtipificación de objetos en Motoko,
+considera implementar un contador más simple con un tipo más general que tenga
+menos operaciones públicas:
 
-``` motoko
+```motoko
 object bumpCounter {
   var c = 0;
   public func bump() : Nat {
@@ -53,19 +61,23 @@ object bumpCounter {
 };
 ```
 
-The object `bumpCounter` has the following object type, exposing exactly one operation, `bump`:
+El objeto `bumpCounter` tiene el siguiente tipo de objeto, exponiendo
+exactamente una operación, `bump`:
 
-``` motoko no-repl
+```motoko no-repl
 {
   bump : () -> Nat ;
 }
 ```
 
-This type exposes the most common operation, and one that only permits certain behavior. For instance, the counter can only ever increase and can never decrease or be set to an arbitrary value.
+Este tipo expone la operación más común y una que solo permite cierto
+comportamiento. Por ejemplo, el contador solo puede aumentar y nunca disminuir o
+establecerse en un valor arbitrario.
 
-In other parts of a system, you may implement and use a less general version with more operations:
+En otras partes de un sistema, puedes implementar y usar una versión menos
+general con más operaciones:
 
-``` motoko no-repl
+```motoko no-repl
 fullCounter : {
   inc   : () -> () ;
   read  : () -> Nat ;
@@ -74,24 +86,40 @@ fullCounter : {
 }
 ```
 
-Consider a counter named `fullCounter` with a less general type than any given above. In addition to `inc`, `read` and `bump`, it additionally includes `write`, which permits the caller to change the current count value to an arbitrary one, such as back to `0`.
+Considera un contador llamado `fullCounter` con un tipo menos general que
+cualquiera de los dados anteriormente. Además de `inc`, `read` y `bump`, también
+incluye `write`, que permite al llamador cambiar el valor actual del contador a
+uno arbitrario, como volver a `0`.
 
-## Structural subtyping
+## Subtipificación estructural
 
-Object subtyping in Motoko uses structural subtyping, not nominal subtyping.
+La subtipificación de objetos en Motoko utiliza subtipificación estructural, no
+subtipificación nominal.
 
-In nominal typing, the question of two types equality depends on choosing consistent, globally-unique type names across projects and time.
+En la tipificación nominal, la igualdad de dos tipos depende de elegir nombres
+de tipos consistentes y globalmente únicos en todos los proyectos y a lo largo
+del tiempo.
 
-In Motoko, the question of two types' equality is based on their structure, not their names. Due to structural typing, naming a class type provides a convenient abbreviation.
+En Motoko, la igualdad de dos tipos se basa en su estructura, no en sus nombres.
+Debido a la tipificación estructural, nombrar un tipo de clase proporciona una
+abreviatura conveniente.
 
-For typing purposes, all that matters is the structure of the corresponding object type. Two classes with different names but equivalent definitions produce type-compatible objects.
+Para fines de tipificación, lo único que importa es la estructura del tipo de
+objeto correspondiente. Dos clases con nombres diferentes pero definiciones
+equivalentes producen objetos compatibles en cuanto a tipo.
 
-When the optional type annotation is supplied in a class declaration, conformance is checked. The object type must be a subtype of the annotation. The annotation does not affect the type of the class, even if it only describes a proper super-type of the object type.
+Cuando se proporciona la anotación de tipo opcional en una declaración de clase,
+se verifica la conformidad. El tipo de objeto debe ser un subtipo de la
+anotación. La anotación no afecta el tipo de la clase, incluso si solo describe
+un supertipo propio del tipo de objeto.
 
-Subtyping relationships in Motoko extend to all types, not just object types.
+Las relaciones de subtipificación en Motoko se extienden a todos los tipos, no
+solo a los tipos de objetos.
 
-Most cases are standard and follow conventional programming language theory for *structural* subtyping.
+La mayoría de los casos son estándar y siguen la teoría convencional de
+lenguajes de programación para la subtipificación _estructural_.
 
-Other notable cases in Motoko for new programmers include array, options, variants and number type inter-relationships.
+Otros casos notables en Motoko para nuevos programadores incluyen las
+interrelaciones entre arreglos, opciones, variantes y tipos numéricos.
 
 <img src="https://github.com/user-attachments/assets/844ca364-4d71-42b3-aaec-4a6c3509ee2e" alt="Logo" width="150" height="150" />

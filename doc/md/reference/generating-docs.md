@@ -2,62 +2,73 @@
 sidebar_position: 4
 ---
 
-# Generating Motoko documentation
+# Generando documentación de Motoko
 
+`mo-doc` es una herramienta de línea de comandos para generar documentación para
+el código fuente de Motoko. Procesa archivos fuente y genera documentación en
+varios formatos.
 
+## Inicio rápido
 
-`mo-doc` is a command-line tool for generating documentation for Motoko source code. It processes source files and generates documentation in various formats.
-
-## Quickstart
-
-Download `mo-doc` from Motoko's [GitHub releases page](https://github.com/dfinity/motoko/releases) or simply use the binary included in your [dfx](https://internetcomputer.org/docs/current/developer-docs/setup/install) installation:
+Descarga `mo-doc` desde la página de la pagina
+[GitHub releases](https://github.com/dfinity/motoko/releases) de Motoko o
+simplemente utiliza el binario incluido en tu instalación de
+[dfx](https://internetcomputer.org/docs/current/developer-docs/setup/install):
 
 ```
 $(dfx cache show)/mo-doc [options]
 ```
 
-## Options
+## Opciones
 
-- `--source <path>`: Specifies the directory to search for Motoko source files. Defaults to `src`.
+- `--source <path>`: Especifica el directorio donde buscar archivos fuente de
+  Motoko. Por defecto, es `src`.
 
-- `--output <path>`: Specifies the directory where the documentation will be generated. Defaults to `docs`.
+- `--output <path>`: Especifica el directorio donde se generará la
+  documentación. Por defecto, es `docs`.
 
-- `--format <format>`: Specifies the generated format. Should be one of the following:
-  - `html`: Generates HTML format documentation.
-  - `adoc`: Generates AsciiDoc format documentation.
-  - `plain`: Generates Markdown documentation.
+- `--format <format>`: Especifica el formato generado. Debe ser uno de los
+  siguientes:
 
-  Defaults to `html`.
+  - `html`: Genera documentación en formato HTML.
+  - `adoc`: Genera documentación en formato AsciiDoc.
+  - `plain`: Genera documentación en formato Markdown.
 
-- `--help`: Shows usage information.
+  Por defecto, es `html`.
 
-## Examples
+- `--help`: Muestra información de uso.
 
-1. Generate HTML documentation from the default source directory (`src`) and place it in the default output directory (`docs`):
+## Ejemplos
+
+1. Generar documentación HTML desde el directorio de origen predeterminado
+   (`src`) y colocarla en el directorio de salida predeterminado (`docs`):
 
    ```bash
    mo-doc
    ```
 
-2. Generate AsciiDoc documentation from a specific source directory:
+2. Generar documentación AsciiDoc desde un directorio de origen específico:
 
    ```bash
    mo-doc --format plain --source ./motoko-code
    ```
 
-3. Generate Markdown documentation in a custom output directory:
+3. Generar documentación en Markdown en un directorio de salida personalizado:
 
    ```bash
    mo-doc --format adoc --output ./public
    ```
 
-## Writing doc comments
+## Escribiendo comentarios de documentación
 
-`mo-doc` supports documenting your Motoko code using special block comments (`/** */`) and line comments (`///`).
+`mo-doc` admite documentar tu código de Motoko utilizando comentarios de bloque
+especiales (`/** */`) y comentarios de línea (`///`).
 
-Doc comments can be used to provide explanations for functions, classes, types, modules, variables, and more. They can span multiple lines and may contain rich Markdown formatting:
+Los comentarios de documentación se pueden utilizar para proporcionar
+explicaciones para funciones, clases, tipos, módulos, variables y más. Pueden
+abarcar varias líneas y pueden contener formato de Markdown enriquecido:
 
-```motoko no-repl
+````motoko no-repl
 /// Calculate the factorial of a given positive integer.
 ///
 /// Example:
@@ -68,11 +79,16 @@ Doc comments can be used to provide explanations for functions, classes, types, 
 func factorial(n : Nat) : ?Nat {
     // ...
 }
-```
+````
 
-## Resources
-Check out Motoko's [base library source code](https://github.com/dfinity/motoko-base/tree/master/src) for additional examples and best practices.
+## Recursos
 
-The source code for `mo-doc` is available in the [dfinity/motoko](https://github.com/dfinity/motoko/tree/master/src/docs) GitHub repository. Contributions are welcome!
+Echa un vistazo al
+[código fuente de la biblioteca base de Motoko](https://github.com/dfinity/motoko-base/tree/master/src)
+para obtener ejemplos adicionales y mejores prácticas.
+
+El código fuente de `mo-doc` está disponible en el repositorio de GitHub
+[dfinity/motoko](https://github.com/dfinity/motoko/tree/master/src/docs). ¡Se
+aceptan contribuciones!
 
 <img src="https://github.com/user-attachments/assets/844ca364-4d71-42b3-aaec-4a6c3509ee2e" alt="Logo" width="150" height="150" />
