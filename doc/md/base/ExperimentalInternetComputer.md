@@ -40,9 +40,15 @@ let output : ?OutputType = from_candid(rawReply); // { decimals = 8 }
 
 [Aprende más sobre la serialización de Candid](https://internetcomputer.org/docs/current/motoko/main/reference/language-manual#candid-serialization)
 
-## Función `countInstructions`
+## Valor `isReplicated`
+``` motoko no-repl
+let isReplicated : () -> Bool
+```
 
-```motoko no-repl
+`isReplicated` es true para los mensajes de actualización (update) y de consulta (query) que pasaron por consenso.
+
+## Function `countInstructions`
+``` motoko no-repl
 func countInstructions(comp : () -> ()) : Nat64
 ```
 
@@ -108,7 +114,7 @@ let diff : Nat64 = IC.performanceCounter(1) - c1;
 ## Función `replyDeadline`
 
 ```motoko no-repl
-func replyDeadline() : Nat
+func replyDeadline() : ?Nat
 ```
 
 Devuelve el tiempo (en nanosegundos desde el inicio de la época) en el que el
