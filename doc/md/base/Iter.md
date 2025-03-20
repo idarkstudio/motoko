@@ -1,33 +1,37 @@
 # Iter
-Iterators
 
-## Type `Iter`
-``` motoko no-repl
+Iteradores
+
+## Tipo `Iter`
+
+```motoko no-repl
 type Iter<T> = { next : () -> ?T }
 ```
 
-An iterator that produces values of type `T`. Calling `next` returns
-`null` when iteration is finished.
+Un iterador que produce valores de tipo `T`. Llamar a `next` devuelve `null`
+cuando la iteración ha finalizado.
 
-Iterators are inherently stateful. Calling `next` "consumes" a value from
-the Iterator that cannot be put back, so keep that in mind when sharing
-iterators between consumers.
+Los iteradores son inherentemente estatales. Llamar a `next` "consume" un valor
+del iterador que no se puede devolver, así que tenlo en cuenta al compartir
+iteradores entre consumidores.
 
-An iterater `i` can be iterated over using
+Un iterador `i` se puede recorrer utilizando
+
 ```
 for (x in i) {
-  …do something with x…
+  …hacer algo con x…
 }
 ```
 
-## Class `range`
+## Clase `range`
 
-``` motoko no-repl
+```motoko no-repl
 class range(x : Nat, y : Int)
 ```
 
-Creates an iterator that produces all `Nat`s from `x` to `y` including
-both of the bounds.
+Crea un iterador que produce todos los `Nat` desde `x` hasta `y`, incluyendo
+ambos límites.
+
 ```motoko
 import Iter "mo:base/Iter";
 let iter = Iter.range(1, 3);
@@ -37,34 +41,34 @@ assert(?3 == iter.next());
 assert(null == iter.next());
 ```
 
-### Function `next`
-``` motoko no-repl
+### Función `next`
+
+```motoko no-repl
 func next() : ?Nat
 ```
 
+## Clase `revRange`
 
-## Class `revRange`
-
-``` motoko no-repl
+```motoko no-repl
 class revRange(x : Int, y : Int)
 ```
 
-Like `range` but produces the values in the opposite
-order.
+Similar a `range` pero produce los valores en orden inverso.
 
-### Function `next`
-``` motoko no-repl
+### Función `next`
+
+```motoko no-repl
 func next() : ?Int
 ```
 
+## Función `iterate`
 
-## Function `iterate`
-``` motoko no-repl
+```motoko no-repl
 func iterate<A>(xs : Iter<A>, f : (A, Nat) -> ())
 ```
 
-Calls a function `f` on every value produced by an iterator and discards
-the results. If you're looking to keep these results use `map` instead.
+Llama a una función `f` en cada valor producido por un iterador y descarta los
+resultados. Si deseas mantener estos resultados, utiliza `map` en su lugar.
 
 ```motoko
 import Iter "mo:base/Iter";
@@ -75,21 +79,24 @@ Iter.iterate<Nat>(Iter.range(1, 3), func(x, _index) {
 assert(6 == sum)
 ```
 
-## Function `size`
-``` motoko no-repl
+## Función `size`
+
+```motoko no-repl
 func size<A>(xs : Iter<A>) : Nat
 ```
 
-Consumes an iterator and counts how many elements were produced
-(discarding them in the process).
+Consume un iterador y cuenta cuántos elementos se produjeron (descartándolos en
+el proceso).
 
-## Function `map`
-``` motoko no-repl
+## Función `map`
+
+```motoko no-repl
 func map<A, B>(xs : Iter<A>, f : A -> B) : Iter<B>
 ```
 
-Takes a function and an iterator and returns a new iterator that lazily applies
-the function to every element produced by the argument iterator.
+Toma una función y un iterador y devuelve un nuevo iterador que aplica
+perezosamente la función a cada elemento producido por el iterador de argumento.
+
 ```motoko
 import Iter "mo:base/Iter";
 let iter = Iter.range(1, 3);
@@ -100,13 +107,15 @@ assert(?6 == mappedIter.next());
 assert(null == mappedIter.next());
 ```
 
-## Function `filter`
-``` motoko no-repl
+## Función `filter`
+
+```motoko no-repl
 func filter<A>(xs : Iter<A>, f : A -> Bool) : Iter<A>
 ```
 
-Takes a function and an iterator and returns a new iterator that produces
-elements from the original iterator if and only if the predicate is true.
+Toma una función y un iterador y devuelve un nuevo iterador que produce
+elementos del iterador original solo si el predicado es verdadero.
+
 ```motoko
 import Iter "mo:base/Iter";
 let iter = Iter.range(1, 3);
@@ -116,12 +125,14 @@ assert(?3 == mappedIter.next());
 assert(null == mappedIter.next());
 ```
 
-## Function `make`
-``` motoko no-repl
+## Función `make`
+
+```motoko no-repl
 func make<A>(x : A) : Iter<A>
 ```
 
-Creates an iterator that produces an infinite sequence of `x`.
+Crea un iterador que produce una secuencia infinita de `x`.
+
 ```motoko
 import Iter "mo:base/Iter";
 let iter = Iter.make(10);
@@ -131,13 +142,15 @@ assert(?10 == iter.next());
 // ...
 ```
 
-## Function `concat`
-``` motoko no-repl
+## Función `concat`
+
+```motoko no-repl
 func concat<A>(a : Iter<A>, b : Iter<A>) : Iter<A>
 ```
 
-Takes two iterators and returns a new iterator that produces
-elements from the original iterators sequentally.
+Toma dos iteradores y devuelve un nuevo iterador que produce elementos de los
+iteradores originales secuencialmente.
+
 ```motoko
 import Iter "mo:base/Iter";
 let iter1 = Iter.range(1, 2);
@@ -150,12 +163,15 @@ assert(?6 == concatenatedIter.next());
 assert(null == concatenatedIter.next());
 ```
 
-## Function `fromArray`
-``` motoko no-repl
+## Función `fromArray`
+
+```motoko no-repl
 func fromArray<A>(xs : [A]) : Iter<A>
 ```
 
-Creates an iterator that produces the elements of an Array in ascending index order.
+Crea un iterador que produce los elementos de un Array en orden ascendente de
+índice.
+
 ```motoko
 import Iter "mo:base/Iter";
 let iter = Iter.fromArray([1, 2, 3]);
@@ -165,51 +181,59 @@ assert(?3 == iter.next());
 assert(null == iter.next());
 ```
 
-## Function `fromArrayMut`
-``` motoko no-repl
+## Función `fromArrayMut`
+
+```motoko no-repl
 func fromArrayMut<A>(xs : [var A]) : Iter<A>
 ```
 
-Like `fromArray` but for Arrays with mutable elements. Captures
-the elements of the Array at the time the iterator is created, so
-further modifications won't be reflected in the iterator.
+Similar a `fromArray` pero para Arrays con elementos mutables. Captura los
+elementos del Array en el momento en que se crea el iterador, por lo que las
+modificaciones posteriores no se reflejarán en el iterador.
 
-## Value `fromList`
-``` motoko no-repl
+## Valor `fromList`
+
+```motoko no-repl
 let fromList
 ```
 
-Like `fromArray` but for Lists.
+Similar a `fromArray` pero para Listas.
 
-## Function `toArray`
-``` motoko no-repl
+## Función `toArray`
+
+```motoko no-repl
 func toArray<A>(xs : Iter<A>) : [A]
 ```
 
-Consumes an iterator and collects its produced elements in an Array.
+Consume un iterador y recopila sus elementos producidos en un Array.
+
 ```motoko
 import Iter "mo:base/Iter";
 let iter = Iter.range(1, 3);
 assert([1, 2, 3] == Iter.toArray(iter));
 ```
 
-## Function `toArrayMut`
-``` motoko no-repl
+## Función `toArrayMut`
+
+```motoko no-repl
 func toArrayMut<A>(xs : Iter<A>) : [var A]
 ```
 
-Like `toArray` but for Arrays with mutable elements.
+Similar a `toArray` pero para Arrays con elementos mutables.
 
-## Function `toList`
-``` motoko no-repl
+## Función `toList`
+
+```motoko no-repl
 func toList<A>(xs : Iter<A>) : List.List<A>
 ```
 
-Like `toArray` but for Lists.
+Similar a `toArray` pero para Listas.
 
-## Function `sort`
-``` motoko no-repl
+## Función `sort`
+
+```motoko no-repl
 func sort<A>(xs : Iter<A>, compare : (A, A) -> Order.Order) : Iter<A>
 ```
 
-Sorted iterator.  Will iterate over *all* elements to sort them, necessarily.
+Iterador ordenado. Iterará sobre _todos_ los elementos para ordenarlos,
+necesariamente.

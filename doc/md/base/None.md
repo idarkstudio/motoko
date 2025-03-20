@@ -1,21 +1,25 @@
 # None
-The absent value
 
-The `None` type represents a type with _no_ value.
+El valor ausente
 
-It is often used to type code that fails to return control (e.g. an infinite loop)
-or to designate impossible values (e.g. the type `?None` only contains `null`).
+El tipo `None` representa un tipo sin _ningún_ valor.
 
-## Type `None`
-``` motoko no-repl
+A menudo se utiliza para tipificar código que no devuelve el control (por
+ejemplo, un bucle infinito) o para designar valores imposibles (por ejemplo, el
+tipo `?None` solo contiene `null`).
+
+## Tipo `None`
+
+```motoko no-repl
 type None = Prim.Types.None
 ```
 
-The empty type. A subtype of all types.
+El tipo vacío. Un subtipo de todos los tipos.
 
-## Value `impossible`
-``` motoko no-repl
+## Valor `impossible`
+
+```motoko no-repl
 let impossible : <A>None -> A
 ```
 
-Turns an absurd value into an arbitrary type.
+Convierte un valor absurdo en un tipo arbitrario.

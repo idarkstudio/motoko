@@ -1,34 +1,38 @@
 # Prelude
-General utilities
 
-This prelude file proposes standard library features that _may_
-belong in the _language_ (compiler-internal) prelude sometime, after
-some further experience and discussion.  Until then, they live here.
+Utilidades generales
 
-## Function `nyi`
-``` motoko no-repl
+Este archivo de preludio propone características de libreria estándar que
+_pueden_ pertenecer al preludio del _lenguaje_ (interno del compilador) en algún
+momento, después de obtener más experiencia y discusión. Hasta entonces, viven
+aquí.
+
+## Función `nyi`
+
+```motoko no-repl
 func nyi() : None
 ```
 
-Not yet implemented
+Aún no implementado
 
-Mark incomplete code with the `nyi` and `xxx` functions.
+Marcar código incompleto con las funciones `nyi` y `xxx`.
 
-Each have calls are well-typed in all typing contexts, which
-trap in all execution contexts.
+Cada una de ellas tiene llamadas bien tipadas en todos los contextos de tipado,
+las cuales atrapan en todos los contextos de ejecución.
 
-## Function `xxx`
-``` motoko no-repl
+## Función `xxx`
+
+```motoko no-repl
 func xxx() : None
 ```
 
+## Función `unreachable`
 
-## Function `unreachable`
-``` motoko no-repl
+```motoko no-repl
 func unreachable() : None
 ```
 
-Mark unreachable code with the `unreachable` function.
+Marcar código inaccesible con la función `unreachable`.
 
-Calls are well-typed in all typing contexts, and they
-trap in all execution contexts.
+Las llamadas están bien tipadas en todos los contextos de tipado y atrapan en
+todos los contextos de ejecución.

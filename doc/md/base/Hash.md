@@ -1,65 +1,77 @@
 # Hash
-Hash values
 
-## Type `Hash`
-``` motoko no-repl
+Valores de hash
+
+## Tipo `Hash`
+
+```motoko no-repl
 type Hash = Nat32
 ```
 
-Hash values represent a string of _hash bits_, packed into a `Nat32`.
+Los valores de hash representan una cadena de _bits de hash_, empaquetados en un
+`Nat32`.
 
-## Value `length`
-``` motoko no-repl
+## Valor `length`
+
+```motoko no-repl
 let length : Nat
 ```
 
-The hash length, always 31.
+La longitud del hash, siempre 31.
 
-## Function `bit`
-``` motoko no-repl
+## Función `bit`
+
+```motoko no-repl
 func bit(h : Hash, pos : Nat) : Bool
 ```
 
-Project a given bit from the bit vector.
+Proyecta un bit dado del vector de bits.
 
-## Function `equal`
-``` motoko no-repl
+## Función `equal`
+
+```motoko no-repl
 func equal(ha : Hash, hb : Hash) : Bool
 ```
 
-Test if two hashes are equal
+Comprueba si dos hashes son iguales.
 
-## Function `hash`
-``` motoko no-repl
+## Función `hash`
+
+```motoko no-repl
 func hash(n : Nat) : Hash
 ```
 
-Computes a hash from the least significant 32-bits of `n`, ignoring other bits.
-@deprecated For large `Nat` values consider using a bespoke hash function that considers all of the argument's bits.
+Calcula un hash a partir de los 32 bits menos significativos de `n`, ignorando
+otros bits. @deprecated Para valores grandes de `Nat`, considera usar una
+función de hash personalizada que tenga en cuenta todos los bits del argumento.
 
-## Function `debugPrintBits`
-``` motoko no-repl
+## Función `debugPrintBits`
+
+```motoko no-repl
 func debugPrintBits(bits : Hash)
 ```
 
-@deprecated This function will be removed in future.
+@deprecated Esta función se eliminará en el futuro.
 
-## Function `debugPrintBitsRev`
-``` motoko no-repl
+## Función `debugPrintBitsRev`
+
+```motoko no-repl
 func debugPrintBitsRev(bits : Hash)
 ```
 
-@deprecated This function will be removed in future.
+@deprecated Esta función se eliminará en el futuro.
 
-## Function `hashNat8`
-``` motoko no-repl
+## Función `hashNat8`
+
+```motoko no-repl
 func hashNat8(key : [Hash]) : Hash
 ```
 
-Jenkin's one at a time:
+Uno a la vez de Jenkins:
 
 https://en.wikipedia.org/wiki/Jenkins_hash_function#one_at_a_time
 
-The input type should actually be `[Nat8]`.
-Note: Be sure to explode each `Nat8` of a `Nat32` into its own `Nat32`, and to shift into lower 8 bits.
-@deprecated This function may be removed or changed in future.
+El tipo de entrada debería ser `[Nat8]`. Nota: Asegúrate de descomponer cada
+`Nat8` de un `Nat32` en su propio `Nat32`, y de desplazarlo a los 8 bits
+inferiores. @deprecated Esta función puede eliminarse o modificarse en el
+futuro.
