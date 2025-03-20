@@ -1,5 +1,4 @@
 position: 9
-label: 'Motoko base library'
+label: "Librería base de Motoko"
 collapsible: true # make the category collapsible
-collapsed: true 
-
+collapsed: true

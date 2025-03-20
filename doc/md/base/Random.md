@@ -1,58 +1,63 @@
 # Random
-A module for obtaining randomness on the Internet Computer (IC).
 
-This module provides the fundamentals for user abstractions to build on.
+Un módulo para obtener aleatoriedad en Internet Computer (IC).
 
-Dealing with randomness on a deterministic computing platform, such
-as the IC, is intricate. Some basic rules need to be followed by the
-user of this module to obtain (and maintain) the benefits of crypto-
-graphic randomness:
+Este módulo proporciona los fundamentos para que las abstracciones de usuario se
+basen en ellos.
 
-- cryptographic entropy (randomness source) is only obtainable
-  asyncronously in discrete chunks of 256 bits (32-byte sized `Blob`s)
-- all bets must be closed *before* entropy is being asked for in
-  order to decide them
-- this implies that the same entropy (i.e. `Blob`) - or surplus entropy
-  not utilised yet - cannot be used for a new round of bets without
-  losing the cryptographic guarantees.
+Lidiar con la aleatoriedad en una plataforma informática determinista, como IC,
+es complicado. El usuario de este módulo debe seguir algunas reglas básicas para
+obtener (y mantener) los beneficios de la aleatoriedad criptográfica:
 
-Concretely, the below class `Finite`, as well as the
-`*From` methods risk the carrying-over of state from previous rounds.
-These are provided for performance (and convenience) reasons, and need
-special care when used. Similar caveats apply for user-defined (pseudo)
-random number generators.
+- la entropía criptográfica (fuente de aleatoriedad) solo se puede obtener de
+  forma asíncrona en fragmentos discretos de 256 bits (bloques de 32 bytes
+  `Blob`)
+- todas las apuestas deben cerrarse _antes_ de solicitar la entropía para
+  decidirlas
+- esto implica que la misma entropía (es decir, `Blob`) - o la entropía
+  excedente no utilizada todavía - no se puede utilizar para una nueva ronda de
+  apuestas sin perder las garantías criptográficas.
 
-Usage:
+Concretamente, la siguiente clase `Finite`, así como los métodos `*From`, corren
+el riesgo de llevar el estado de rondas anteriores. Se proporcionan por razones
+de rendimiento (y conveniencia), y se necesita tener cuidado especial al
+usarlos. Se aplican advertencias similares para generadores de números
+aleatorios (pseudo) definidos por el usuario.
+
+Uso:
+
 ```motoko no-repl
 import Random "mo:base/Random";
 ```
 
-## Value `blob`
-``` motoko no-repl
+## Valor `blob`
+
+```motoko no-repl
 let blob : shared () -> async Blob
 ```
 
-Obtains a full blob (32 bytes) worth of fresh entropy.
+Obtiene un `blob` completo (32 bytes) de entropía fresca.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let random = Random.Finite(await Random.blob());
 ```
 
-## Class `Finite`
+## Clase `Finite`
 
-``` motoko no-repl
+```motoko no-repl
 class Finite(entropy : Blob)
 ```
 
-Drawing from a finite supply of entropy, `Finite` provides
-methods to obtain random values. When the entropy is used up,
-`null` is returned. Otherwise the outcomes' distributions are
-stated for each method. The uniformity of outcomes is
-guaranteed only when the supplied entropy is originally obtained
-by the `blob()` call, and is never reused.
+A partir de un suministro finito de entropía, `Finite` proporciona métodos para
+obtener valores aleatorios. Cuando se agota la entropía, se devuelve `null`. De
+lo contrario, la distribución de los resultados se indica para cada método. La
+uniformidad de los resultados solo se garantiza cuando la entropía suministrada
+se obtiene originalmente mediante la llamada a `blob()`, y nunca se reutiliza.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 import Random "mo:base/Random";
 
@@ -62,120 +67,133 @@ let seed : Blob = "\14\C9\72\09\03\D4\D5\72\82\95\E5\43\AF\FA\A9\44\49\2F\25\56\
 let seedRandom = Random.Finite(seed);
 ```
 
-### Function `byte`
-``` motoko no-repl
+### Función `byte`
+
+```motoko no-repl
 func byte() : ?Nat8
 ```
 
-Uniformly distributes outcomes in the numeric range [0 .. 255].
-Consumes 1 byte of entropy.
+Distribuye uniformemente los resultados en el rango numérico [0 .. 255]. Consume
+1 byte de entropía.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let seed : Blob = "\14\C9\72\09\03\D4\D5\72\82\95\E5\43\AF\FA\A9\44\49\2F\25\56\13\F3\6E\C7\B0\87\DC\76\08\69\14\CF";
 let random = Random.Finite(seed);
 random.byte() // => ?20
 ```
 
+### Función `coin`
 
-### Function `coin`
-``` motoko no-repl
+```motoko no-repl
 func coin() : ?Bool
 ```
 
-Simulates a coin toss. Both outcomes have equal probability.
-Consumes 1 bit of entropy (amortised).
+Simula una tirada de moneda. Ambos resultados tienen la misma probabilidad.
+Consume 1 bit de entropía (amortizado).
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let seed : Blob = "\14\C9\72\09\03\D4\D5\72\82\95\E5\43\AF\FA\A9\44\49\2F\25\56\13\F3\6E\C7\B0\87\DC\76\08\69\14\CF";
 let random = Random.Finite(seed);
 random.coin() // => ?false
 ```
 
+### Función `range`
 
-### Function `range`
-``` motoko no-repl
+```motoko no-repl
 func range(p : Nat8) : ?Nat
 ```
 
-Uniformly distributes outcomes in the numeric range [0 .. 2^p - 1].
-Consumes ⌈p/8⌉ bytes of entropy.
+Distribuye uniformemente los resultados en el rango numérico [0 .. 2^p - 1].
+Consume ⌈p/8⌉ bytes de entropía.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let seed : Blob = "\14\C9\72\09\03\D4\D5\72\82\95\E5\43\AF\FA\A9\44\49\2F\25\56\13\F3\6E\C7\B0\87\DC\76\08\69\14\CF";
 let random = Random.Finite(seed);
 random.range(32) // => ?348746249
 ```
 
+### Función `binomial`
 
-### Function `binomial`
-``` motoko no-repl
+```motoko no-repl
 func binomial(n : Nat8) : ?Nat8
 ```
 
-Counts the number of heads in `n` fair coin tosses.
-Consumes ⌈n/8⌉ bytes of entropy.
+Cuenta el número de caras en `n` lanzamientos justos de moneda. Consume ⌈n/8⌉
+bytes de entropía.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let seed : Blob = "\14\C9\72\09\03\D4\D5\72\82\95\E5\43\AF\FA\A9\44\49\2F\25\56\13\F3\6E\C7\B0\87\DC\76\08\69\14\CF";
 let random = Random.Finite(seed);
 random.binomial(5) // => ?1
 ```
 
-## Function `byteFrom`
-``` motoko no-repl
+## Función `byteFrom`
+
+```motoko no-repl
 func byteFrom(seed : Blob) : Nat8
 ```
 
-Distributes outcomes in the numeric range [0 .. 255].
-Seed blob must contain at least a byte.
+Distribuye los resultados en el rango numérico [0 .. 255]. El `blob` de semilla
+debe contener al menos un byte.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let seed : Blob = "\14\C9\72\09\03\D4\D5\72\82\95\E5\43\AF\FA\A9\44\49\2F\25\56\13\F3\6E\C7\B0\87\DC\76\08\69\14\CF";
 Random.byteFrom(seed) // => 20
 ```
 
-## Function `coinFrom`
-``` motoko no-repl
+## Función `coinFrom`
+
+```motoko no-repl
 func coinFrom(seed : Blob) : Bool
 ```
 
-Simulates a coin toss.
-Seed blob must contain at least a byte.
+Simula una tirada de moneda. El `blob` de semilla debe contener al menos un
+byte.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let seed : Blob = "\14\C9\72\09\03\D4\D5\72\82\95\E5\43\AF\FA\A9\44\49\2F\25\56\13\F3\6E\C7\B0\87\DC\76\08\69\14\CF";
 Random.coinFrom(seed) // => false
 ```
 
-## Function `rangeFrom`
-``` motoko no-repl
+## Función `rangeFrom`
+
+```motoko no-repl
 func rangeFrom(p : Nat8, seed : Blob) : Nat
 ```
 
-Distributes outcomes in the numeric range [0 .. 2^p - 1].
-Seed blob must contain at least ((p+7) / 8) bytes.
+Distribuye los resultados en el rango numérico [0 .. 2^p - 1]. El `blob` de
+semilla debe contener al menos ((p+7) / 8) bytes.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let seed : Blob = "\14\C9\72\09\03\D4\D5\72\82\95\E5\43\AF\FA\A9\44\49\2F\25\56\13\F3\6E\C7\B0\87\DC\76\08\69\14\CF";
 Random.rangeFrom(32, seed) // => 348746249
 ```
 
-## Function `binomialFrom`
-``` motoko no-repl
+## Función `binomialFrom`
+
+```motoko no-repl
 func binomialFrom(n : Nat8, seed : Blob) : Nat8
 ```
 
-Counts the number of heads in `n` coin tosses.
-Seed blob must contain at least ((n+7) / 8) bytes.
+Cuenta el número de caras en `n` lanzamientos de moneda. El `blob` de semilla
+debe contener al menos ((n+7) / 8) bytes.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let seed : Blob = "\14\C9\72\09\03\D4\D5\72\82\95\E5\43\AF\FA\A9\44\49\2F\25\56\13\F3\6E\C7\B0\87\DC\76\08\69\14\CF";
 Random.binomialFrom(5, seed) // => 1

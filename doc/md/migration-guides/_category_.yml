@@ -1,4 +1,4 @@
 position: 7
-label: 'Migration guides'
+label: "Guías de migración"
 collapsible: true # make the category collapsible
-collapsed: true 
+collapsed: true

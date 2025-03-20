@@ -1,23 +1,30 @@
 # Time
-System time
 
-## Type `Time`
-``` motoko no-repl
+Tiempo del sistema
+
+## Tipo `Time`
+
+```motoko no-repl
 type Time = Int
 ```
 
-System time is represent as nanoseconds since 1970-01-01.
+El tiempo del sistema se representa en nanosegundos desde 1970-01-01.
 
-## Value `now`
-``` motoko no-repl
+## Valor `now`
+
+```motoko no-repl
 let now : () -> Time
 ```
 
-Current system time given as nanoseconds since 1970-01-01. The system guarantees that:
+Tiempo actual del sistema dado en nanosegundos desde 1970-01-01. El sistema
+garantiza que:
 
-* the time, as observed by the canister smart contract, is monotonically increasing, even across canister upgrades.
-* within an invocation of one entry point, the time is constant.
+- el tiempo, tal como es observado por el contrato inteligente del canister,
+  aumenta de forma monótona, incluso a través de actualizaciones del canister.
+- dentro de una invocación de un punto de entrada, el tiempo es constante.
 
-The system times of different canisters are unrelated, and calls from one canister to another may appear to travel "backwards in time"
+Los tiempos del sistema de diferentes canisters no están relacionados, y las
+llamadas de un canister a otro pueden parecer viajar "hacia atrás en el tiempo".
 
-Note: While an implementation will likely try to keep the system time close to the real time, this is not formally guaranteed.
+Nota: Aunque una implementación probablemente intentará mantener el tiempo del
+sistema cercano al tiempo real, esto no está garantizado formalmente.

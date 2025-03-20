@@ -1,119 +1,134 @@
 # TrieSet
-Functional set
 
-Sets are partial maps from element type to unit type,
-i.e., the partial map represents the set with its domain.
+Conjunto funcional
 
-LIMITATIONS: This data structure allows at most MAX_LEAF_SIZE=8 hash collisions:
-attempts to insert more than MAX_LEAF_SIZE elements (whether directly via `put` or indirectly via other operations) with the same hash value will trap.
-This limitation is inherited from the underlying `Trie` data structure.
+Los conjuntos son mapas parciales del tipo de elemento al tipo de unidad, es
+decir, el mapa parcial representa el conjunto con su dominio.
 
-## Type `Hash`
-``` motoko no-repl
+LIMITACIONES: Esta estructura de datos permite como máximo MAX_LEAF_SIZE=8
+colisiones de hash: los intentos de insertar más de MAX_LEAF_SIZE elementos (ya
+sea directamente a través de `put` o indirectamente a través de otras
+operaciones) con el mismo valor de hash generarán un error. Esta limitación se
+hereda de la estructura de datos subyacente `Trie`.
+
+## Tipo `Hash`
+
+```motoko no-repl
 type Hash = Hash.Hash
 ```
 
+## Tipo `Set`
 
-## Type `Set`
-``` motoko no-repl
+```motoko no-repl
 type Set<T> = Trie.Trie<T, ()>
 ```
 
+## Función `empty`
 
-## Function `empty`
-``` motoko no-repl
+```motoko no-repl
 func empty<T>() : Set<T>
 ```
 
-Empty set.
+Conjunto vacío.
 
-## Function `put`
-``` motoko no-repl
+## Función `put`
+
+```motoko no-repl
 func put<T>(s : Set<T>, x : T, xh : Hash, eq : (T, T) -> Bool) : Set<T>
 ```
 
-Put an element into the set.
+Inserta un elemento en el conjunto.
 
-## Function `delete`
-``` motoko no-repl
+## Función `delete`
+
+```motoko no-repl
 func delete<T>(s : Set<T>, x : T, xh : Hash, eq : (T, T) -> Bool) : Set<T>
 ```
 
-Delete an element from the set.
+Elimina un elemento del conjunto.
 
-## Function `equal`
-``` motoko no-repl
+## Función `equal`
+
+```motoko no-repl
 func equal<T>(s1 : Set<T>, s2 : Set<T>, eq : (T, T) -> Bool) : Bool
 ```
 
-Test if two sets are equal.
+Comprueba si dos conjuntos son iguales.
 
-## Function `size`
-``` motoko no-repl
+## Función `size`
+
+```motoko no-repl
 func size<T>(s : Set<T>) : Nat
 ```
 
-The number of set elements, set's cardinality.
+El número de elementos del conjunto, la cardinalidad del conjunto.
 
-## Function `isEmpty`
-``` motoko no-repl
+## Función `isEmpty`
+
+```motoko no-repl
 func isEmpty<T>(s : Set<T>) : Bool
 ```
 
-Test if `s` is the empty set.
+Comprueba si `s` es el conjunto vacío.
 
-## Function `isSubset`
-``` motoko no-repl
+## Función `isSubset`
+
+```motoko no-repl
 func isSubset<T>(s1 : Set<T>, s2 : Set<T>, eq : (T, T) -> Bool) : Bool
 ```
 
-Test if `s1` is a subset of `s2`.
+Comprueba si `s1` es un subconjunto de `s2`.
 
-## Function `mem`
-``` motoko no-repl
+## Función `mem`
+
+```motoko no-repl
 func mem<T>(s : Set<T>, x : T, xh : Hash, eq : (T, T) -> Bool) : Bool
 ```
 
-@deprecated: use `TrieSet.contains()`
+@deprecated: usa `TrieSet.contains()`
 
-Test if a set contains a given element.
+Comprueba si un conjunto contiene un elemento dado.
 
-## Function `contains`
-``` motoko no-repl
+## Función `contains`
+
+```motoko no-repl
 func contains<T>(s : Set<T>, x : T, xh : Hash, eq : (T, T) -> Bool) : Bool
 ```
 
-Test if a set contains a given element.
+Comprueba si un conjunto contiene un elemento dado.
 
-## Function `union`
-``` motoko no-repl
+## Función `union`
+
+```motoko no-repl
 func union<T>(s1 : Set<T>, s2 : Set<T>, eq : (T, T) -> Bool) : Set<T>
 ```
 
-[Set union](https://en.wikipedia.org/wiki/Union_(set_theory)).
+[Unión de conjuntos](<https://en.wikipedia.org/wiki/Union_(set_theory)>).
 
-## Function `diff`
-``` motoko no-repl
+## Función `diff`
+
+```motoko no-repl
 func diff<T>(s1 : Set<T>, s2 : Set<T>, eq : (T, T) -> Bool) : Set<T>
 ```
 
-[Set difference](https://en.wikipedia.org/wiki/Difference_(set_theory)).
+[Diferencia de conjuntos](<https://en.wikipedia.org/wiki/Difference_(set_theory)>).
 
-## Function `intersect`
-``` motoko no-repl
+## Función `intersect`
+
+```motoko no-repl
 func intersect<T>(s1 : Set<T>, s2 : Set<T>, eq : (T, T) -> Bool) : Set<T>
 ```
 
-[Set intersection](https://en.wikipedia.org/wiki/Intersection_(set_theory)).
+[Intersección de conjuntos](<https://en.wikipedia.org/wiki/Intersection_(set_theory)>).
 
-## Function `fromArray`
-``` motoko no-repl
+## Función `fromArray`
+
+```motoko no-repl
 func fromArray<T>(arr : [T], elemHash : T -> Hash, eq : (T, T) -> Bool) : Set<T>
 ```
 
+## Función `toArray`
 
-## Function `toArray`
-``` motoko no-repl
+```motoko no-repl
 func toArray<T>(s : Set<T>) : [T]
 ```
-

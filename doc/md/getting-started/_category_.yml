@@ -1,4 +1,4 @@
 position: 1
-label: 'Getting started'
+label: "Empezando"
 collapsible: true # make the category collapsible
-collapsed: true 
+collapsed: true

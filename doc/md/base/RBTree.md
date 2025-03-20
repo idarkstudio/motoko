@@ -1,403 +1,434 @@
 # RBTree
-Key-value map implemented as a red-black tree (RBTree) with nodes storing key-value pairs.
 
-A red-black tree is a balanced binary search tree ordered by the keys.
+Mapa clave-valor implementado como un árbol red-black (RBTree) con nodos que
+almacenan pares clave-valor.
 
-The tree data structure internally colors each of its nodes either red or black,
-and uses this information to balance the tree during the modifying operations.
+Un árbol red-black es un árbol de búsqueda binario equilibrado ordenado por las
+claves.
 
-Creation:
-Instantiate class `RBTree<K, V>` that provides a map from keys of type `K` to values of type `V`.
+La estructura de datos del árbol colorea internamente cada uno de sus nodos de
+rojo o negro, y utiliza esta información para equilibrar el árbol durante las
+operaciones de modificación.
 
-Example:
+Creación: Instancie la clase `RBTree<K, V>` que proporciona un mapa de claves de
+tipo `K` a valores de tipo `V`.
+
+Ejemplo:
+
 ```motoko
 import RBTree "mo:base/RBTree";
 import Nat "mo:base/Nat";
 import Debug "mo:base/Debug";
 
-let tree = RBTree.RBTree<Nat, Text>(Nat.compare); // Create a new red-black tree mapping Nat to Text
-tree.put(1, "one");
-tree.put(2, "two");
-tree.put(3, "tree");
+let tree = RBTree.RBTree<Nat, Text>(Nat.compare); // Crea un nuevo árbol red-black que mapea Nat a Text
+tree.put(1, "uno");
+tree.put(2, "dos");
+tree.put(3, "tres");
 for (entry in tree.entries()) {
-  Debug.print("Entry key=" # debug_show(entry.0) # " value=\"" # entry.1 #"\"");
+  Debug.print("Key del elemento=" # debug_show(entry.0) # " value=\"" # entry.1 #"\"");
 }
 ```
 
-Performance:
-* Runtime: `O(log(n))` worst case cost per insertion, removal, and retrieval operation.
-* Heap space: `O(n)` for storing the entire tree.
-* Stack space: `O(log(n)) for storing the entire tree.
-`n` denotes the number of key-value entries (i.e. nodes) stored in the tree.
+Rendimiento:
 
-Note:
-* Tree insertion, replacement, and removal produce `O(log(n))` garbage objects.
+- Tiempo de ejecución: `O(log(n))` costo en el peor de los casos por inserción,
+  eliminación y operación de recuperación.
+- Espacio en el heap: `O(n)` para almacenar todo el árbol.
+- Espacio en el stack: `O(log(n))` para almacenar todo el árbol. `n` denota el
+  número de entradas clave-valor (es decir, nodos) almacenados en el árbol.
 
-Credits:
+Nota:
 
-The core of this implementation is derived from:
+- La inserción, reemplazo y eliminación del árbol producen objetos basura
+  `O(log(n))`.
 
-* Ken Friis Larsen's [RedBlackMap.sml](https://github.com/kfl/mosml/blob/master/src/mosmllib/Redblackmap.sml), which itself is based on:
-* Stefan Kahrs, "Red-black trees with types", Journal of Functional Programming, 11(4): 425-432 (2001), [version 1 in web appendix](http://www.cs.ukc.ac.uk/people/staff/smk/redblack/rb.html).
+Créditos:
 
-## Type `Color`
-``` motoko no-repl
+El núcleo de esta implementación se deriva de:
+
+- [RedBlackMap.sml](https://github.com/kfl/mosml/blob/master/src/mosmllib/Redblackmap.sml)
+  de Ken Friis Larsen, que a su vez se basa en:
+- Stefan Kahrs, "Red-black trees with types", Journal of Functional Programming,
+  11(4): 425-432 (2001),
+  [versión 1 en el apéndice web](http://www.cs.ukc.ac.uk/people/staff/smk/redblack/rb.html).
+
+## Tipo `Color`
+
+```motoko no-repl
 type Color = {#R; #B}
 ```
 
-Node color: Either red (`#R`) or black (`#B`).
+Color del nodo: ya sea rojo (`#R`) o negro (`#B`).
 
-## Type `Tree`
-``` motoko no-repl
+## Tipo `Tree`
+
+```motoko no-repl
 type Tree<K, V> = {#node : (Color, Tree<K, V>, (K, ?V), Tree<K, V>); #leaf}
 ```
 
-Red-black tree of nodes with key-value entries, ordered by the keys.
-The keys have the generic type `K` and the values the generic type `V`.
-Leaves are considered implicitly black.
+Árbol red-black de nodos con entradas clave-valor, ordenado por las claves. Las
+claves tienen el tipo genérico `K` y los valores el tipo genérico `V`. Las hojas
+se consideran implícitamente negras.
 
-## Class `RBTree<K, V>`
+## Clase `RBTree<K, V>`
 
-``` motoko no-repl
+```motoko no-repl
 class RBTree<K, V>(compare : (K, K) -> O.Order)
 ```
 
-A map from keys of type `K` to values of type `V` implemented as a red-black tree.
-The entries of key-value pairs are ordered by `compare` function applied to the keys.
+Un mapa de claves de tipo `K` a valores de tipo `V` implementado como un árbol
+red-black. Las entradas de pares clave-valor están ordenadas por la función
+`compare` aplicada a las claves.
 
-The class enables imperative usage in object-oriented-style.
-However, internally, the class uses a functional implementation.
+La clase permite el uso imperativo en estilo orientado a objetos. Sin embargo,
+internamente, la clase utiliza una implementación funcional.
 
-The `compare` function should implement a consistent total order among all possible values of `K` and
-for efficiency, only involves `O(1)` runtime costs without space allocation.
+La función `compare` debe implementar un orden total consistente entre todos los
+valores posibles de `K` y, para mayor eficiencia, solo implica costos de tiempo
+de ejecución `O(1)` sin asignación de espacio.
 
-Example:
+Ejemplo:
+
 ```motoko name=initialize
 import RBTree "mo:base/RBTree";
 import Nat "mo:base/Nat";
 
-let tree = RBTree.RBTree<Nat, Text>(Nat.compare); // Create a map of `Nat` to `Text` using the `Nat.compare` order
+let tree = RBTree.RBTree<Nat, Text>(Nat.compare); // Crea un mapa de `Nat` a `Text` usando el orden `Nat.compare`
 ```
 
-Costs of instantiation (only empty tree):
-Runtime: `O(1)`.
-Heap space: `O(1)`.
-Stack space: `O(1)`.
+Costos de la instanciación (solo árbol vacío): Tiempo de ejecución: `O(1)`.
+Espacio en el heap: `O(1)`. Espacio en el stack: `O(1)`.
 
-### Function `share`
-``` motoko no-repl
+### Función `share`
+
+```motoko no-repl
 func share() : Tree<K, V>
 ```
 
-Return a snapshot of the internal functional tree representation as sharable data.
-The returned tree representation is not affected by subsequent changes of the `RBTree` instance.
+Devuelve una instantánea de la representación funcional interna del árbol como
+datos compartibles. La representación del árbol devuelto no se ve afectada por
+cambios posteriores de la instancia de `RBTree`.
 
+Ejemplo:
 
-Example:
 ```motoko include=initialize
 
-tree.put(1, "one");
+tree.put(1, "uno");
 let treeSnapshot = tree.share();
-tree.put(2, "second");
-RBTree.size(treeSnapshot) // => 1 (Only the first insertion is part of the snapshot.)
+tree.put(2, "segundo");
+RBTree.size(treeSnapshot) // => 1 (Solo la primera inserción forma parte de la instantánea.)
 ```
 
-Useful for storing the state of a tree object as a stable variable, determining its size, pretty-printing, and sharing it across async function calls,
-i.e. passing it in async arguments or async results.
+Útil para almacenar el estado de un objeto de árbol como una variable estable,
+determinar su tamaño, imprimirlo de forma legible y compartirlo entre llamadas
+de funciones asíncronas, es decir, pasándolo en argumentos asíncronos o
+resultados asíncronos.
 
-Runtime: `O(1)`.
-Heap space: `O(1)`.
-Stack space: `O(1)`.
+Tiempo de ejecución: `O(1)`. Espacio en el heap: `O(1)`. Espacio en el stack:
+`O(1)`.
 
+### Función `unshare`
 
-### Function `unshare`
-``` motoko no-repl
+```motoko no-repl
 func unshare(t : Tree<K, V>) : ()
 ```
 
-Reset the current state of the tree object from a functional tree representation.
+Restablece el estado actual del objeto de árbol a partir de una representación
+de árbol funcional.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 import Iter "mo:base/Iter";
 
-tree.put(1, "one");
-let snapshot = tree.share(); // save the current state of the tree object in a snapshot
-tree.put(2, "two");
-tree.unshare(snapshot); // restore the tree object from the snapshot
-Iter.toArray(tree.entries()) // => [(1, "one")]
+tree.put(1, "uno");
+let snapshot = tree.share(); // guarda el estado actual del objeto de árbol en una instantánea
+tree.put(2, "dos");
+tree.unshare(snapshot); // restaura el objeto de árbol desde la instantánea
+Iter.toArray(tree.entries()) // => [(1, "uno")]
 ```
 
-Useful for restoring the state of a tree object from stable data, saved, for example, in a stable variable.
+Útil para restaurar el estado de un objeto de árbol a partir de datos estables,
+guardados, por ejemplo, en una variable estable.
 
-Runtime: `O(1)`.
-Heap space: `O(1)`.
-Stack space: `O(1)`.
+Tiempo de ejecución: `O(1)`. Espacio en el heap: `O(1)`. Espacio en el stack:
+`O(1)`.
 
+### Función `get`
 
-### Function `get`
-``` motoko no-repl
+```motoko no-repl
 func get(key : K) : ?V
 ```
 
-Retrieve the value associated with a given key, if present. Returns `null`, if the key is absent.
-The key is searched according to the `compare` function defined on the class instantiation.
+Recupera el valor asociado con una clave dada, si está presente. Devuelve `null`
+si la clave está ausente. La clave se busca según la función `compare` definida
+en la instancia de la clase.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 
-tree.put(1, "one");
-tree.put(2, "two");
+tree.put(1, "uno");
+tree.put(2, "dos");
 
-tree.get(1) // => ?"one"
+tree.get(1) // => ?"uno"
 ```
 
-Runtime: `O(log(n))`.
-Heap space: `O(1)`.
-Stack space: `O(log(n))`.
-where `n` denotes the number of key-value entries stored in the tree and
-assuming that the `compare` function implements an `O(1)` comparison.
+Tiempo de ejecución: `O(log(n))`. Espacio en el heap: `O(1)`. Espacio en el
+stack: `O(log(n))`. donde `n` denota el número de entradas clave-valor
+almacenadas en el árbol y asumiendo que la función `compare` implementa una
+comparación `O(1)`.
 
+### Función `replace`
 
-### Function `replace`
-``` motoko no-repl
+```motoko no-repl
 func replace(key : K, value : V) : ?V
 ```
 
-Replace the value associated with a given key, if the key is present.
-Otherwise, if the key does not yet exist, insert the key-value entry.
+Reemplaza el valor asociado con una clave dada, si la clave está presente. De lo
+contrario, si la clave aún no existe, inserta la entrada clave-valor.
 
-Returns the previous value of the key, if the key already existed.
-Otherwise, `null`, if the key did not yet exist before.
+Devuelve el valor anterior de la clave, si la clave ya existía. De lo contrario,
+`null` si la clave aún no existía antes.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 import Iter "mo:base/Iter";
 
-tree.put(1, "old one");
-tree.put(2, "two");
+tree.put(1, "uno antiguo");
+tree.put(2, "dos");
 
-ignore tree.replace(1, "new one");
-Iter.toArray(tree.entries()) // => [(1, "new one"), (2, "two")]
+ignore tree.replace(1, "uno nuevo");
+Iter.toArray(tree.entries()) // => [(1, "uno nuevo"), (2, "dos")]
 ```
 
-Runtime: `O(log(n))`.
-Heap space: `O(1)` retained memory plus garbage, see the note below.
-Stack space: `O(log(n))`.
-where `n` denotes the number of key-value entries stored in the tree and
-assuming that the `compare` function implements an `O(1)` comparison.
+Tiempo de ejecución: `O(log(n))`. Espacio en el heap: `O(1)` memoria retenida
+más basura, consulte la nota a continuación. Espacio en el stack: `O(log(n))`.
+donde `n` denota el número de entradas clave-valor almacenadas en el árbol y
+asumiendo que la función `compare` implementa una comparación `O(1)`.
 
-Note: Creates `O(log(n))` garbage objects.
+Nota: Crea objetos basura `O(log(n))`.
 
+### Función `put`
 
-### Function `put`
-``` motoko no-repl
+```motoko no-repl
 func put(key : K, value : V)
 ```
 
-Insert a key-value entry in the tree. If the key already exists, it overwrites the associated value.
+Inserta una entrada clave-valor en el árbol. Si la clave ya existe, sobrescribe
+el valor asociado.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 import Iter "mo:base/Iter";
 
-tree.put(1, "one");
-tree.put(2, "two");
-tree.put(3, "three");
-Iter.toArray(tree.entries()) // now contains three entries
+tree.put(1, "uno");
+tree.put(2, "dos");
+tree.put(3, "tres");
+Iter.toArray(tree.entries()) // ahora contiene tres entradas
 ```
 
-Runtime: `O(log(n))`.
-Heap space: `O(1)` retained memory plus garbage, see the note below.
-Stack space: `O(log(n))`.
-where `n` denotes the number of key-value entries stored in the tree and
-assuming that the `compare` function implements an `O(1)` comparison.
+Tiempo de ejecución: `O(log(n))`. Espacio en el heap: `O(1)` memoria retenida
+más basura, consulte la nota a continuación. Espacio en el stack: `O(log(n))`.
+donde `n` denota el número de entradas clave-valor almacenadas en el árbol y
+asumiendo que la función `compare` implementa una comparación `O(1)`.
 
-Note: Creates `O(log(n))` garbage objects.
+Nota: Crea objetos basura `O(log(n))`.
 
+### Función `delete`
 
-### Function `delete`
-``` motoko no-repl
+```motoko no-repl
 func delete(key : K)
 ```
 
-Delete the entry associated with a given key, if the key exists.
-No effect if the key is absent. Same as `remove(key)` except that it
-does not have a return value.
+Elimina la entrada asociada con una clave dada, si la clave existe. Sin efecto
+si la clave está ausente. Igual que `remove(key)` excepto que no tiene un valor
+de retorno.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 import Iter "mo:base/Iter";
 
-tree.put(1, "one");
-tree.put(2, "two");
+tree.put(1, "uno");
+tree.put(2, "dos");
 
 tree.delete(1);
-Iter.toArray(tree.entries()) // => [(2, "two")].
+Iter.toArray(tree.entries()) // => [(2, "dos")].
 ```
 
-Runtime: `O(log(n))`.
-Heap space: `O(1)` retained memory plus garbage, see the note below.
-Stack space: `O(log(n))`.
-where `n` denotes the number of key-value entries stored in the tree and
-assuming that the `compare` function implements an `O(1)` comparison.
+Tiempo de ejecución: `O(log(n))`. Espacio en el heap: `O(1)` memoria retenida
+más basura, consulte la nota a continuación. Espacio en el stack: `O(log(n))`.
+donde `n` denota el número de entradas clave-valor almacenadas en el árbol y
+asumiendo que la función `compare` implementa una comparación `O(1)`.
 
-Note: Creates `O(log(n))` temporary objects that will be collected as garbage.
+Nota: Crea objetos temporales `O(log(n))` que se recogerán como basura.
 
+### Función `remove`
 
-### Function `remove`
-``` motoko no-repl
+```motoko no-repl
 func remove(key : K) : ?V
 ```
 
-Remove the entry associated with a given key, if the key exists, and return the associated value.
-Returns `null` without any other effect if the key is absent.
+Elimina la entrada asociada con una clave dada, si la clave existe, y devuelve
+el valor asociado. Devuelve `null` sin ningún otro efecto si la clave está
+ausente.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 import Iter "mo:base/Iter";
 
-tree.put(1, "one");
-tree.put(2, "two");
+tree.put(1, "uno");
+tree.put(2, "dos");
 
 ignore tree.remove(1);
-Iter.toArray(tree.entries()) // => [(2, "two")].
+Iter.toArray(tree.entries()) // => [(2, "dos")].
 ```
 
-Runtime: `O(log(n))`.
-Heap space: `O(1)` retained memory plus garbage, see the note below.
-Stack space: `O(log(n))`.
-where `n` denotes the number of key-value entries stored in the tree and
-assuming that the `compare` function implements an `O(1)` comparison.
+Tiempo de ejecución: `O(log(n))`. Espacio en el heap: `O(1)` memoria retenida
+más basura, consulte la nota a continuación. Espacio en el stack: `O(log(n))`.
+donde `n` denota el número de entradas clave-valor almacenadas en el árbol y
+asumiendo que la función `compare` implementa una comparación `O(1)`.
 
-Note: Creates `O(log(n))` garbage objects.
+Nota: Crea objetos basura `O(log(n))`.
 
+### Función `entries`
 
-### Function `entries`
-``` motoko no-repl
+```motoko no-repl
 func entries() : I.Iter<(K, V)>
 ```
 
-An iterator for the key-value entries of the map, in ascending key order.
-The iterator takes a snapshot view of the tree and is not affected by concurrent modifications.
+Un iterador para las entradas clave-valor del mapa, en orden ascendente de las
+claves. El iterador toma una vista instantánea del árbol y no se ve afectado por
+modificaciones concurrentes.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 import Debug "mo:base/Debug";
 
-tree.put(1, "one");
-tree.put(2, "two");
-tree.put(3, "two");
+tree.put(1, "uno");
+tree.put(2, "dos");
+tree.put(3, "dos");
 
 for (entry in tree.entries()) {
-  Debug.print("Entry key=" # debug_show(entry.0) # " value=\"" # entry.1 #"\"");
+  Debug.print("Clave del elemento=" # debug_show(entry.0) # " valor=\"" # entry.1 #"\"");
 }
 
-// Entry key=1 value="one"
-// Entry key=2 value="two"
-// Entry key=3 value="three"
+// Clave del elemento=1 valor="uno"
+// Clave del elemento=2 valor="dos"
+// Clave del elemento=3 valor="tres"
 ```
 
-Cost of iteration over all elements:
-Runtime: `O(n)`.
-Heap space: `O(log(n))` retained memory plus garbage, see the note below.
-Stack space: `O(log(n))`.
-where `n` denotes the number of key-value entries stored in the tree.
+Costo de la iteración sobre todos los elementos: Tiempo de ejecución: `O(n)`.
+Espacio en el heap: `O(log(n))` memoria retenida más basura, consulte la nota a
+continuación. Espacio en el stack: `O(log(n))`. donde `n` denota el número de
+entradas clave-valor almacenadas en el árbol.
 
-Note: Full tree iteration creates `O(n)` temporary objects that will be collected as garbage.
+Nota: La iteración completa del árbol crea objetos temporales `O(n)` que se
+recogerán como basura.
 
+### Función `entriesRev`
 
-### Function `entriesRev`
-``` motoko no-repl
+```motoko no-repl
 func entriesRev() : I.Iter<(K, V)>
 ```
 
-An iterator for the key-value entries of the map, in descending key order.
-The iterator takes a snapshot view of the tree and is not affected by concurrent modifications.
+Un iterador para las entradas clave-valor del mapa, en orden descendente de las
+claves. El iterador toma una vista instantánea del árbol y no se ve afectado por
+modificaciones concurrentes.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 import Debug "mo:base/Debug";
 
 let tree = RBTree.RBTree<Nat, Text>(Nat.compare);
-tree.put(1, "one");
-tree.put(2, "two");
-tree.put(3, "two");
+tree.put(1, "uno");
+tree.put(2, "dos");
+tree.put(3, "dos");
 
 for (entry in tree.entriesRev()) {
-  Debug.print("Entry key=" # debug_show(entry.0) # " value=\"" # entry.1 #"\"");
+  Debug.print("Clave del elemento=" # debug_show(entry.0) # " valor=\"" # entry.1 #"\"");
 }
 
-// Entry key=3 value="three"
-// Entry key=2 value="two"
-// Entry key=1 value="one"
+// Clave del elemento=3 valor="tres"
+// Clave del elemento=2 valor="dos"
+// Clave del elemento=1 valor="uno"
 ```
 
-Cost of iteration over all elements:
-Runtime: `O(n)`.
-Heap space: `O(log(n))` retained memory plus garbage, see the note below.
-Stack space: `O(log(n))`.
-where `n` denotes the number of key-value entries stored in the tree.
+Costo de la iteración sobre todos los elementos: Tiempo de ejecución: `O(n)`.
+Espacio en el heap: `O(log(n))` memoria retenida más basura, consulte la nota a
+continuación. Espacio en el stack: `O(log(n))`. donde `n` denota el número de
+entradas clave-valor almacenadas en el árbol.
 
-Note: Full tree iteration creates `O(n)` temporary objects that will be collected as garbage.
+Nota: La iteración completa del árbol crea objetos temporales `O(n)` que se
+recogerán como basura.
 
-## Function `iter`
-``` motoko no-repl
+## Función `iter`
+
+```motoko no-repl
 func iter<X, Y>(tree : Tree<X, Y>, direction : {#fwd; #bwd}) : I.Iter<(X, Y)>
 ```
 
-Get an iterator for the entries of the `tree`, in ascending (`#fwd`) or descending (`#bwd`) order as specified by `direction`.
-The iterator takes a snapshot view of the tree and is not affected by concurrent modifications.
+Obtiene un iterador para las entradas del `tree`, en orden ascendente (`#fwd`) o
+descendente (`#bwd`) según lo especificado por `direction`. El iterador toma una
+vista instantánea del árbol y no se ve afectado por modificaciones concurrentes.
 
-Example:
+Ejemplo:
+
 ```motoko
 import RBTree "mo:base/RBTree";
 import Nat "mo:base/Nat";
 import Debug "mo:base/Debug";
 
 let tree = RBTree.RBTree<Nat, Text>(Nat.compare);
-tree.put(1, "one");
-tree.put(2, "two");
-tree.put(3, "two");
+tree.put(1, "uno");
+tree.put(2, "dos");
+tree.put(3, "dos");
 
-for (entry in RBTree.iter(tree.share(), #bwd)) { // backward iteration
-  Debug.print("Entry key=" # debug_show(entry.0) # " value=\"" # entry.1 #"\"");
+for (entry in RBTree.iter(tree.share(), #bwd)) { // iteración hacia atrás
+  Debug.print("Clave del elemento=" # debug_show(entry.0) # " valor=\"" # entry.1 #"\"");
 }
 
-// Entry key=3 value="three"
-// Entry key=2 value="two"
-// Entry key=1 value="one"
+// Clave del elemento=3 valor="tres"
+// Clave del elemento=2 valor="dos"
+// Clave del elemento=1 valor="uno"
 ```
 
-Cost of iteration over all elements:
-Runtime: `O(n)`.
-Heap space: `O(log(n))` retained memory plus garbage, see the note below.
-Stack space: `O(log(n))`.
-where `n` denotes the number of key-value entries stored in the tree.
+Costo de la iteración sobre todos los elementos: Tiempo de ejecución: `O(n)`.
+Espacio en el heap: `O(log(n))` memoria retenida más basura, consulte la nota a
+continuación. Espacio en el stack: `O(log(n))`. donde `n` denota el número de
+entradas clave-valor almacenadas en el árbol.
 
-Note: Full tree iteration creates `O(n)` temporary objects that will be collected as garbage.
+Nota: La iteración completa del árbol crea objetos temporales `O(n)` que se
+recogerán como basura.
 
-## Function `size`
-``` motoko no-repl
+## Función `size`
+
+```motoko no-repl
 func size<X, Y>(t : Tree<X, Y>) : Nat
 ```
 
-Determine the size of the tree as the number of key-value entries.
+Determina el tamaño del árbol como el número de entradas clave-valor.
 
-Example:
+Ejemplo:
+
 ```motoko
 import RBTree "mo:base/RBTree";
 import Nat "mo:base/Nat";
 
 let tree = RBTree.RBTree<Nat, Text>(Nat.compare);
-tree.put(1, "one");
-tree.put(2, "two");
-tree.put(3, "three");
+tree.put(1, "uno");
+tree.put(2, "dos");
+tree.put(3, "tres");
 
-RBTree.size(tree.share()) // 3 entries
+RBTree.size(tree.share()) // 3 entradas
 ```
 
-Runtime: `O(log(n))`.
-Heap space: `O(1)`.
-Stack space: `O(log(n))`.
-where `n` denotes the number of key-value entries stored in the tree.
+Tiempo de ejecución: `O(log(n))`. Espacio en el heap: `O(1)`. Espacio en el
+stack: `O(log(n))`. donde `n` denota el número de entradas clave-valor
+almacenadas en el árbol.
