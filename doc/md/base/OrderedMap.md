@@ -1,50 +1,65 @@
 # OrderedMap
-Stable key-value map implemented as a red-black tree with nodes storing key-value pairs.
 
-A red-black tree is a balanced binary search tree ordered by the keys.
+Map clave-valor (key-value) estable implementado como un árbol red-black
+(RBTree) con nodos que almacenan pares clave-valor.
 
-The tree data structure internally colors each of its nodes either red or black,
-and uses this information to balance the tree during the modifying operations.
+Un árbol red-black es un árbol de búsqueda binario equilibrado ordenado por las
+claves.
 
-Performance:
-* Runtime: `O(log(n))` worst case cost per insertion, removal, and retrieval operation.
-* Space: `O(n)` for storing the entire tree.
-`n` denotes the number of key-value entries (i.e. nodes) stored in the tree.
+La estructura de datos del árbol colorea internamente cada uno de sus nodos de
+rojo o negro, y utiliza esta información para equilibrar el árbol durante las
+operaciones de modificación.
 
-Note:
-* Map operations, such as retrieval, insertion, and removal create `O(log(n))` temporary objects that become garbage.
+Rendimiento:
 
-Credits:
+- Tiempo de ejecución: `O(log(n))` costo peor caso por inserción, eliminación y
+  recuperación operación.
+- Espacio: `O(n)` para almacenar todo el árbol. `n` denota el número de pares
+  clave-valor entradas (es decir, nodos) almacenados en el árbol.
 
-The core of this implementation is derived from:
+Nota:
 
-* Ken Friis Larsen's [RedBlackMap.sml](https://github.com/kfl/mosml/blob/master/src/mosmllib/Redblackmap.sml), which itself is based on:
-* Stefan Kahrs, "Red-black trees with types", Journal of Functional Programming, 11(4): 425-432 (2001), [version 1 in web appendix](http://www.cs.ukc.ac.uk/people/staff/smk/redblack/rb.html).
+- Las operaciones del map, como la recuperación, inserción y eliminación, crean
+  `O(log(n))` objetos temporales que se convierten en basura.
 
-## Type `Map`
-``` motoko no-repl
+Créditos:
+
+El núcleo de esta implementación se deriva de:
+
+- Ken Friis Larsen's
+  [RedBlackMap.sml](https://github.com/kfl/mosml/blob/master/src/mosmllib/Redblackmap.sml),
+  que a su vez se basa en:
+- Stefan Kahrs, "Red-black trees with types", Journal of Functional Programming,
+  11(4): 425-432 (2001),
+  [versión 1 en el apéndice web](http://www.cs.ukc.ac.uk/people/staff/smk/redblack/rb.html).
+
+## Tipo `Map`
+
+```motoko no-repl
 type Map<K, V> = { size : Nat; root : Tree<K, V> }
 ```
 
-Collection of key-value entries, ordered by the keys and key unique.
-The keys have the generic type `K` and the values the generic type `V`.
-If `K` and `V` is stable types then `Map<K, V>` is also stable. 
-To ensure that property the `Map<K, V>` does not have any methods, instead 
-they are gathered in the functor-like class `Operations` (see example there).
+Colección de entradas clave-valor, ordenadas por las claves y clave única. Las
+claves tienen el tipo genérico `K` y los valores el tipo genérico `V`. Si `K` y
+`V` son tipos estables, entonces `Map<K, V>` también es estable. Para asegurar
+esa propiedad, el `Map<K, V>` no tiene ningún método, en su lugar se recopilan
+en la clase tipo functor `Operations` (ver ejemplo allí).
 
-## Class `Operations<K>`
+## Clase `Operations<K>`
 
-``` motoko no-repl
+```motoko no-repl
 class Operations<K>(compare : (K, K) -> O.Order)
 ```
 
-Class that captures key type `K` along with its ordering function `compare` 
-and provides all operations to work with a map of type `Map<K, _>`.
+Clase que captura el tipo de clave `K` junto con su función de ordenación
+`compare` y proporciona todas las operaciones para trabajar con un map de tipo
+`Map<K, _>`.
 
-An instance object should be created once as a canister field to ensure 
-that the same ordering function is used for every operation.
+Se debe crear un objeto de instancia una vez como un campo del contenedor para
+asegurar que el se utiliza la misma función de ordenación para cada operación.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Map "mo:base/OrderedMap";
 import Nat "mo:base/Nat";
@@ -52,22 +67,24 @@ import Nat "mo:base/Nat";
 actor {
   let natMap = Map.Make<Nat>(Nat.compare); // : Operations<Nat>
   stable var keyStorage : Map.Map<Nat, Text> = natMap.empty<Text>();
-  
+
   public func addKey(id : Nat, key : Text) : async () {
     keyStorage := natMap.put(keyStorage, id, key);
   }
 }
 ```
 
-### Function `fromIter`
-``` motoko no-repl
+### Función `fromIter`
+
+```motoko no-repl
 func fromIter<V>(i : I.Iter<(K, V)>) : Map<K, V>
 ```
 
-Returns a new map, containing all entries given by the iterator `i`.
-If there are multiple entries with the same key the last one is taken.
+Devuelve un nuevo map que contiene todas las entradas dadas por el iterador `i`.
+Si hay múltiples entradas con la misma clave, se toma la última.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Map "mo:base/OrderedMap";
 import Nat "mo:base/Nat";
@@ -82,23 +99,24 @@ Debug.print(debug_show(Iter.toArray(natMap.entries(m))));
 // [(0, "Zero"), (1, "One"), (2, "Two")]
 ```
 
-Runtime: `O(n * log(n))`.
-Space: `O(n)` retained memory plus garbage, see the note below.
-where `n` denotes the number of key-value entries stored in the map and
-assuming that the `compare` function implements an `O(1)` comparison.
+Tiempo de ejecución: `O(n * log(n))`. Espacio: `O(n)` memoria retenida más
+basura, ver la nota a continuación. donde `n` denota el número de pares
+clave-valor entradas almacenadas en el map y asumiendo que la función `compare`
+implementa una comparación `O(1)`.
 
-Note: Creates `O(n * log(n))` temporary objects that will be collected as garbage.
+Nota: Crea `O(n * log(n))` objetos temporales que se recogerán como basura.
 
+### Función `put`
 
-### Function `put`
-``` motoko no-repl
+```motoko no-repl
 func put<V>(m : Map<K, V>, key : K, value : V) : Map<K, V>
 ```
 
-Insert the value `value` with key `key` into the map `m`. Overwrites any existing entry with key `key`.
-Returns a modified map.
+Inserta el valor `value` con la clave `key` en el map `m`. Sobrescribe cualquier
+entrada existente con la clave `key`. Devuelve un map modificado.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Map "mo:base/OrderedMap";
 import Nat "mo:base/Nat";
@@ -117,25 +135,26 @@ Debug.print(debug_show(Iter.toArray(natMap.entries(map))));
 // [(0, "Zero"), (1, "One"), (2, "Two")]
 ```
 
-Runtime: `O(log(n))`.
-Space: `O(log(n))`.
-where `n` denotes the number of key-value entries stored in the map and
-assuming that the `compare` function implements an `O(1)` comparison.
-   
-Note: The returned map shares with the `m` most of the tree nodes. 
-Garbage collecting one of maps (e.g. after an assignment `m := natMap.put(m, k)`)
-causes collecting `O(log(n))` nodes.
+Tiempo de ejecución: `O(log(n))`. Espacio: `O(log(n))`. donde `n` denota el
+número de pares clave-valor almacenados en el map y asumiendo que la función
+`compare` implementa una comparación `O(1)`.
 
+Nota: El map devuelto comparte con el `m` la mayoría de los nodos del árbol.
+Recolectar basura uno de los maps (por ejemplo, después de una asignación
+`m := natMap.put(m, k)`) causa recolectar `O(log(n))` nodos.
 
-### Function `replace`
-``` motoko no-repl
+### Función `replace`
+
+```motoko no-repl
 func replace<V>(m : Map<K, V>, key : K, value : V) : (Map<K, V>, ?V)
 ```
 
-Insert the value `value` with key `key` into the map `m`. Returns modified map and
-the previous value associated with key `key` or `null` if no such value exists.
+Inserta el valor `value` con la clave `key` en el map `m`. Devuelve el map
+modificado y el valor anterior asociado con la clave `key` o `null` si no existe
+dicho valor.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Map "mo:base/OrderedMap";
 import Nat "mo:base/Nat";
@@ -160,27 +179,28 @@ Debug.print(debug_show(old2));
 // null
 ```
 
-Runtime: `O(log(n))`.
-Space: `O(log(n))` retained memory plus garbage, see the note below.
-where `n` denotes the number of key-value entries stored in the map and
-assuming that the `compare` function implements an `O(1)` comparison.
+Tiempo de ejecución: `O(log(n))`. Espacio: `O(log(n))` memoria retenida más
+basura, ver la nota a continuación. donde `n` denota el número de pares
+clave-valor almacenados en el map y asumiendo que la función `compare`
+implementa una comparación `O(1)`.
 
-Note: The returned map shares with the `m` most of the tree nodes. 
-Garbage collecting one of maps (e.g. after an assignment `m := natMap.replace(m, k).0`)
-causes collecting `O(log(n))` nodes.
+Nota: El map devuelto comparte con el `m` la mayoría de los nodos del árbol.
+Recolectar basura uno de los maps (por ejemplo, después de una asignación
+`m := natMap.replace(m, k).0`) causa recolectar `O(log(n))` nodos.
 
+### Función `mapFilter`
 
-### Function `mapFilter`
-``` motoko no-repl
+```motoko no-repl
 func mapFilter<V1, V2>(m : Map<K, V1>, f : (K, V1) -> ?V2) : Map<K, V2>
 ```
 
-Creates a new map by applying `f` to each entry in the map `m`. For each entry
-`(k, v)` in the old map, if `f` evaluates to `null`, the entry is discarded.
-Otherwise, the entry is transformed into a new entry `(k, v2)`, where
-the new value `v2` is the result of applying `f` to `(k, v)`.
+Crea un nuevo map aplicando `f` a cada entrada en el map `m`. Para cada entrada
+`(k, v)` en el map antiguo, si `f` se evalúa a `null`, se descarta la entrada.
+De lo contrario, la entrada se transforma en una nueva entrada `(k, v2)`, donde
+el nuevo valor `v2` es el resultado de aplicar `f` a `(k, v)`.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Map "mo:base/OrderedMap";
 import Nat "mo:base/Nat";
@@ -202,22 +222,24 @@ Debug.print(debug_show(Iter.toArray(natMap.entries(newMap))));
 // [(1, "Twenty One"), (2, "Twenty Two")]
 ```
 
-Runtime: `O(n * log(n))`.
-Space: `O(n)` retained memory plus garbage, see the note below.
-where `n` denotes the number of key-value entries stored in the map and
-assuming that the `compare` function implements an `O(1)` comparison.
+Tiempo de ejecución: `O(n * log(n))`. Espacio: `O(n)` memoria retenida más
+basura, ver la nota a continuación. donde `n` denota el número de pares
+clave-valor almacenados en el map y asumiendo que la función `compare`
+implementa una comparación `O(1)`.
 
-Note: Creates `O(n * log(n))` temporary objects that will be collected as garbage.
+Nota: Crea `O(n * log(n))` objetos temporales que se recogerán como basura.
 
+### Función `get`
 
-### Function `get`
-``` motoko no-repl
+```motoko no-repl
 func get<V>(m : Map<K, V>, key : K) : ?V
 ```
 
-Get the value associated with key `key` in the given map `m` if present and `null` otherwise.
+Obtiene el valor asociado con la clave `key` en el map dado `m` si está presente
+y `null` de lo contrario.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Map "mo:base/OrderedMap";
 import Nat "mo:base/Nat";
@@ -234,20 +256,20 @@ Debug.print(debug_show(natMap.get(map, 42)));
 // null
 ```
 
-Runtime: `O(log(n))`.
-Space: `O(1)`.
-where `n` denotes the number of key-value entries stored in the map and
-assuming that the `compare` function implements an `O(1)` comparison.
+Tiempo de ejecución: `O(log(n))`. Espacio: `O(1)`. donde `n` denota el número de
+pares clave-valor entradas almacenadas en el map y asumiendo que la función
+`compare` implementa una comparación `O(1)`.
 
+### Función `contains`
 
-### Function `contains`
-``` motoko no-repl
+```motoko no-repl
 func contains<V>(m : Map<K, V>, key : K) : Bool
 ```
 
-Test whether the map `m` contains any binding for the given `key`.
+Comprueba si el map `m` contiene alguna asociación para la clave dada `key`.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Map "mo:base/OrderedMap";
 import Nat "mo:base/Nat";
@@ -257,24 +279,26 @@ import Debug "mo:base/Debug";
 let natMap = Map.Make<Nat>(Nat.compare);
 let map = natMap.fromIter<Text>(Iter.fromArray([(0, "Zero"), (2, "Two"), (1, "One")]));
 
+
 Debug.print(debug_show natMap.contains(map, 1)); // => true
 Debug.print(debug_show natMap.contains(map, 42)); // => false
 ```
 
-Runtime: `O(log(n))`.
-Space: `O(1)`.
-where `n` denotes the number of key-value entries stored in the map and
-assuming that the `compare` function implements an `O(1)` comparison.
+Tiempo de ejecución: `O(log(n))`. Espacio: `O(1)`. donde `n` denota el número de
+pares clave-valor almacenados en el map y asumiendo que la función `compare`
+implementa una comparación `O(1)`.
 
+### Función `maxEntry`
 
-### Function `maxEntry`
-``` motoko no-repl
+```motoko no-repl
 func maxEntry<V>(m : Map<K, V>) : ?(K, V)
 ```
 
-Retrieves a key-value pair from the map `m` with a maximal key. If the map is empty returns `null`.
+Recupera un par clave-valor del map `m` con la clave máxima. Si el map está
+vacío, devuelve `null`.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Map "mo:base/OrderedMap";
 import Nat "mo:base/Nat";
@@ -288,19 +312,20 @@ Debug.print(debug_show(natMap.maxEntry(map))); // => ?(2, "Two")
 Debug.print(debug_show(natMap.maxEntry(natMap.empty()))); // => null
 ```
 
-Runtime: `O(log(n))`.
-Space: `O(1)`.
-where `n` denotes the number of key-value entries stored in the map.
+Tiempo de ejecución: `O(log(n))`. Espacio: `O(1)`, donde `n` denota el número de
+pares clave-valor almacenados en el map.
 
+### Función `minEntry`
 
-### Function `minEntry`
-``` motoko no-repl
+```motoko no-repl
 func minEntry<V>(m : Map<K, V>) : ?(K, V)
 ```
 
-Retrieves a key-value pair from the map `m` with a minimal key. If the map is empty returns `null`.
+Recupera un par clave-valor del map `m` con la clave mínima. Si el map está
+vacío, devuelve `null`.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Map "mo:base/OrderedMap";
 import Iter "mo:base/Iter";
@@ -314,20 +339,20 @@ Debug.print(debug_show(natMap.minEntry(map))); // => ?(0, "Zero")
 Debug.print(debug_show(natMap.minEntry(natMap.empty()))); // => null
 ```
 
-Runtime: `O(log(n))`.
-Space: `O(1)`.
-where `n` denotes the number of key-value entries stored in the map.
+Tiempo de ejecución: `O(log(n))`. Espacio: `O(1)`, donde `n` denota el número de
+pares clave-valor almacenados en el map.
 
+### Función `delete`
 
-### Function `delete`
-``` motoko no-repl
+```motoko no-repl
 func delete<V>(m : Map<K, V>, key : K) : Map<K, V>
 ```
 
-Deletes the entry with the key `key` from the map `m`. Has no effect if `key` is not
-present in the map. Returns modified map.
+Elimina la entrada con la clave `key` del map `m`. No tiene efecto si la clave
+no está presente en el map. Devuelve el map modificado.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Map "mo:base/OrderedMap";
 import Nat "mo:base/Nat";
@@ -344,25 +369,25 @@ Debug.print(debug_show(Iter.toArray(natMap.entries(natMap.delete(map, 42)))));
 // [(0, "Zero"), (1, "One"), (2, "Two")]
 ```
 
-Runtime: `O(log(n))`.
-Space: `O(log(n))`
-where `n` denotes the number of key-value entries stored in the map and
-assuming that the `compare` function implements an `O(1)` comparison.
+Tiempo de ejecución: `O(log(n))`. Espacio: `O(log(n))`, donde `n` denota el
+número de pares clave-valor almacenados en el map y asumiendo que la función
+`compare` implementa una comparación `O(1)`.
 
-Note: The returned map shares with the `m` most of the tree nodes. 
-Garbage collecting one of maps (e.g. after an assignment `m := natMap.delete(m, k).0`)
-causes collecting `O(log(n))` nodes.
+Nota: El map devuelto comparte con `m` la mayoría de los nodos del árbol.
+Recolectar basura en uno de los maps (por ejemplo, después de una asignación
+`m := natMap.delete(m, k).0`) provoca la recolección de `O(log(n))` nodos.
 
+### Función `remove`
 
-### Function `remove`
-``` motoko no-repl
+```motoko no-repl
 func remove<V>(m : Map<K, V>, key : K) : (Map<K, V>, ?V)
 ```
 
-Deletes the entry with the key `key`. Returns modified map and the
-previous value associated with key `key` or `null` if no such value exists.
+Elimina la entrada con la clave `key`. Devuelve el map modificado y el valor
+anterior asociado con la clave `key` o `null` si no existe dicho valor.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Map "mo:base/OrderedMap";
 import Nat "mo:base/Nat";
@@ -387,24 +412,24 @@ Debug.print(debug_show(old2));
 // null
 ```
 
-Runtime: `O(log(n))`.
-Space: `O(log(n))`.
-where `n` denotes the number of key-value entries stored in the map and
-assuming that the `compare` function implements an `O(1)` comparison.
+Tiempo de ejecución: `O(log(n))`. Espacio: `O(log(n))`, donde `n` denota el
+número de pares clave-valor almacenados en el map y asumiendo que la función
+`compare` implementa una comparación `O(1)`.
 
-Note: The returned map shares with the `m` most of the tree nodes. 
-Garbage collecting one of maps (e.g. after an assignment `m := natMap.remove(m, k)`)
-causes collecting `O(log(n))` nodes.
+Nota: El map devuelto comparte con `m` la mayoría de los nodos del árbol.
+Recolectar basura en uno de los maps (por ejemplo, después de una asignación
+`m := natMap.remove(m, k)`) provoca la recolección de `O(log(n))` nodos.
 
+### Función `empty`
 
-### Function `empty`
-``` motoko no-repl
+```motoko no-repl
 func empty<V>() : Map<K, V>
 ```
 
-Create a new empty map.
+Crea un nuevo map vacío.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Map "mo:base/OrderedMap";
 import Nat "mo:base/Nat";
@@ -419,21 +444,20 @@ Debug.print(debug_show(natMap.size(map)));
 // 0
 ```
 
-Cost of empty map creation
-Runtime: `O(1)`.
-Space: `O(1)`
+Costo de creación de un map vacío Tiempo de ejecución: `O(1)`. Espacio: `O(1)`
 
+### Función `entries`
 
-### Function `entries`
-``` motoko no-repl
+```motoko no-repl
 func entries<V>(m : Map<K, V>) : I.Iter<(K, V)>
 ```
 
-Returns an Iterator (`Iter`) over the key-value pairs in the map.
-Iterator provides a single method `next()`, which returns
-pairs in ascending order by keys, or `null` when out of pairs to iterate over.
+Devuelve un iterador (`Iter`) sobre los pares clave-valor en el map. El iterador
+proporciona un único método `next()`, que devuelve los pares en orden ascendente
+por claves, o `null` cuando no hay más pares para iterar.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Map "mo:base/OrderedMap";
 import Nat "mo:base/Nat";
@@ -449,32 +473,34 @@ var sum = 0;
 for ((k, _) in natMap.entries(map)) { sum += k; };
 Debug.print(debug_show(sum)); // => 3
 ```
-Cost of iteration over all elements:
-Runtime: `O(n)`.
-Space: `O(log(n))` retained memory plus garbage, see the note below.
-where `n` denotes the number of key-value entries stored in the map.
 
-Note: Full map iteration creates `O(n)` temporary objects that will be collected as garbage.
+Costo de iteración sobre todos los elementos: Tiempo de ejecución: `O(n)`.
+Espacio: `O(log(n))` memoria retenida más basura, ver la nota a continuación.
+donde `n` denota el número de pares clave-valor almacenados en el map.
 
+Nota: La iteración completa del map crea `O(n)` objetos temporales que se
+recogerán como basura.
 
-### Function `entriesRev`
-``` motoko no-repl
+### Función `entriesRev`
+
+```motoko no-repl
 func entriesRev<V>(m : Map<K, V>) : I.Iter<(K, V)>
 ```
 
-Same as `entries` but iterates in the descending order.
+Igual que `entries` pero itera en orden descendente.
 
+### Función `keys`
 
-### Function `keys`
-``` motoko no-repl
+```motoko no-repl
 func keys<V>(m : Map<K, V>) : I.Iter<K>
 ```
 
-Returns an Iterator (`Iter`) over the keys of the map.
-Iterator provides a single method `next()`, which returns
-keys in ascending order, or `null` when out of keys to iterate over.
+Devuelve un iterador (`Iter`) sobre las claves del map. El iterador proporciona
+un único método `next()`, que devuelve las claves en orden ascendente, o `null`
+cuando no hay más claves para iterar.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Map "mo:base/OrderedMap";
 import Nat "mo:base/Nat";
@@ -488,24 +514,26 @@ Debug.print(debug_show(Iter.toArray(natMap.keys(map))));
 
 // [0, 1, 2]
 ```
-Cost of iteration over all elements:
-Runtime: `O(n)`.
-Space: `O(log(n))` retained memory plus garbage, see the note below.
-where `n` denotes the number of key-value entries stored in the map.
 
-Note: Full map iteration creates `O(n)` temporary objects that will be collected as garbage.
+Costo de iteración sobre todos los elementos: Tiempo de ejecución: `O(n)`.
+Espacio: `O(log(n))` memoria retenida más basura, ver la nota a continuación.
+donde `n` denota el número de pares clave-valor almacenados en el map.
 
+Nota: La iteración completa del map crea `O(n)` objetos temporales que se
+recogerán como basura.
 
-### Function `vals`
-``` motoko no-repl
+### Función `vals`
+
+```motoko no-repl
 func vals<V>(m : Map<K, V>) : I.Iter<V>
 ```
 
-Returns an Iterator (`Iter`) over the values of the map.
-Iterator provides a single method `next()`, which returns
-values in ascending order of associated keys, or `null` when out of values to iterate over.
+Devuelve un iterador (`Iter`) sobre los valores del map. El iterador proporciona
+un único método `next()`, que devuelve los valores en orden ascendente de las
+claves asociadas, o `null` cuando no hay más valores para iterar.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Map "mo:base/OrderedMap";
 import Nat "mo:base/Nat";
@@ -519,24 +547,26 @@ Debug.print(debug_show(Iter.toArray(natMap.vals(map))));
 
 // ["Zero", "One", "Two"]
 ```
-Cost of iteration over all elements:
-Runtime: `O(n)`.
-Space: `O(log(n))` retained memory plus garbage, see the note below.
-where `n` denotes the number of key-value entries stored in the map.
 
-Note: Full map iteration creates `O(n)` temporary objects that will be collected as garbage.
+Costo de iteración sobre todos los elementos: Tiempo de ejecución: `O(n)`.
+Espacio: `O(log(n))` memoria retenida más basura, ver la nota a continuación.
+donde `n` denota el número de pares clave-valor almacenados en el map.
 
+Nota: La iteración completa del map crea `O(n)` objetos temporales que se
+recogerán como basura.
 
-### Function `map`
-``` motoko no-repl
+### Función `map`
+
+```motoko no-repl
 func map<V1, V2>(m : Map<K, V1>, f : (K, V1) -> V2) : Map<K, V2>
 ```
 
-Creates a new map by applying `f` to each entry in the map `m`. Each entry
-`(k, v)` in the old map is transformed into a new entry `(k, v2)`, where
-the new value `v2` is created by applying `f` to `(k, v)`.
+Crea un nuevo map aplicando `f` a cada entrada en el map `m`. Cada entrada
+`(k, v)` en el map antiguo se transforma en una nueva entrada `(k, v2)`, donde
+el nuevo valor `v2` se crea aplicando `f` a `(k, v)`.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Map "mo:base/OrderedMap";
 import Nat "mo:base/Nat";
@@ -554,20 +584,20 @@ Debug.print(debug_show(Iter.toArray(natMap.entries(resMap))));
 // [(0, 0), (1, 2), (2, 4)]
 ```
 
-Cost of mapping all the elements:
-Runtime: `O(n)`.
-Space: `O(n)` retained memory
-where `n` denotes the number of key-value entries stored in the map.
+Costo de mapeo de todos los elementos: Tiempo de ejecución: `O(n)`. Espacio:
+`O(n)` memoria retenida donde `n` denota el número de pares clave-valor
+almacenados en el map.
 
+### Función `size`
 
-### Function `size`
-``` motoko no-repl
+```motoko no-repl
 func size<V>(m : Map<K, V>) : Nat
 ```
 
-Determine the size of the map as the number of key-value entries.
+Determina el tamaño del map como el número de pares clave-valor.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Map "mo:base/OrderedMap";
 import Nat "mo:base/Nat";
@@ -581,20 +611,20 @@ Debug.print(debug_show(natMap.size(map)));
 // 3
 ```
 
-Runtime: `O(n)`.
-Space: `O(1)`.
+Tiempo de ejecución: `O(n)`. Espacio: `O(1)`.
 
+### Función `foldLeft`
 
-### Function `foldLeft`
-``` motoko no-repl
+```motoko no-repl
 func foldLeft<Value, Accum>(map : Map<K, Value>, base : Accum, combine : (Accum, K, Value) -> Accum) : Accum
 ```
 
-Collapses the elements in the `map` into a single value by starting with `base`
-and progressively combining keys and values into `base` with `combine`. Iteration runs
-left to right.
+Combina los elementos del `map` en un único valor comenzando con `base` y
+combinando progresivamente claves y valores en `base` con `combine`. La
+iteración se realiza de izquierda a derecha.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Map "mo:base/OrderedMap";
 import Nat "mo:base/Nat";
@@ -612,24 +642,25 @@ Debug.print(debug_show(natMap.foldLeft(map, (0, ""), folder)));
 // (3, "ZeroOneTwo")
 ```
 
-Cost of iteration over all elements:
-Runtime: `O(n)`.
-Space: depends on `combine` function plus garbage, see the note below.
-where `n` denotes the number of key-value entries stored in the map.
+Costo de iteración sobre todos los elementos: Tiempo de ejecución: `O(n)`.
+Espacio: depende de la función `combine` más basura, ver la nota a continuación.
+donde `n` denota el número de pares clave-valor almacenados en el map.
 
-Note: Full map iteration creates `O(n)` temporary objects that will be collected as garbage.
+Nota: La iteración completa del map crea `O(n)` objetos temporales que se
+recogerán como basura.
 
+### Función `foldRight`
 
-### Function `foldRight`
-``` motoko no-repl
+```motoko no-repl
 func foldRight<Value, Accum>(map : Map<K, Value>, base : Accum, combine : (K, Value, Accum) -> Accum) : Accum
 ```
 
-Collapses the elements in the `map` into a single value by starting with `base`
-and progressively combining keys and values into `base` with `combine`. Iteration runs
-right to left.
+Combina los elementos del `map` en un único valor comenzando con `base` y
+combinando progresivamente claves y valores en `base` con `combine`. La
+iteración se realiza de derecha a izquierda.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Map "mo:base/OrderedMap";
 import Nat "mo:base/Nat";
@@ -647,22 +678,23 @@ Debug.print(debug_show(natMap.foldRight(map, (0, ""), folder)));
 // (3, "TwoOneZero")
 ```
 
-Cost of iteration over all elements:
-Runtime: `O(n)`.
-Space: depends on `combine` function plus garbage, see the note below.
-where `n` denotes the number of key-value entries stored in the map.
+Costo de iteración sobre todos los elementos: Tiempo de ejecución: `O(n)`.
+Espacio: depende de la función `combine` más basura, ver la nota a continuación.
+donde `n` denota el número de pares clave-valor almacenados en el map.
 
-Note: Full map iteration creates `O(n)` temporary objects that will be collected as garbage.
+Nota: La iteración completa del map crea `O(n)` objetos temporales que se
+recogerán como basura.
 
+### Función `all`
 
-### Function `all`
-``` motoko no-repl
+```motoko no-repl
 func all<V>(m : Map<K, V>, pred : (K, V) -> Bool) : Bool
 ```
 
-Test whether all key-value pairs satisfy a given predicate `pred`.
+Comprueba si todos los pares clave-valor satisfacen un predicado dado `pred`.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Map "mo:base/OrderedMap";
 import Nat "mo:base/Nat";
@@ -678,19 +710,19 @@ Debug.print(debug_show(natMap.all<Text>(map, func (k, v) = (k < 2))));
 // false
 ```
 
-Runtime: `O(n)`.
-Space: `O(1)`.
-where `n` denotes the number of key-value entries stored in the map.
+Tiempo de ejecución: `O(n)`. Espacio: `O(1)`, donde `n` denota el número de
+pares clave-valor almacenados en el map.
 
+### Función `some`
 
-### Function `some`
-``` motoko no-repl
+```motoko no-repl
 func some<V>(m : Map<K, V>, pred : (K, V) -> Bool) : Bool
 ```
 
-Test if there exists a key-value pair satisfying a given predicate `pred`.
+Comprueba si existe un par clave-valor que cumple un predicado dado `pred`.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Map "mo:base/OrderedMap";
 import Nat "mo:base/Nat";
@@ -706,28 +738,29 @@ Debug.print(debug_show(natMap.some<Text>(map, func (k, v) = (k >= 0))));
 // true
 ```
 
-Runtime: `O(n)`.
-Space: `O(1)`.
-where `n` denotes the number of key-value entries stored in the map.
+Tiempo de ejecución: `O(n)`. Espacio: `O(1)`, donde `n` denota el número de
+pares clave-valor almacenados en el map.
 
+### Función `validate`
 
-### Function `validate`
-``` motoko no-repl
+```motoko no-repl
 func validate<V>(m : Map<K, V>) : ()
 ```
 
-Debug helper that check internal invariants of the given map `m`. 
-Raise an error (for a stack trace) if invariants are violated.
+Ayudante de depuración que verifica las invariantes internas del map `m` dado.
+Lanza un error (con una traza de pila) si se violan las invariantes.
 
-## Value `Make`
-``` motoko no-repl
+## Valor `Make`
+
+```motoko no-repl
 let Make : <K>(compare : (K, K) -> O.Order) -> Operations<K>
 ```
 
-Create `OrderedMap.Operations` object capturing key type `K` and `compare` function. 
-It is an alias for the `Operations` constructor.
+Crea un objeto `OrderedMap.Operations` que captura el tipo de clave `K` y la
+función `compare`. Es un alias para el constructor `Operations`.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Map "mo:base/OrderedMap";
 import Nat "mo:base/Nat";

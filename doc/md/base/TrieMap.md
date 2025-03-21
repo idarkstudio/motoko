@@ -1,19 +1,21 @@
 # TrieMap
-Class `TrieMap<K, V>` provides a map from keys of type `K` to values of type `V`.
-The class wraps and manipulates an underyling hash trie, found in the `Trie`
-module. The trie is a binary tree in which the position of elements in the
-tree are determined using the hash of the elements.
 
-LIMITATIONS: This data structure allows at most MAX_LEAF_SIZE=8 hash collisions:
-attempts to insert more than MAX_LEAF_SIZE keys (whether directly via `put` or indirectly via other operations) with the same hash value will trap.
-This limitation is inherited from the underlying `Trie` data structure.
+La clase `TrieMap<K, V>` proporciona un map de claves de tipo `K` a valores de
+tipo `V`. La clase envuelve y manipula un trie de hash subyacente, que se
+encuentra en el módulo `Trie`. El trie es un árbol binario en el que la posición
+de los elementos en el árbol se determina utilizando el hash de los elementos.
 
+LIMITACIONES: Esta estructura de datos permite como máximo MAX_LEAF_SIZE=8
+colisiones de hash: los intentos de insertar más de MAX_LEAF_SIZE claves (ya sea
+directamente a través de `put` o indirectamente a través de otras operaciones)
+con el mismo valor de hash generarán un error. Esta limitación se hereda de la
+estructura de datos `Trie` subyacente.
 
-Note: The `class` `TrieMap` exposes the same interface as `HashMap`.
+Nota: La clase `TrieMap` expone la misma interfaz que `HashMap`.
 
-Creating a map:
-The equality function is used to compare keys, and the hash function is used
-to hash keys. See the example below.
+Creación de un map: La función de igualdad se utiliza para comparar las claves y
+la función de hash se utiliza para hashear las claves. Consulta el ejemplo a
+continuación.
 
 ```motoko name=initialize
 import TrieMap "mo:base/TrieMap";
@@ -24,151 +26,157 @@ import Iter "mo:base/Iter";
 let map = TrieMap.TrieMap<Nat, Nat>(Nat.equal, Hash.hash)
 ```
 
-## Class `TrieMap<K, V>`
+## Clase `TrieMap<K, V>`
 
-``` motoko no-repl
+```motoko no-repl
 class TrieMap<K, V>(isEq : (K, K) -> Bool, hashOf : K -> Hash.Hash)
 ```
 
+### Función `size`
 
-### Function `size`
-``` motoko no-repl
+```motoko no-repl
 func size() : Nat
 ```
 
-Returns the number of entries in the map.
+Devuelve el número de entradas en el map.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 map.size()
 ```
 
-Runtime: O(1)
-Space: O(1)
+Tiempo de ejecución: O(1) Espacio: O(1)
 
+### Función `put`
 
-### Function `put`
-``` motoko no-repl
+```motoko no-repl
 func put(key : K, value : V)
 ```
 
-Maps `key` to `value`, and overwrites the old entry if the key
-was already present.
+Mapea la `key` al `value` y sobrescribe la entrada anterior si la clave ya
+estaba presente.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 map.put(0, 10);
 map.put(2, 12);
 Iter.toArray(map.entries())
 ```
 
-Runtime: O(log(size))
-Space: O(log(size))
+Tiempo de ejecución: O(log(size)) Espacio: O(log(size))
 
-*Runtime and space assumes that the trie is reasonably balanced and the
-map is using a constant time and space equality and hash function.
+\*El tiempo de ejecución y el espacio asumen que el trie está razonablemente
+equilibrado y que el map está utilizando una función de igualdad y hash de
+tiempo y espacio constante.
 
+### Función `replace`
 
-### Function `replace`
-``` motoko no-repl
+```motoko no-repl
 func replace(key : K, value : V) : ?V
 ```
 
-Maps `key` to `value`. Overwrites _and_ returns the old entry as an
-option if the key was already present, and `null` otherwise.
+Mapea la `key` al `value`. Sobrescribe y devuelve la entrada anterior como una
+opción si la clave ya estaba presente, y `null` en caso contrario.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 map.put(0, 10);
 map.replace(0, 20)
 ```
 
-Runtime: O(log(size))
-Space: O(log(size))
+Tiempo de ejecución: O(log(size)) Espacio: O(log(size))
 
-*Runtime and space assumes that the trie is reasonably balanced and the
-map is using a constant time and space equality and hash function.
+\*El tiempo de ejecución y el espacio asumen que el trie está razonablemente
+equilibrado y que el map está utilizando una función de igualdad y hash de
+tiempo y espacio constante.
 
+### Función `get`
 
-### Function `get`
-``` motoko no-repl
+```motoko no-repl
 func get(key : K) : ?V
 ```
 
-Gets the value associated with the key `key` in an option, or `null` if it
-doesn't exist.
+Obtiene el valor asociado con la clave `key` en una opción, o `null` si no
+existe.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 map.put(0, 10);
 map.get(0)
 ```
 
-Runtime: O(log(size))
-Space: O(log(size))
+Tiempo de ejecución: O(log(size)) Espacio: O(log(size))
 
-*Runtime and space assumes that the trie is reasonably balanced and the
-map is using a constant time and space equality and hash function.
+\*El tiempo de ejecución y el espacio asumen que el trie está razonablemente
+equilibrado y que el map está utilizando una función de igualdad y hash de
+tiempo y espacio constante.
 
+### Función `delete`
 
-### Function `delete`
-``` motoko no-repl
+```motoko no-repl
 func delete(key : K)
 ```
 
-Delete the entry associated with key `key`, if it exists. If the key is
-absent, there is no effect.
+Elimina la entrada asociada con la clave `key`, si existe. Si la clave está
+ausente, no tiene efecto.
 
-Note: The deletion of an existing key shrinks the trie map.
+Nota: La eliminación de una clave existente reduce el tamaño del trie map.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 map.put(0, 10);
 map.delete(0);
 map.get(0)
 ```
 
-Runtime: O(log(size))
-Space: O(log(size))
+Tiempo de ejecución: O(log(size)) Espacio: O(log(size))
 
-*Runtime and space assumes that the trie is reasonably balanced and the
-map is using a constant time and space equality and hash function.
+\*El tiempo de ejecución y el espacio asumen que el trie está razonablemente
+equilibrado y que el map está utilizando una función de igualdad y hash de
+tiempo y espacio constante.
 
+### Función `remove`
 
-### Function `remove`
-``` motoko no-repl
+```motoko no-repl
 func remove(key : K) : ?V
 ```
 
-Delete the entry associated with key `key`. Return the deleted value
-as an option if it exists, and `null` otherwise.
+Elimina la entrada asociada con la clave `key`. Devuelve el valor eliminado como
+una opción si existe, y `null` en caso contrario.
 
-Note: The deletion of an existing key shrinks the trie map.
+Nota: La eliminación de una clave existente reduce el tamaño del trie map.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 map.put(0, 10);
 map.remove(0)
 ```
 
-Runtime: O(log(size))
-Space: O(log(size))
+Tiempo de ejecución: O(log(size)) Espacio: O(log(size))
 
-*Runtime and space assumes that the trie is reasonably balanced and the
-map is using a constant time and space equality and hash function.
+\*El tiempo de ejecución y el espacio asumen que el trie está razonablemente
+equilibrado y que el map está utilizando una función de igualdad y hash de
+tiempo y espacio constante.
 
+### Función `keys`
 
-### Function `keys`
-``` motoko no-repl
+```motoko no-repl
 func keys() : I.Iter<K>
 ```
 
-Returns an iterator over the keys of the map.
+Devuelve un iterador sobre las claves del map.
 
-Each iterator gets a _snapshot view_ of the mapping, and is unaffected
-by concurrent updates to the iterated map.
+Cada iterador obtiene una "vista instantánea" de la asignación y no se ve
+afectado por las actualizaciones concurrentes en el map iterado.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 map.put(0, 10);
 map.put(1, 11);
@@ -183,24 +191,25 @@ for (key in map.keys()) {
 sum
 ```
 
-Runtime: O(1)
-Space: O(1)
+Tiempo de ejecución: O(1) Espacio: O(1)
 
-*The above runtime and space are for the construction of the iterator.
-The iteration itself takes linear time and logarithmic space to execute.
+\*El tiempo de ejecución y el espacio anteriores son para la construcción del
+iterador. La iteración en sí misma requiere tiempo lineal y espacio logarítmico
+para ejecutarse.
 
+### Función `vals`
 
-### Function `vals`
-``` motoko no-repl
+```motoko no-repl
 func vals() : I.Iter<V>
 ```
 
-Returns an iterator over the values in the map.
+Devuelve un iterador sobre los valores en el map.
 
-Each iterator gets a _snapshot view_ of the mapping, and is unaffected
-by concurrent updates to the iterated map.
+Cada iterador obtiene una "vista instantánea" de la asignación y no se ve
+afectado por las actualizaciones concurrentes en el map iterado.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 map.put(0, 10);
 map.put(1, 11);
@@ -215,24 +224,25 @@ for (key in map.vals()) {
 sum
 ```
 
-Runtime: O(1)
-Space: O(1)
+Tiempo de ejecución: O(1) Espacio: O(1)
 
-*The above runtime and space are for the construction of the iterator.
-The iteration itself takes linear time and logarithmic space to execute.
+\*El tiempo de ejecución y el espacio anteriores son para la construcción del
+iterador. La iteración en sí misma requiere tiempo lineal y espacio logarítmico
+para ejecutarse.
 
+### Función `entries`
 
-### Function `entries`
-``` motoko no-repl
+```motoko no-repl
 func entries() : I.Iter<(K, V)>
 ```
 
-Returns an iterator over the entries (key-value pairs) in the map.
+Devuelve un iterador sobre las entradas (pares clave-valor) en el map.
 
-Each iterator gets a _snapshot view_ of the mapping, and is unaffected
-by concurrent updates to the iterated map.
+Cada iterador obtiene una "vista instantánea" de la asignación y no se ve
+afectado por las actualizaciones concurrentes en el map iterado.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 map.put(0, 10);
 map.put(1, 11);
@@ -247,21 +257,23 @@ for ((key, value) in map.entries()) {
 sum
 ```
 
-Runtime: O(1)
-Space: O(1)
+Tiempo de ejecución: O(1) Espacio: O(1)
 
-*The above runtime and space are for the construction of the iterator.
-The iteration itself takes linear time and logarithmic space to execute.
+\*El tiempo de ejecución y el espacio anteriores son para la construcción del
+iterador. La iteración en sí misma requiere tiempo lineal y espacio logarítmico
+para ejecutarse.
 
-## Function `clone`
-``` motoko no-repl
+## Función `clone`
+
+```motoko no-repl
 func clone<K, V>(map : TrieMap<K, V>, keyEq : (K, K) -> Bool, keyHash : K -> Hash.Hash) : TrieMap<K, V>
 ```
 
-Produce a copy of `map`, using `keyEq` to compare keys and `keyHash` to
-hash keys.
+Produce una copia de `map`, utilizando `keyEq` para comparar las claves y
+`keyHash` para hashear las claves.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 map.put(0, 10);
 map.put(1, 11);
@@ -271,42 +283,46 @@ let mapCopy = TrieMap.clone(map, Nat.equal, Hash.hash);
 Iter.toArray(mapCopy.entries())
 ```
 
-Runtime: O(size * log(size))
-Space: O(size)
+Tiempo de ejecución: O(size \* log(size)) Espacio: O(size)
 
-*Runtime and space assumes that the trie underlying `map` is reasonably
-balanced and that `keyEq` and `keyHash` run in O(1) time and space.
+\*El tiempo de ejecución y el espacio asumen que el trie subyacente de `map`
+está razonablemente equilibrado y que `keyEq` y `keyHash` se ejecutan en tiempo
+y espacio O(1).
 
-## Function `fromEntries`
-``` motoko no-repl
+## Función `fromEntries`
+
+```motoko no-repl
 func fromEntries<K, V>(entries : I.Iter<(K, V)>, keyEq : (K, K) -> Bool, keyHash : K -> Hash.Hash) : TrieMap<K, V>
 ```
 
-Create a new map from the entries in `entries`, using `keyEq` to compare
-keys and `keyHash` to hash keys.
+Crea un nuevo map a partir de las entradas en `entries`, utilizando `keyEq` para
+comparar las claves y `keyHash` para hashear las claves.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 let entries = [(0, 10), (1, 11), (2, 12)];
 let newMap = TrieMap.fromEntries<Nat, Nat>(entries.vals(), Nat.equal, Hash.hash);
 newMap.get(2)
 ```
 
-Runtime: O(size * log(size))
-Space: O(size)
+Tiempo de ejecución: O(size \* log(size)) Espacio: O(size)
 
-*Runtime and space assumes that `entries` returns elements in O(1) time,
-and `keyEq` and `keyHash` run in O(1) time and space.
+\*El tiempo de ejecución y el espacio asumen que `entries` devuelve elementos en
+tiempo O(1), y que `keyEq` y `keyHash` se ejecutan en tiempo y espacio O(1).
 
-## Function `map`
-``` motoko no-repl
+## Función `map`
+
+```motoko no-repl
 func map<K, V1, V2>(map : TrieMap<K, V1>, keyEq : (K, K) -> Bool, keyHash : K -> Hash.Hash, f : (K, V1) -> V2) : TrieMap<K, V2>
 ```
 
-Transform (map) the values in `map` using function `f`, retaining the keys.
-Uses `keyEq` to compare keys and `keyHash` to hash keys.
+Transforma (mapea) los valores en `map` utilizando la función `f`, manteniendo
+las claves. Utiliza `keyEq` para comparar las claves y `keyHash` para hashear
+las claves.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 map.put(0, 10);
 map.put(1, 11);
@@ -316,22 +332,23 @@ let newMap = TrieMap.map<Nat, Nat, Nat>(map, Nat.equal, Hash.hash, func(key, val
 Iter.toArray(newMap.entries())
 ```
 
-Runtime: O(size * log(size))
-Space: O(size)
+Tiempo de ejecución: O(size \* log(size)) Espacio: O(size)
 
-*Runtime and space assumes that `f`, `keyEq`, and `keyHash` run in O(1)
-time and space.
+\*El tiempo de ejecución y el espacio asumen que `f`, `keyEq` y `keyHash` se
+ejecutan en tiempo y espacio O(1).
 
-## Function `mapFilter`
-``` motoko no-repl
+## Función `mapFilter`
+
+```motoko no-repl
 func mapFilter<K, V1, V2>(map : TrieMap<K, V1>, keyEq : (K, K) -> Bool, keyHash : K -> Hash.Hash, f : (K, V1) -> ?V2) : TrieMap<K, V2>
 ```
 
-Transform (map) the values in `map` using function `f`, discarding entries
-for which `f` evaluates to `null`. Uses `keyEq` to compare keys and
-`keyHash` to hash keys.
+Transforma (mapea) los valores en `map` utilizando la función `f`, descartando
+las entradas para las cuales `f` evalúa a `null`. Utiliza `keyEq` para comparar
+las claves y `keyHash` para hashear las claves.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 map.put(0, 10);
 map.put(1, 11);
@@ -347,8 +364,7 @@ let newMap =
 Iter.toArray(newMap.entries())
 ```
 
-Runtime: O(size * log(size))
-Space: O(size)
+Tiempo de ejecución: O(size \* log(size)) Espacio: O(size)
 
-*Runtime and space assumes that `f`, `keyEq`, and `keyHash` run in O(1)
-time and space.
+\*El tiempo de ejecución y el espacio asumen que `f`, `keyEq` y `keyHash` se
+ejecutan en tiempo y espacio O(1).
