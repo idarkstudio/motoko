@@ -1,46 +1,56 @@
 # Timer
-Timers for one-off or periodic tasks. Applicable as part of the default mechanism.
-If `moc` is invoked with `-no-timer`, the importing will fail. Furthermore, if passed `--trap-on-call-error`, a congested canister send queue may prevent timer expirations to execute at runtime. It may also deactivate the global timer.
 
-The resolution of the timers is similar to the block rate,
-so durations should be chosen well above that. For frequent
-canister wake-ups, consider using the [heartbeat](https://internetcomputer.org/docs/current/motoko/main/writing-motoko/heartbeats) mechanism; however, when possible, canisters should prefer timers.
+Temporizadores para tareas únicas o periódicas. Aplicable como parte del
+mecanismo predeterminado. Si se invoca `moc` con `-no-timer`, la importación
+fallará. Además, si se pasa `--trap-on-call-error`, una cola de envío de
+canister congestionada puede evitar que las expiraciones del temporizador se
+ejecuten en tiempo de ejecución. También puede desactivar el temporizador
+global.
 
-The functionality described below is enabled only when the actor does not override it by declaring an explicit `system func timer`.
+La resolución de los temporizadores es similar a la velocidad de bloqueo, por lo
+que las duraciones deben elegirse por encima de eso. Para despertares frecuentes
+de canister, considere usar el mecanismo de
+[heartbeat](https://internetcomputer.org/docs/current/motoko/main/writing-motoko/heartbeats);
+sin embargo, cuando sea posible, los canisters deben preferir los
+temporizadores.
 
-Timers are _not_ persisted across upgrades. One possible strategy
-to re-establish timers after an upgrade is to use stable variables
-in the `post_upgrade` hook and distill necessary timer information
-from there.
+La funcionalidad descrita a continuación solo está habilitada cuando el actor no
+la anula al declarar una `system func timer` explícita.
 
-Using timers for security (e.g., access control) is strongly discouraged.
-Make sure to inform yourself about state-of-the-art dapp security.
-If you must use timers for security controls, be sure
-to consider reentrancy issues as well as the vanishing of timers on upgrades
-and reinstalls.
+Los temporizadores _no_ se persisten en las actualizaciones. Una estrategia
+posible para restablecer los temporizadores después de una actualización es usar
+variables estables en el gancho `post_upgrade` y destilar la información del
+temporizador necesaria desde allí.
 
-For further usage information for timers on the IC, please consult
-[the documentation](https://internetcomputer.org/docs/current/developer-docs/backend/periodic-tasks#timers-library-limitations).
+Se desaconseja encarecidamente el uso de temporizadores para la seguridad (por
+ejemplo, control de acceso). Asegúrese de informarse sobre la seguridad de dapp
+de última generación. Si debe usar temporizadores para controles de seguridad,
+asegúrese de considerar problemas de reentrancia, así como la desaparición de
+temporizadores en actualizaciones y reinstalaciones.
 
-## Type `Duration`
-``` motoko no-repl
+Para obtener más información sobre el uso de temporizadores en el IC, consulte
+[la documentación](https://internetcomputer.org/docs/current/developer-docs/backend/periodic-tasks#timers-library-limitations).
+
+## Tipo `Duration`
+
+```motoko no-repl
 type Duration = {#seconds : Nat; #nanoseconds : Nat}
 ```
 
+## Tipo `TimerId`
 
-## Type `TimerId`
-``` motoko no-repl
+```motoko no-repl
 type TimerId = Nat
 ```
 
+## Función `setTimer`
 
-## Function `setTimer`
-``` motoko no-repl
+```motoko no-repl
 func setTimer(d : Duration, job : () -> async ()) : TimerId
 ```
 
-Installs a one-off timer that upon expiration after given duration `d`
-executes the future `job()`.
+Instala un temporizador único que, al expirar después de la duración dada `d`,
+ejecuta el futuro `job()`.
 
 ```motoko no-repl
 let now = Time.now();
@@ -51,15 +61,16 @@ func alarmUser() : async () {
 appt.reminder = setTimer(#nanoseconds (Int.abs(appt.when - now - thirtyMinutes)), alarmUser);
 ```
 
-## Function `recurringTimer`
-``` motoko no-repl
+## Función `recurringTimer`
+
+```motoko no-repl
 func recurringTimer(d : Duration, job : () -> async ()) : TimerId
 ```
 
-Installs a recurring timer that upon expiration after given duration `d`
-executes the future `job()` and reinserts itself for another expiration.
+Instala un temporizador recurrente que, al expirar después de la duración dada
+`d`, ejecuta el futuro `job()` y se vuelve a insertar para otra expiración.
 
-Note: A duration of 0 will only expire once.
+Nota: Una duración de 0 solo expirará una vez.
 
 ```motoko no-repl
 func checkAndWaterPlants() : async () {
@@ -69,12 +80,13 @@ let daily = recurringTimer(#seconds (24 * 60 * 60), checkAndWaterPlants);
 ```
 
 ## Function `cancelTimer`
-``` motoko no-repl
+
+```motoko no-repl
 func cancelTimer(_ : TimerId) : ()
 ```
 
-Cancels a still active timer with `(id : TimerId)`. For expired timers
-and not recognised `id`s nothing happens.
+Cancela un temporizador aún activo con `(id : TimerId)`. Para temporizadores
+vencidos y `id`s no reconocidos, no sucede nada.
 
 ```motoko no-repl
 func deleteAppointment(appointment : Appointment) {

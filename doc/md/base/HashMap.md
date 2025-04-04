@@ -1,30 +1,34 @@
 # HashMap
-Class `HashMap<K, V>` provides a hashmap from keys of type `K` to values of type `V`.
-The class is parameterized by the key's equality and hash functions,
-and an initial capacity.  However, the underlying allocation happens only when
-the first key-value entry is inserted.
 
-Internally, the map is represented as an array of `AssocList` (buckets).
-The growth policy of the underyling array is very simple, for now: double
-the current capacity when the expected bucket list size grows beyond a
-certain constant.
+La clase `HashMap<K, V>` proporciona un hashmap de claves de tipo `K` a valores
+de tipo `V`. La clase está parametrizada por las funciones de igualdad y hash de
+la clave, y una capacidad inicial. Sin embargo, la asignación subyacente ocurre
+solo cuando se inserta la primera entrada de clave-valor.
 
-WARNING: Certain operations are amortized O(1) time, such as `put`, but run
-in worst case O(size) time. These worst case runtimes may exceed the cycles limit
-per message if the size of the map is large enough. Further, this runtime analysis
-assumes that the hash functions uniformly maps keys over the hash space. Grow these structures
-with discretion, and with good hash functions. All amortized operations
-below also list the worst case runtime.
+Internamente, el mapa se representa como un array de `AssocList` (buckets). La
+política de crecimiento del array subyacente es muy simple, por ahora: duplicar
+la capacidad actual cuando el tamaño esperado de la lista de buckets crece más
+allá de una cierta constante.
 
-For maps without amortization, see `TrieMap`.
+ADVERTENCIA: Ciertas operaciones son de tiempo amortizado O(1), como `put`, pero
+se ejecutan en el peor caso en tiempo O(size). Estos tiempos de ejecución en el
+peor caso pueden exceder el límite de ciclos por mensaje si el tamaño del mapa
+es lo suficientemente grande. Además, este análisis de tiempo de ejecución asume
+que las funciones de hash mapean uniformemente las claves sobre el espacio de
+hash. Haga crecer estas estructuras con discreción y con buenas funciones de
+hash. Todas las operaciones amortizadas a continuación también enumeran el
+tiempo de ejecución en el peor caso.
 
-Note on the constructor:
-The argument `initCapacity` determines the initial number of buckets in the
-underyling array. Also, the runtime and space anlyses in this documentation
-assumes that the equality and hash functions for keys used to construct the
-map run in O(1) time and space.
+Para mapas sin amortización, consulte `TrieMap`.
 
-Example:
+Nota sobre el constructor: El argumento `initCapacity` determina el número
+inicial de buckets en el array subyacente. Además, el análisis de tiempo de
+ejecución y espacio en esta documentación asume que las funciones de igualdad y
+hash para las claves utilizadas para construir el mapa se ejecutan en tiempo y
+espacio O(1).
+
+Ejemplo:
+
 ```motoko name=initialize
 import HashMap "mo:base/HashMap";
 import Text "mo:base/Text";
@@ -32,145 +36,158 @@ import Text "mo:base/Text";
 let map = HashMap.HashMap<Text, Nat>(5, Text.equal, Text.hash);
 ```
 
-Runtime: O(1)
+Tiempo de ejecución: O(1)
 
-Space: O(1)
+Espacio: O(1)
 
-## Class `HashMap<K, V>`
+## Clase `HashMap<K, V>`
 
-``` motoko no-repl
+```motoko no-repl
 class HashMap<K, V>(initCapacity : Nat, keyEq : (K, K) -> Bool, keyHash : K -> Hash.Hash)
 ```
 
+## Función `size`
 
-### Function `size`
-``` motoko no-repl
+```motoko no-repl
 func size() : Nat
 ```
 
-Returns the current number of key-value entries in the map.
+Devuelve el número actual de entradas de clave-valor en el mapa.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 map.size() // => 0
 ```
 
-Runtime: O(1)
+Tiempo de ejecución: O(1)
 
-Space: O(1)
+Espacio: O(1)
 
+## Función `get`
 
-### Function `get`
-``` motoko no-repl
+```motoko no-repl
 func get(key : K) : (value : ?V)
 ```
 
-Returns the value assocaited with key `key` if present and `null` otherwise.
+Devuelve el valor asociado con la clave `key` si está presente y `null` en caso
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 map.put("key", 3);
 map.get("key") // => ?3
 ```
 
-Expected Runtime: O(1), Worst Case Runtime: O(size)
+Tiempo de ejecución esperado: O(1), Tiempo de ejecución en el peor de los casos:
+O(size)
 
-Space: O(1)
+Espacio: O(1)
 
+## Función `put`
 
-### Function `put`
-``` motoko no-repl
+```motoko no-repl
 func put(key : K, value : V)
 ```
 
-Insert the value `value` with key `key`. Overwrites any existing entry with key `key`.
+Inserta el valor `value` con la clave `key`. Sobrescribe cualquier entrada
+existente con la clave `key`.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 map.put("key", 3);
 map.get("key") // => ?3
 ```
 
-Expected Amortized Runtime: O(1), Worst Case Runtime: O(size)
+Tiempo de ejecución amortizado esperado: O(1), Tiempo de ejecución en el peor de
+los casos: O(size)
 
-Expected Amortized Space: O(1), Worst Case Space: O(size)
+Espacio amortizado esperado: O(1), Espacio en el peor de los casos: O(size)
 
-Note: If this is the first entry into this map, this operation will cause
-the initial allocation of the underlying array.
+Nota: Si esta es la primera entrada en este mapa, esta operación causará la
+asignación inicial del array subyacente.
 
+## Función `replace`
 
-### Function `replace`
-``` motoko no-repl
+```motoko no-repl
 func replace(key : K, value : V) : (oldValue : ?V)
 ```
 
-Insert the value `value` with key `key`. Returns the previous value
-associated with key `key` or `null` if no such value exists.
+Inserta el valor `value` con la clave `key`. Devuelve el valor anterior asociado
+con la clave `key` o `null` si no existe tal valor.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 map.put("key", 3);
 ignore map.replace("key", 2); // => ?3
 map.get("key") // => ?2
 ```
 
-Expected Amortized Runtime: O(1), Worst Case Runtime: O(size)
+Tiempo de ejecución amortizado esperado: O(1), Tiempo de ejecución en el peor de
+los casos: O(size)
 
-Expected Amortized Space: O(1), Worst Case Space: O(size)
+Espacio amortizado esperado: O(1), Espacio en el peor de los casos: O(size)
 
-Note: If this is the first entry into this map, this operation will cause
-the initial allocation of the underlying array.
+Nota: Si esta es la primera entrada en este mapa, esta operación causará la
+asignación inicial del array subyacente.
 
+## Función `delete`
 
-### Function `delete`
-``` motoko no-repl
+```motoko no-repl
 func delete(key : K)
 ```
 
-Deletes the entry with the key `key`. Has no effect if `key` is not
-present in the map.
+Elimina la entrada con la clave `key`. No tiene efecto si `key` no está presente
+en el mapa.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 map.put("key", 3);
 map.delete("key");
 map.get("key"); // => null
 ```
 
-Expected Runtime: O(1), Worst Case Runtime: O(size)
+Tiempo de ejecución esperado: O(1), Tiempo de ejecución en el peor de los casos:
+O(size)
 
-Expected Space: O(1), Worst Case Space: O(size)
+Espacio esperado: O(1), Espacio en el peor de los casos: O(size)
 
+## Función `remove`
 
-### Function `remove`
-``` motoko no-repl
+```motoko no-repl
 func remove(key : K) : (oldValue : ?V)
 ```
 
-Deletes the entry with the key `key`. Returns the previous value
-associated with key `key` or `null` if no such value exists.
+Elimina la entrada con la clave `key`. Devuelve el valor anterior asociado con
+la clave `key` o `null` si no existe tal valor.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 map.put("key", 3);
 map.remove("key"); // => ?3
 ```
 
-Expected Runtime: O(1), Worst Case Runtime: O(size)
+Tiempo de ejecución esperado: O(1), Tiempo de ejecución en el peor de los casos:
+O(size)
 
-Expected Space: O(1), Worst Case Space: O(size)
+Espacio esperado: O(1), Espacio en el peor de los casos: O(size)
 
+## Función `keys`
 
-### Function `keys`
-``` motoko no-repl
+```motoko no-repl
 func keys() : Iter.Iter<K>
 ```
 
-Returns an Iterator (`Iter`) over the keys of the map.
-Iterator provides a single method `next()`, which returns
-keys in no specific order, or `null` when out of keys to iterate over.
+Devuelve un iterador (`Iter`) sobre las claves del mapa. El iterador proporciona
+un único método `next()`, que devuelve las claves en un orden no específico, o
+`null` cuando no hay más claves para iterar.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 
 map.put("key1", 1);
@@ -184,23 +201,24 @@ for (key in map.keys()) {
 keys // => "key3 key2 key1 "
 ```
 
-Cost of iteration over all keys:
+Costo de la iteración sobre todas las keys:
 
-Runtime: O(size)
+Tiempo de ejecución: O(size)
 
-Space: O(1)
+Espacio: O(1)
 
+## Función `vals`
 
-### Function `vals`
-``` motoko no-repl
+```motoko no-repl
 func vals() : Iter.Iter<V>
 ```
 
-Returns an Iterator (`Iter`) over the values of the map.
-Iterator provides a single method `next()`, which returns
-values in no specific order, or `null` when out of values to iterate over.
+Devuelve un iterador (`Iter`) sobre los valores del mapa. El iterador
+proporciona un único método `next()`, que devuelve los valores en un orden no
+específico, o `null` cuando no hay más valores para iterar.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 
 map.put("key1", 1);
@@ -214,23 +232,24 @@ for (value in map.vals()) {
 sum // => 6
 ```
 
-Cost of iteration over all values:
+Costo de la iteración sobre todos los values:
 
-Runtime: O(size)
+Tiempo de ejecución: O(size)
 
-Space: O(1)
+Espacio: O(1)
 
+## Función `entries`
 
-### Function `entries`
-``` motoko no-repl
+```motoko no-repl
 func entries() : Iter.Iter<(K, V)>
 ```
 
-Returns an Iterator (`Iter`) over the key-value pairs in the map.
-Iterator provides a single method `next()`, which returns
-pairs in no specific order, or `null` when out of pairs to iterate over.
+Devuelve un iterador (`Iter`) sobre los pares clave-valor en el mapa. El
+iterador proporciona un único método `next()`, que devuelve los pares en un
+orden no específico, o `null` cuando no hay más pares para iterar.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 import Nat "mo:base/Nat";
 
@@ -245,21 +264,23 @@ for ((key, value) in map.entries()) {
 pairs // => "(key3, 3) (key2, 2) (key1, 1)"
 ```
 
-Cost of iteration over all pairs:
+Costo de la iteración sobre todos los pares:
 
-Runtime: O(size)
+Tiempo de ejecución: O(size)
 
-Space: O(1)
+Espacio: O(1)
 
-## Function `clone`
-``` motoko no-repl
+## Función `clone`
+
+```motoko no-repl
 func clone<K, V>(map : HashMap<K, V>, keyEq : (K, K) -> Bool, keyHash : K -> Hash.Hash) : HashMap<K, V>
 ```
 
-Returns a copy of `map`, initializing the copy with the provided equality
-and hash functions.
+Devuelve una copia de `map`, inicializando la copia con las funciones de
+igualdad y hash proporcionadas.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 map.put("key1", 1);
 map.put("key2", 2);
@@ -269,20 +290,23 @@ let map2 = HashMap.clone(map, Text.equal, Text.hash);
 map2.get("key1") // => ?1
 ```
 
-Expected Runtime: O(size), Worst Case Runtime: O(size * size)
+Tiempo de ejecución esperado: O(size), Tiempo de ejecución en el peor de los
+casos: O(size \* size)
 
-Expected Space: O(size), Worst Case Space: O(size)
+Espacio esperado: O(size), Espacio en el peor de los casos: O(size)
 
-## Function `fromIter`
-``` motoko no-repl
+## Función `fromIter`
+
+```motoko no-repl
 func fromIter<K, V>(iter : Iter.Iter<(K, V)>, initCapacity : Nat, keyEq : (K, K) -> Bool, keyHash : K -> Hash.Hash) : HashMap<K, V>
 ```
 
-Returns a new map, containing all entries given by the iterator `iter`.
-The new map is initialized with the provided initial capacity, equality,
-and hash functions.
+Devuelve un nuevo mapa, que contiene todas las entradas proporcionadas por el
+iterador `iter`. El nuevo mapa se inicializa con la capacidad inicial, funciones
+de igualdad y hash proporcionadas.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 let entries = [("key3", 3), ("key2", 2), ("key1", 1)];
 let iter = entries.vals();
@@ -291,18 +315,20 @@ let map2 = HashMap.fromIter<Text, Nat>(iter, entries.size(), Text.equal, Text.ha
 map2.get("key1") // => ?1
 ```
 
-Expected Runtime: O(size), Worst Case Runtime: O(size * size)
+Tiempo de ejecución esperado: O(size), Tiempo de ejecución en el peor de los
+casos: O(size \* size)
 
-Expected Space: O(size), Worst Case Space: O(size)
+Espacio esperado: O(size), Espacio en el peor de los casos: O(size)
 
-## Function `map`
-``` motoko no-repl
+## Función `map`
+
+```motoko no-repl
 func map<K, V1, V2>(hashMap : HashMap<K, V1>, keyEq : (K, K) -> Bool, keyHash : K -> Hash.Hash, f : (K, V1) -> V2) : HashMap<K, V2>
 ```
 
-Creates a new map by applying `f` to each entry in `hashMap`. Each entry
-`(k, v)` in the old map is transformed into a new entry `(k, v2)`, where
-the new value `v2` is created by applying `f` to `(k, v)`.
+Crea un nuevo mapa aplicando `f` a cada entrada en `hashMap`. Cada entrada
+`(k, v)` en el mapa antiguo se transforma en una nueva entrada `(k, v2)`, donde
+el nuevo valor `v2` se crea aplicando `f` a `(k, v)`.
 
 ```motoko include=initialize
 map.put("key1", 1);
@@ -313,21 +339,24 @@ let map2 = HashMap.map<Text, Nat, Nat>(map, Text.equal, Text.hash, func (k, v) =
 map2.get("key2") // => ?4
 ```
 
-Expected Runtime: O(size), Worst Case Runtime: O(size * size)
+Tiempo de ejecución esperado: O(size), Tiempo de ejecución en el peor de los
+casos: O(size \* size)
 
-Expected Space: O(size), Worst Case Space: O(size)
+Espacio esperado: O(size), Espacio en el peor de los casos: O(size)
 
-*Runtime and space assumes that `f` runs in O(1) time and space.
+\*Tiempo de ejecución y espacio asume que `f` se ejecuta en tiempo y espacio
+O(1).
 
-## Function `mapFilter`
-``` motoko no-repl
+## Función `mapFilter`
+
+```motoko no-repl
 func mapFilter<K, V1, V2>(hashMap : HashMap<K, V1>, keyEq : (K, K) -> Bool, keyHash : K -> Hash.Hash, f : (K, V1) -> ?V2) : HashMap<K, V2>
 ```
 
-Creates a new map by applying `f` to each entry in `hashMap`. For each entry
-`(k, v)` in the old map, if `f` evaluates to `null`, the entry is discarded.
-Otherwise, the entry is transformed into a new entry `(k, v2)`, where
-the new value `v2` is the result of applying `f` to `(k, v)`.
+Crea un nuevo mapa aplicando `f` a cada entrada en `hashMap`. Para cada entrada
+`(k, v)` en el mapa antiguo, si `f` evalúa a `null`, la entrada se descarta. De
+lo contrario, la entrada se transforma en una nueva entrada `(k, v2)`, donde el
+nuevo valor `v2` es el resultado de aplicar `f` a `(k, v)`.
 
 ```motoko include=initialize
 map.put("key1", 1);
@@ -344,8 +373,10 @@ let map2 =
 map2.get("key3") // => ?6
 ```
 
-Expected Runtime: O(size), Worst Case Runtime: O(size * size)
+Tiempo de ejecución esperado: O(size), Tiempo de ejecución en el peor de los
+casos: O(size \* size)
 
-Expected Space: O(size), Worst Case Space: O(size)
+Espacio esperado: O(size), Espacio en el peor de los casos: O(size)
 
-*Runtime and space assumes that `f` runs in O(1) time and space.
+\*Tiempo de ejecución y espacio asume que `f` se ejecuta en tiempo y espacio
+O(1).

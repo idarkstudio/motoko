@@ -1,73 +1,82 @@
 # Buffer
-Class `Buffer<X>` provides a mutable list of elements of type `X`.
-The class wraps and resizes an underyling array that holds the elements,
-and thus is comparable to ArrayLists or Vectors in other languages.
 
-When required, the current state of a buffer object can be converted to a fixed-size array of its elements.
-This is recommended for example when storing a buffer to a stable variable.
+# Buffer
 
-Throughout this documentation, two terms come up that can be confused: `size`
-and `capacity`. `size` is the length of the list that the buffer represents.
-`capacity` is the length of the underyling array that backs this list.
-`capacity` >= `size` is an invariant for this class.
+La clase `Buffer<X>` proporciona una lista mutable de elementos de tipo `X`. La
+clase envuelve y redimensiona un array subyacente que contiene los elementos, y
+por lo tanto es comparable a ArrayLists o Vectores en otros lenguajes.
 
-Like arrays, elements in the buffer are ordered by indices from 0 to `size`-1.
+Cuando sea necesario, el estado actual de un objeto buffer se puede convertir en
+un array de tamaño fijo de sus elementos. Esto se recomienda, por ejemplo, al
+almacenar un buffer en una variable estable.
 
-WARNING: Certain operations are amortized O(1) time, such as `add`, but run
-in worst case O(n) time. These worst case runtimes may exceed the cycles limit
-per message if the size of the buffer is large enough. Grow these structures
-with discretion. All amortized operations below also list the worst case runtime.
+A lo largo de esta documentación, aparecen dos términos que pueden confundirse:
+`size` y `capacity`. `size` es la longitud de la lista que representa el buffer.
+`capacity` es la longitud del array subyacente que respalda esta lista.
+`capacity` >= `size` es una invariante para esta clase.
 
-Constructor:
-The argument `initCapacity` determines the initial capacity of the array.
-The underlying array grows by a factor of 1.5 when its current capacity is
-exceeded. Further, when the size of the buffer shrinks to be less than 1/4th
-of the capacity, the underyling array is shrunk by a factor of 2.
+Al igual que los arrays, los elementos en el buffer están ordenados por índices
+del 0 a `size`-1.
 
-Example:
+ADVERTENCIA: Ciertas operaciones tienen un tiempo amortizado O(1), como `add`,
+pero se ejecutan en el peor caso en tiempo O(n). Estos tiempos de ejecución en
+el peor caso pueden superar el límite de ciclos por mensaje si el tamaño del
+buffer es lo suficientemente grande. Haga crecer estas estructuras con
+discreción. Todas las operaciones amortizadas a continuación también indican el
+tiempo de ejecución en el peor caso.
+
+Constructor: El argumento `initCapacity` determina la capacidad inicial del
+array. El array subyacente crece en un factor de 1.5 cuando se excede su
+capacidad actual. Además, cuando el tamaño del buffer se reduce a menos de 1/4
+de la capacidad, el array subyacente se reduce en un factor de 2.
+
+Ejemplo:
+
 ```motoko name=initialize
 import Buffer "mo:base/Buffer";
 
 let buffer = Buffer.Buffer<Nat>(3); // Creates a new Buffer
 ```
 
-Runtime: O(initCapacity)
+Tiempo de ejecución: O(initCapacity)
 
-Space: O(initCapacity)
+Espacio: O(initCapacity)
 
-## Class `Buffer<X>`
+## Clase `Buffer<X>`
 
-``` motoko no-repl
+```motoko no-repl
 class Buffer<X>(initCapacity : Nat)
 ```
 
+### Función `size`
 
-### Function `size`
-``` motoko no-repl
+```motoko no-repl
 func size() : Nat
 ```
 
-Returns the current number of elements in the buffer.
+Devuelve el número actual de elementos en el buffer.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 buffer.size() // => 0
 ```
 
-Runtime: O(1)
+Tiempo de ejecución: O(1)
 
-Space: O(1)
+Espacio: O(1)
 
+### Función `add`
 
-### Function `add`
-``` motoko no-repl
+```motoko no-repl
 func add(element : X)
 ```
 
-Adds a single element to the end of the buffer, doubling
-the size of the array if capacity is exceeded.
+Agrega un solo elemento al final del buffer, duplicando el tamaño del array si
+se excede la capacidad.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 
 buffer.add(0); // add 0 to buffer
@@ -77,19 +86,21 @@ buffer.add(3); // causes underlying array to increase in capacity
 Buffer.toArray(buffer) // => [0, 1, 2, 3]
 ```
 
-Amortized Runtime: O(1), Worst Case Runtime: O(size)
+Tiempo de ejecución amortizado: O(1), Peor Caso Tiempo de ejecución: O(size)
 
-Amortized Space: O(1), Worst Case Space: O(size)
+Espacio amortizado: O(1), Peor Caso Espacio: O(size)
 
+### Función `get`
 
-### Function `get`
-``` motoko no-repl
+```motoko no-repl
 func get(index : Nat) : X
 ```
 
-Returns the element at index `index`. Traps if  `index >= size`. Indexing is zero-based.
+Devuelve el elemento en el índice `index`. Traps si `index >= size`. La
+indexación comienza en cero.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 
 buffer.add(10);
@@ -97,20 +108,21 @@ buffer.add(11);
 buffer.get(0); // => 10
 ```
 
-Runtime: O(1)
+Tiempo de ejecución: O(1)
 
-Space: O(1)
+Espacio: O(1)
 
+### Función `getOpt`
 
-### Function `getOpt`
-``` motoko no-repl
+```motoko no-repl
 func getOpt(index : Nat) : ?X
 ```
 
-Returns the element at index `index` as an option.
-Returns `null` when `index >= size`. Indexing is zero-based.
+Devuelve el elemento en el índice `index` como una opción. Devuelve `null`
+cuando `index >= size`. La indexación comienza en cero.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 
 buffer.add(10);
@@ -119,20 +131,21 @@ let x = buffer.getOpt(0); // => ?10
 let y = buffer.getOpt(2); // => null
 ```
 
-Runtime: O(1)
+Tiempo de ejecución: O(1)
 
-Space: O(1)
+Espacio: O(1)
 
+### Función `put`
 
-### Function `put`
-``` motoko no-repl
+```motoko no-repl
 func put(index : Nat, element : X)
 ```
 
-Overwrites the current element at `index` with `element`. Traps if
-`index` >= size. Indexing is zero-based.
+Sobrescribe el elemento actual en `index` con `element`. Traps si `index` >=
+tamaño. La indexación comienza en cero.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 
 buffer.add(10);
@@ -140,20 +153,21 @@ buffer.put(0, 20); // overwrites 10 at index 0 with 20
 Buffer.toArray(buffer) // => [20]
 ```
 
-Runtime: O(1)
+Tiempo de ejecución: O(1)
 
-Space: O(1)
+Espacio: O(1)
 
+### Función `removeLast`
 
-### Function `removeLast`
-``` motoko no-repl
+```motoko no-repl
 func removeLast() : ?X
 ```
 
-Removes and returns the last item in the buffer or `null` if
-the buffer is empty.
+Remueve y devuelve el último elemento en el buffer o `null` si el buffer está
+vacío.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 
 buffer.add(10);
@@ -161,27 +175,28 @@ buffer.add(11);
 buffer.removeLast(); // => ?11
 ```
 
-Amortized Runtime: O(1), Worst Case Runtime: O(size)
+Tiempo de ejecución amortizado: O(1), Peor Caso Tiempo de ejecución: O(size)
 
-Amortized Space: O(1), Worst Case Space: O(size)
+Espacio amortizado: O(1), Peor Caso Espacio: O(size)
 
+### Función `remove`
 
-### Function `remove`
-``` motoko no-repl
+```motoko no-repl
 func remove(index : Nat) : X
 ```
 
-Removes and returns the element at `index` from the buffer.
-All elements with index > `index` are shifted one position to the left.
-This may cause a downsizing of the array.
+Remueve y devuelve el elemento en `index` del buffer. Todos los elementos con
+índice > `index` se desplazan una posición a la izquierda. Esto puede causar una
+reducción del tamaño del array.
 
-Traps if index >= size.
+Traps si index >= size.
 
-WARNING: Repeated removal of elements using this method is ineffecient
-and might be a sign that you should consider a different data-structure
-for your use case.
+ADVERTENCIA: La eliminación repetida de elementos utilizando este método es
+ineficiente y puede ser una señal de que debes considerar una estructura de
+datos diferente para tu caso de uso.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 
 buffer.add(10);
@@ -191,19 +206,20 @@ let x = buffer.remove(1); // evaluates to 11. 11 no longer in list.
 Buffer.toArray(buffer) // => [10, 12]
 ```
 
-Runtime: O(size)
+Tiempo de ejecución: O(size)
 
-Amortized Space: O(1), Worst Case Space: O(size)
+Espacio amortizado: O(1), Peor Caso Espacio: O(size)
 
+### Función `clear`
 
-### Function `clear`
-``` motoko no-repl
+```motoko no-repl
 func clear()
 ```
 
-Resets the buffer. Capacity is set to 8.
+Reinicia el buffer. La capacidad se establece en 8.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 
 buffer.add(10);
@@ -213,21 +229,22 @@ buffer.clear(); // buffer is now empty
 Buffer.toArray(buffer) // => []
 ```
 
-Runtime: O(1)
+Tiempo de ejecución: O(1)
 
-Space: O(1)
+Espacio: O(1)
 
+### Función `filterEntries`
 
-### Function `filterEntries`
-``` motoko no-repl
+```motoko no-repl
 func filterEntries(predicate : (Nat, X) -> Bool)
 ```
 
-Removes all elements from the buffer for which the predicate returns false.
-The predicate is given both the index of the element and the element itself.
-This may cause a downsizing of the array.
+Remueve todos los elementos del buffer para los cuales el predicado devuelve
+falso. El predicado recibe tanto el índice del elemento como el elemento en sí.
+Esto puede causar una reducción del tamaño del array.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 
 buffer.add(10);
@@ -237,19 +254,20 @@ buffer.filterEntries(func(_, x) = x % 2 == 0); // only keep even elements
 Buffer.toArray(buffer) // => [10, 12]
 ```
 
-Runtime: O(size)
+Tiempo de ejecución: O(size)
 
-Amortized Space: O(1), Worst Case Space: O(size)
+Espacio amortizado: O(1), Peor Caso Espacio: O(size)
 
+### Función `capacity`
 
-### Function `capacity`
-``` motoko no-repl
+```motoko no-repl
 func capacity() : Nat
 ```
 
-Returns the capacity of the buffer (the length of the underlying array).
+Devuelve la capacidad del buffer (la longitud del array subyacente).
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 
 let buffer = Buffer.Buffer<Nat>(2); // underlying array has capacity 2
@@ -260,17 +278,17 @@ buffer.add(12); // causes capacity to increase by factor of 1.5
 let c2 = buffer.capacity(); // => 3
 ```
 
-Runtime: O(1)
+Tiempo de ejecución: O(1)
 
-Space: O(1)
+Espacio: O(1)
 
+### Función `reserve`
 
-### Function `reserve`
-``` motoko no-repl
+```motoko no-repl
 func reserve(capacity : Nat)
 ```
 
-Changes the capacity to `capacity`. Traps if `capacity` < `size`.
+Cambia la capacidad a `capacity`. Traps si `capacity` < `size`.
 
 ```motoko include=initialize
 
@@ -280,17 +298,17 @@ buffer.add(11);
 buffer.capacity(); // => 4
 ```
 
-Runtime: O(capacity)
+Tiempo de ejecución: O(capacity)
 
-Space: O(capacity)
+Espacio: O(capacity)
 
+### Función `append`
 
-### Function `append`
-``` motoko no-repl
+```motoko no-repl
 func append(buffer2 : Buffer<X>)
 ```
 
-Adds all elements in buffer `b` to this buffer.
+Agrega todos los elementos en el buffer `b` a este buffer.
 
 ```motoko include=initialize
 let buffer1 = Buffer.Buffer<Nat>(2);
@@ -303,18 +321,19 @@ buffer1.append(buffer2); // adds elements from buffer2 to buffer1
 Buffer.toArray(buffer1) // => [10, 11, 12, 13]
 ```
 
-Amortized Runtime: O(size2), Worst Case Runtime: O(size1 + size2)
+Tiempo de ejecución amortizado: O(size2), Peor Caso Tiempo de ejecución:
+O(size1 + size2)
 
-Amortized Space: O(1), Worst Case Space: O(size1 + size2)
+Espacio amortizado: O(1), Peor Caso Espacio: O(size1 + size2)
 
+### Función `insert`
 
-### Function `insert`
-``` motoko no-repl
+```motoko no-repl
 func insert(index : Nat, element : X)
 ```
 
-Inserts `element` at `index`, shifts all elements to the right of
-`index` over by one index. Traps if `index` is greater than size.
+Inserta `element` en `index`, desplaza todos los elementos a la derecha de
+`index` en un índice. Traps si `index` es mayor que el tamaño.
 
 ```motoko include=initialize
 let buffer1 = Buffer.Buffer<Nat>(2);
@@ -325,18 +344,18 @@ buffer.insert(1, 9);
 Buffer.toArray(buffer) // => [10, 9, 11]
 ```
 
-Runtime: O(size)
+Tiempo de ejecución: O(size)
 
-Amortized Space: O(1), Worst Case Space: O(size)
+Espacio amortizado: O(1), Peor Caso Espacio: O(size)
 
+### Función `insertBuffer`
 
-### Function `insertBuffer`
-``` motoko no-repl
+```motoko no-repl
 func insertBuffer(index : Nat, buffer2 : Buffer<X>)
 ```
 
-Inserts `buffer2` at `index`, and shifts all elements to the right of
-`index` over by size2. Traps if `index` is greater than size.
+Inserta `buffer2` en `index`, desplaza todos los elementos a la derecha de
+`index` en un índice. Traps si `index` es mayor que el tamaño.
 
 ```motoko include=initialize
 let buffer1 = Buffer.Buffer<Nat>(2);
@@ -349,18 +368,18 @@ buffer1.insertBuffer(1, buffer2);
 Buffer.toArray(buffer1) // => [10, 12, 13, 11]
 ```
 
-Runtime: O(size)
+Tiempo de ejecución: O(size)
 
-Amortized Space: O(1), Worst Case Space: O(size1 + size2)
+Espacio amortizado: O(1), Peor Caso Espacio: O(size1 + size2)
 
+### Función `sort`
 
-### Function `sort`
-``` motoko no-repl
+```motoko no-repl
 func sort(compare : (X, X) -> Order.Order)
 ```
 
-Sorts the elements in the buffer according to `compare`.
-Sort is deterministic, stable, and in-place.
+Ordena los elementos en el buffer según `compare`. La ordenación es
+determinista, estable y en su lugar.
 
 ```motoko include=initialize
 
@@ -373,19 +392,19 @@ buffer.sort(Nat.compare);
 Buffer.toArray(buffer) // => [10, 11, 12]
 ```
 
-Runtime: O(size * log(size))
+Tiempo de ejecución: O(size \* log(size))
 
-Space: O(size)
+Espacio: O(size)
 
+### Función `vals`
 
-### Function `vals`
-``` motoko no-repl
+```motoko no-repl
 func vals() : { next : () -> ?X }
 ```
 
-Returns an Iterator (`Iter`) over the elements of this buffer.
-Iterator provides a single method `next()`, which returns
-elements in order, or `null` when out of elements to iterate over.
+Devuelve un Iterador (`Iter`) sobre los elementos de este buffer. El Iterador
+proporciona un único método `next()`, que devuelve los elementos en orden, o
+`null` cuando no hay más elementos para iterar.
 
 ```motoko include=initialize
 
@@ -400,42 +419,44 @@ for (element in buffer.vals()) {
 sum // => 33
 ```
 
-Runtime: O(1)
+Tiempo de ejecución: O(1)
 
-Space: O(1)
+Espacio: O(1)
 
+### Función `clone`
 
-### Function `clone`
-``` motoko no-repl
+```motoko no-repl
 func clone() : Buffer<X>
 ```
 
 @deprecated Use static library function instead.
 
+### Función `toArray`
 
-### Function `toArray`
-``` motoko no-repl
+```motoko no-repl
 func toArray() : [X]
 ```
 
 @deprecated Use static library function instead.
 
+### Función `toVarArray`
 
-### Function `toVarArray`
-``` motoko no-repl
+```motoko no-repl
 func toVarArray() : [var X]
 ```
 
 @deprecated Use static library function instead.
 
 ## Function `isEmpty`
-``` motoko no-repl
+
+```motoko no-repl
 func isEmpty<X>(buffer : Buffer<X>) : Bool
 ```
 
-Returns true if and only if the buffer is empty.
+Returna true si y solo si el buffer está vacío.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 buffer.add(2);
 buffer.add(0);
@@ -447,20 +468,21 @@ Buffer.isEmpty(buffer); // => false
 Buffer.isEmpty(buffer); // => true
 ```
 
-Runtime: O(1)
+Tiempo de ejecución: O(1)
 
-Space: O(1)
+Espacio: O(1)
 
 ## Function `contains`
-``` motoko no-repl
+
+```motoko no-repl
 func contains<X>(buffer : Buffer<X>, element : X, equal : (X, X) -> Bool) : Bool
 ```
 
-Returns true iff `buffer` contains `element` with respect to equality
-defined by `equal`.
+Devuelve true si y solo si `buffer` contiene `element` con respecto a la
+igualdad definida por `equal`.
 
+Ejemplo:
 
-Example:
 ```motoko include=initialize
 import Nat "mo:base/Nat";
 
@@ -470,21 +492,21 @@ buffer.add(3);
 Buffer.contains<Nat>(buffer, 2, Nat.equal); // => true
 ```
 
-Runtime: O(size)
+Tiempo de ejecución: O(size)
 
-Space: O(1)
-
-*Runtime and space assumes that `equal` runs in O(1) time and space.
+Espacio: O(1) \*El tiempo de ejecución y el espacio asumen que `equal` se
+ejecuta en tiempo y espacio O(1).
 
 ## Function `clone`
-``` motoko no-repl
+
+```motoko no-repl
 func clone<X>(buffer : Buffer<X>) : Buffer<X>
 ```
 
-Returns a copy of `buffer`, with the same capacity.
+Devuelve una copia de `buffer`, con la misma capacidad.
 
+Ejemplo:
 
-Example:
 ```motoko include=initialize
 
 buffer.add(1);
@@ -493,20 +515,21 @@ let clone = Buffer.clone(buffer);
 Buffer.toArray(clone); // => [1]
 ```
 
-Runtime: O(size)
+Tiempo de ejecución: O(size)
 
-Space: O(size)
+Espacio: O(size)
 
 ## Function `max`
-``` motoko no-repl
+
+```motoko no-repl
 func max<X>(buffer : Buffer<X>, compare : (X, X) -> Order) : ?X
 ```
 
-Finds the greatest element in `buffer` defined by `compare`.
-Returns `null` if `buffer` is empty.
+Encuentra el elemento más grande en `buffer` definido por `compare`. Devuelve
+`null` si `buffer` está vacío.
 
+Ejemplo:
 
-Example:
 ```motoko include=initialize
 import Nat "mo:base/Nat";
 
@@ -516,21 +539,22 @@ buffer.add(2);
 Buffer.max(buffer, Nat.compare); // => ?2
 ```
 
-Runtime: O(size)
+Tiempo de ejecución: O(size)
 
-Space: O(1)
-
-*Runtime and space assumes that `compare` runs in O(1) time and space.
+Espacio: O(1) \*Tiempo de ejecución y espacio asume que `compare` se ejecuta en
+tiempo y espacio O(1).
 
 ## Function `min`
-``` motoko no-repl
+
+```motoko no-repl
 func min<X>(buffer : Buffer<X>, compare : (X, X) -> Order) : ?X
 ```
 
-Finds the least element in `buffer` defined by `compare`.
-Returns `null` if `buffer` is empty.
+Encuentra el elemento más pequeño en `buffer` definido por `compare`. Devuelve
+`null` si `buffer` está vacío.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 import Nat "mo:base/Nat";
 
@@ -540,24 +564,24 @@ buffer.add(2);
 Buffer.min(buffer, Nat.compare); // => ?1
 ```
 
-Runtime: O(size)
+Tiempo de ejecución: O(size)
 
-Space: O(1)
-
-*Runtime and space assumes that `compare` runs in O(1) time and space.
+Espacio: O(1) \*Tiempo de ejecución y espacio asume que `compare` se ejecuta en
+tiempo y espacio O(1).
 
 ## Function `equal`
-``` motoko no-repl
+
+```motoko no-repl
 func equal<X>(buffer1 : Buffer<X>, buffer2 : Buffer<X>, equal : (X, X) -> Bool) : Bool
 ```
 
-Defines equality for two buffers, using `equal` to recursively compare elements in the
-buffers. Returns true iff the two buffers are of the same size, and `equal`
-evaluates to true for every pair of elements in the two buffers of the same
-index.
+Define la igualdad para dos buffers, utilizando `equal` para comparar
+recursivamente los elementos en los buffers. Devuelve true si y solo si los dos
+buffers tienen el mismo tamaño y `equal` evalúa a true para cada par de
+elementos en los dos buffers con el mismo índice.
 
+Ejemplo:
 
-Example:
 ```motoko include=initialize
 import Nat "mo:base/Nat";
 
@@ -572,22 +596,25 @@ buffer2.add(2);
 Buffer.equal(buffer1, buffer2, Nat.equal); // => true
 ```
 
-Runtime: O(size)
+Tiempo de ejecución: O(size)
 
-Space: O(1)
+Espacio: O(1)
 
-*Runtime and space assumes that `equal` runs in O(1) time and space.
+\*El tiempo de ejecución y el espacio asumen que `equal` se ejecuta en tiempo y
+espacio O(1).
 
 ## Function `compare`
-``` motoko no-repl
+
+```motoko no-repl
 func compare<X>(buffer1 : Buffer<X>, buffer2 : Buffer<X>, compare : (X, X) -> Order.Order) : Order.Order
 ```
 
-Defines comparison for two buffers, using `compare` to recursively compare elements in the
-buffers. Comparison is defined lexicographically.
+Define la comparación para dos buffers, utilizando `compare` para comparar
+recursivamente los elementos en los buffers. La comparación se define de forma
+lexicográfica.
 
+Ejemplo:
 
-Example:
 ```motoko include=initialize
 import Nat "mo:base/Nat";
 
@@ -602,14 +629,16 @@ buffer2.add(4);
 Buffer.compare<Nat>(buffer1, buffer2, Nat.compare); // => #less
 ```
 
-Runtime: O(size)
+Tiempo de ejecución: O(size)
 
-Space: O(1)
+Espacio: O(1)
 
-*Runtime and space assumes that `compare` runs in O(1) time and space.
+\*El tiempo de ejecución y el espacio asumen que `compare` se ejecuta en tiempo
+y espacio O(1).
 
 ## Function `toText`
-``` motoko no-repl
+
+```motoko no-repl
 func toText<X>(buffer : Buffer<X>, toText : X -> Text) : Text
 ```
 
@@ -617,6 +646,7 @@ Creates a textual representation of `buffer`, using `toText` to recursively
 convert the elements into Text.
 
 Example:
+
 ```motoko include=initialize
 import Nat "mo:base/Nat";
 
@@ -628,22 +658,25 @@ buffer.add(4);
 Buffer.toText(buffer, Nat.toText); // => "[1, 2, 3, 4]"
 ```
 
-Runtime: O(size)
+Tiempo de ejecución: O(size)
 
-Space: O(size)
+Espacio: O(size)
 
-*Runtime and space assumes that `toText` runs in O(1) time and space.
+\*Tiempo de ejecución and space assumes that `toText` runs in O(1) time and
+space.
 
 ## Function `hash`
-``` motoko no-repl
+
+```motoko no-repl
 func hash<X>(buffer : Buffer<X>, hash : X -> Nat32) : Nat32
 ```
 
-Hashes `buffer` using `hash` to hash the underlying elements.
-The deterministic hash function is a function of the elements in the Buffer, as well
-as their ordering.
+Hashes `buffer` using `hash` to hash the underlying elements. The deterministic
+hash function is a function of the elements in the Buffer, as well as their
+ordering.
 
 Example:
+
 ```motoko include=initialize
 import Hash "mo:base/Hash";
 
@@ -655,21 +688,23 @@ buffer.add(1000);
 Buffer.hash<Nat>(buffer, Hash.hash); // => 2_872_640_342
 ```
 
-Runtime: O(size)
+Tiempo de ejecución: O(size)
 
-Space: O(1)
+Espacio: O(1)
 
-*Runtime and space assumes that `hash` runs in O(1) time and space.
+\*Tiempo de ejecución and space assumes that `hash` runs in O(1) time and space.
 
 ## Function `indexOf`
-``` motoko no-repl
+
+```motoko no-repl
 func indexOf<X>(element : X, buffer : Buffer<X>, equal : (X, X) -> Bool) : ?Nat
 ```
 
-Finds the first index of `element` in `buffer` using equality of elements defined
-by `equal`. Returns `null` if `element` is not found.
+Finds the first index of `element` in `buffer` using equality of elements
+defined by `equal`. Returns `null` if `element` is not found.
 
 Example:
+
 ```motoko include=initialize
 import Nat "mo:base/Nat";
 
@@ -681,14 +716,16 @@ buffer.add(4);
 Buffer.indexOf<Nat>(3, buffer, Nat.equal); // => ?2
 ```
 
-Runtime: O(size)
+Tiempo de ejecución: O(size)
 
-Space: O(size)
+Espacio: O(size)
 
-*Runtime and space assumes that `equal` runs in O(1) time and space.
+\*El tiempo de ejecución y el espacio asumen que `equal` se ejecuta en tiempo y
+espacio O(1).
 
 ## Function `lastIndexOf`
-``` motoko no-repl
+
+```motoko no-repl
 func lastIndexOf<X>(element : X, buffer : Buffer<X>, equal : (X, X) -> Bool) : ?Nat
 ```
 
@@ -696,6 +733,7 @@ Finds the last index of `element` in `buffer` using equality of elements defined
 by `equal`. Returns `null` if `element` is not found.
 
 Example:
+
 ```motoko include=initialize
 import Nat "mo:base/Nat";
 
@@ -709,20 +747,24 @@ buffer.add(2);
 Buffer.lastIndexOf<Nat>(2, buffer, Nat.equal); // => ?5
 ```
 
-Runtime: O(size)
+Tiempo de ejecución: O(size)
 
-Space: O(size)
+Espacio: O(size)
 
-*Runtime and space assumes that `equal` runs in O(1) time and space.
+\*El tiempo de ejecución y el espacio asumen que `equal` se ejecuta en tiempo y
+espacio O(1).
 
 ## Function `indexOfBuffer`
-``` motoko no-repl
+
+```motoko no-repl
 func indexOfBuffer<X>(subBuffer : Buffer<X>, buffer : Buffer<X>, equal : (X, X) -> Bool) : ?Nat
 ```
 
-Searches for `subBuffer` in `buffer`, and returns the starting index if it is found.
+Searches for `subBuffer` in `buffer`, and returns the starting index if it is
+found.
 
 Example:
+
 ```motoko include=initialize
 import Nat "mo:base/Nat";
 
@@ -741,22 +783,25 @@ sub.add(6);
 Buffer.indexOfBuffer<Nat>(sub, buffer, Nat.equal); // => ?3
 ```
 
-Runtime: O(size of buffer + size of subBuffer)
+Tiempo de ejecución: O(size of buffer + size of subBuffer)
 
-Space: O(size of subBuffer)
+Espacio: O(size of subBuffer)
 
-*Runtime and space assumes that `equal` runs in O(1) time and space.
+\*El tiempo de ejecución y el espacio asumen que `equal` se ejecuta en tiempo y
+espacio O(1).
 
 ## Function `binarySearch`
-``` motoko no-repl
+
+```motoko no-repl
 func binarySearch<X>(element : X, buffer : Buffer<X>, compare : (X, X) -> Order.Order) : ?Nat
 ```
 
-Similar to indexOf, but runs in logarithmic time. Assumes that `buffer` is sorted.
-Behavior is undefined if `buffer` is not sorted. Uses `compare` to
+Similar to indexOf, but runs in logarithmic time. Assumes that `buffer` is
+sorted. Behavior is undefined if `buffer` is not sorted. Uses `compare` to
 perform the search. Returns an index of `element` if it is found.
 
 Example:
+
 ```motoko include=initialize
 import Nat "mo:base/Nat";
 
@@ -768,22 +813,25 @@ buffer.add(6);
 Buffer.binarySearch<Nat>(5, buffer, Nat.compare); // => ?2
 ```
 
-Runtime: O(log(size))
+Tiempo de ejecución: O(log(size))
 
-Space: O(1)
+Espacio: O(1)
 
-*Runtime and space assumes that `compare` runs in O(1) time and space.
+\*El tiempo de ejecución y el espacio asumen que `compare` se ejecuta en tiempo
+y espacio O(1).
 
 ## Function `subBuffer`
-``` motoko no-repl
+
+```motoko no-repl
 func subBuffer<X>(buffer : Buffer<X>, start : Nat, length : Nat) : Buffer<X>
 ```
 
-Returns the sub-buffer of `buffer` starting at index `start`
-of length `length`. Traps if `start` is out of bounds, or `start + length`
-is greater than the size of `buffer`.
+Devuelve el sub-buffer de `buffer` que comienza en el índice `start` y tiene una
+longitud de `length`. Genera un error si `start` está fuera de los límites o si
+`start + length` es mayor que el tamaño de `buffer`.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 import Nat "mo:base/Nat";
 
@@ -798,19 +846,21 @@ let sub = Buffer.subBuffer(buffer, 3, 2);
 Buffer.toText(sub, Nat.toText); // => [4, 5]
 ```
 
-Runtime: O(length)
+Tiempo de ejecución: O(length)
 
-Space: O(length)
+Espacio: O(length)
 
 ## Function `isSubBufferOf`
-``` motoko no-repl
+
+```motoko no-repl
 func isSubBufferOf<X>(subBuffer : Buffer<X>, buffer : Buffer<X>, equal : (X, X) -> Bool) : Bool
 ```
 
-Checks if `subBuffer` is a sub-Buffer of `buffer`. Uses `equal` to
-compare elements.
+Verifica si `subBuffer` es un sub-buffer de `buffer`. Utiliza `equal` para
+comparar los elementos.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 import Nat "mo:base/Nat";
 
@@ -827,22 +877,25 @@ sub.add(3);
 Buffer.isSubBufferOf(sub, buffer, Nat.equal); // => true
 ```
 
-Runtime: O(size of subBuffer + size of buffer)
+Tiempo de ejecución: O(size of subBuffer + size of buffer)
 
-Space: O(size of subBuffer)
+Espacio: O(size of subBuffer)
 
-*Runtime and space assumes that `equal` runs in O(1) time and space.
+\*El tiempo de ejecución y el espacio asumen que `equal` se ejecuta en tiempo y
+espacio O(1).
 
 ## Function `isStrictSubBufferOf`
-``` motoko no-repl
+
+```motoko no-repl
 func isStrictSubBufferOf<X>(subBuffer : Buffer<X>, buffer : Buffer<X>, equal : (X, X) -> Bool) : Bool
 ```
 
-Checks if `subBuffer` is a strict subBuffer of `buffer`, i.e. `subBuffer` must be
-strictly contained inside both the first and last indices of `buffer`.
-Uses `equal` to compare elements.
+Verifica si `subBuffer` es un sub-buffer estricto de `buffer`, es decir,
+`subBuffer` debe estar estrictamente contenido dentro de los primeros y últimos
+índices de `buffer`. Utiliza `equal` para comparar los elementos.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 import Nat "mo:base/Nat";
 
@@ -857,21 +910,24 @@ sub.add(3);
 Buffer.isStrictSubBufferOf(sub, buffer, Nat.equal); // => true
 ```
 
-Runtime: O(size of subBuffer + size of buffer)
+Tiempo de ejecución: O(size of subBuffer + size of buffer)
 
-Space: O(size of subBuffer)
+Espacio: O(size of subBuffer)
 
-*Runtime and space assumes that `equal` runs in O(1) time and space.
+\*El tiempo de ejecución y el espacio asumen que `equal` se ejecuta en tiempo y
+espacio O(1).
 
 ## Function `prefix`
-``` motoko no-repl
+
+```motoko no-repl
 func prefix<X>(buffer : Buffer<X>, length : Nat) : Buffer<X>
 ```
 
-Returns the prefix of `buffer` of length `length`. Traps if `length`
-is greater than the size of `buffer`.
+Devuelve el prefijo de `buffer` de longitud `length`. Genera un error si
+`length` es mayor que el tamaño de `buffer`.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 import Nat "mo:base/Nat";
 
@@ -884,19 +940,21 @@ let pre = Buffer.prefix(buffer, 3); // => [1, 2, 3]
 Buffer.toText(pre, Nat.toText);
 ```
 
-Runtime: O(length)
+Tiempo de ejecución: O(length)
 
-Space: O(length)
+Espacio: O(length)
 
 ## Function `isPrefixOf`
-``` motoko no-repl
+
+```motoko no-repl
 func isPrefixOf<X>(prefix : Buffer<X>, buffer : Buffer<X>, equal : (X, X) -> Bool) : Bool
 ```
 
-Checks if `prefix` is a prefix of `buffer`. Uses `equal` to
-compare elements.
+Verifica si `prefix` es un prefijo de `buffer`. Utiliza `equal` para comparar
+los elementos.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 import Nat "mo:base/Nat";
 
@@ -911,21 +969,24 @@ pre.add(2);
 Buffer.isPrefixOf(pre, buffer, Nat.equal); // => true
 ```
 
-Runtime: O(size of prefix)
+Tiempo de ejecución: O(size of prefix)
 
-Space: O(size of prefix)
+Espacio: O(size of prefix)
 
-*Runtime and space assumes that `equal` runs in O(1) time and space.
+\*El tiempo de ejecución y el espacio asumen que `equal` se ejecuta en tiempo y
+espacio O(1).
 
 ## Function `isStrictPrefixOf`
-``` motoko no-repl
+
+```motoko no-repl
 func isStrictPrefixOf<X>(prefix : Buffer<X>, buffer : Buffer<X>, equal : (X, X) -> Bool) : Bool
 ```
 
-Checks if `prefix` is a strict prefix of `buffer`. Uses `equal` to
-compare elements.
+Verifica si `prefix` es un prefijo estricto de `buffer`. Utiliza `equal` para
+comparar los elementos.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 import Nat "mo:base/Nat";
 
@@ -941,21 +1002,24 @@ pre.add(3);
 Buffer.isStrictPrefixOf(pre, buffer, Nat.equal); // => true
 ```
 
-Runtime: O(size of prefix)
+Tiempo de ejecución: O(size of prefix)
 
-Space: O(size of prefix)
+Espacio: O(size of prefix)
 
-*Runtime and space assumes that `equal` runs in O(1) time and space.
+\*El tiempo de ejecución y el espacio asumen que `equal` se ejecuta en tiempo y
+espacio O(1).
 
 ## Function `suffix`
-``` motoko no-repl
+
+```motoko no-repl
 func suffix<X>(buffer : Buffer<X>, length : Nat) : Buffer<X>
 ```
 
-Returns the suffix of `buffer` of length `length`.
-Traps if `length`is greater than the size of `buffer`.
+Devuelve el sufijo de `buffer` de longitud `length`. Genera un error si `length`
+es mayor que el tamaño de `buffer`.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 import Nat "mo:base/Nat";
 
@@ -968,19 +1032,21 @@ let suf = Buffer.suffix(buffer, 3); // => [2, 3, 4]
 Buffer.toText(suf, Nat.toText);
 ```
 
-Runtime: O(length)
+Tiempo de ejecución: O(length)
 
-Space: O(length)
+Espacio: O(length)
 
 ## Function `isSuffixOf`
-``` motoko no-repl
+
+```motoko no-repl
 func isSuffixOf<X>(suffix : Buffer<X>, buffer : Buffer<X>, equal : (X, X) -> Bool) : Bool
 ```
 
-Checks if `suffix` is a suffix of `buffer`. Uses `equal` to compare
-elements.
+Verifica si `suffix` es un sufijo de `buffer`. Utiliza `equal` para comparar los
+elementos.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 import Nat "mo:base/Nat";
 
@@ -996,21 +1062,24 @@ suf.add(4);
 Buffer.isSuffixOf(suf, buffer, Nat.equal); // => true
 ```
 
-Runtime: O(length of suffix)
+Tiempo de ejecución: O(length of suffix)
 
-Space: O(length of suffix)
+Espacio: O(length of suffix)
 
-*Runtime and space assumes that `equal` runs in O(1) time and space.
+\*El tiempo de ejecución y el espacio asumen que `equal` se ejecuta en tiempo y
+espacio O(1).
 
 ## Function `isStrictSuffixOf`
-``` motoko no-repl
+
+```motoko no-repl
 func isStrictSuffixOf<X>(suffix : Buffer<X>, buffer : Buffer<X>, equal : (X, X) -> Bool) : Bool
 ```
 
-Checks if `suffix` is a strict suffix of `buffer`. Uses `equal` to compare
-elements.
+Verifica si `suffix` es un sufijo estricto de `buffer`. Utiliza `equal` para
+comparar los elementos.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 import Nat "mo:base/Nat";
 
@@ -1026,20 +1095,23 @@ suf.add(4);
 Buffer.isStrictSuffixOf(suf, buffer, Nat.equal); // => true
 ```
 
-Runtime: O(length of suffix)
+Tiempo de ejecución: O(length of suffix)
 
-Space: O(length of suffix)
+Espacio: O(length of suffix)
 
-*Runtime and space assumes that `equal` runs in O(1) time and space.
+\*El tiempo de ejecución y el espacio asumen que `equal` se ejecuta en tiempo y
+espacio O(1).
 
 ## Function `forAll`
-``` motoko no-repl
+
+```motoko no-repl
 func forAll<X>(buffer : Buffer<X>, predicate : X -> Bool) : Bool
 ```
 
-Returns true iff every element in `buffer` satisfies `predicate`.
+Devuelve true si todos los elementos en `buffer` satisfacen `predicate`.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 
 buffer.add(2);
@@ -1049,20 +1121,23 @@ buffer.add(4);
 Buffer.forAll<Nat>(buffer, func x { x > 1 }); // => true
 ```
 
-Runtime: O(size)
+Tiempo de ejecución: O(size)
 
-Space: O(1)
+Espacio: O(1)
 
-*Runtime and space assumes that `predicate` runs in O(1) time and space.
+\*El tiempo de ejecución y el espacio asumen que `predicate` se ejecuta en
+tiempo y espacio O(1).
 
 ## Function `forSome`
-``` motoko no-repl
+
+```motoko no-repl
 func forSome<X>(buffer : Buffer<X>, predicate : X -> Bool) : Bool
 ```
 
-Returns true iff some element in `buffer` satisfies `predicate`.
+Devuelve true si algún elemento en `buffer` satisface `predicate`.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 
 buffer.add(2);
@@ -1072,20 +1147,23 @@ buffer.add(4);
 Buffer.forSome<Nat>(buffer, func x { x > 3 }); // => true
 ```
 
-Runtime: O(size)
+Tiempo de ejecución: O(size)
 
-Space: O(1)
+Espacio: O(1)
 
-*Runtime and space assumes that `predicate` runs in O(1) time and space.
+\*El tiempo de ejecución y el espacio asumen que `predicate` se ejecuta en
+tiempo y espacio O(1).
 
 ## Function `forNone`
-``` motoko no-repl
+
+```motoko no-repl
 func forNone<X>(buffer : Buffer<X>, predicate : X -> Bool) : Bool
 ```
 
-Returns true iff no element in `buffer` satisfies `predicate`.
+Devuelve true si ningún elemento en `buffer` satisface `predicate`.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 
 buffer.add(2);
@@ -1095,20 +1173,23 @@ buffer.add(4);
 Buffer.forNone<Nat>(buffer, func x { x == 0 }); // => true
 ```
 
-Runtime: O(size)
+Tiempo de ejecución: O(size)
 
-Space: O(1)
+Espacio: O(1)
 
-*Runtime and space assumes that `predicate` runs in O(1) time and space.
+\*El tiempo de ejecución y el espacio asumen que `predicate` se ejecuta en
+tiempo y espacio O(1).
 
 ## Function `toArray`
-``` motoko no-repl
+
+```motoko no-repl
 func toArray<X>(buffer : Buffer<X>) : [X]
 ```
 
-Creates an array containing elements from `buffer`.
+Crea un array que contiene los elementos de `buffer`.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 
 buffer.add(1);
@@ -1119,18 +1200,20 @@ Buffer.toArray<Nat>(buffer); // => [1, 2, 3]
 
 ```
 
-Runtime: O(size)
+Tiempo de ejecución: O(size)
 
-Space: O(size)
+Espacio: O(size)
 
 ## Function `toVarArray`
-``` motoko no-repl
+
+```motoko no-repl
 func toVarArray<X>(buffer : Buffer<X>) : [var X]
 ```
 
-Creates a mutable array containing elements from `buffer`.
+Crea un array mutable que contiene los elementos de `buffer`.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 
 buffer.add(1);
@@ -1140,18 +1223,20 @@ buffer.add(3);
 Buffer.toVarArray<Nat>(buffer); // => [1, 2, 3]
 ```
 
-Runtime: O(size)
+Tiempo de ejecución: O(size)
 
-Space: O(size)
+Espacio: O(size)
 
 ## Function `fromArray`
-``` motoko no-repl
+
+```motoko no-repl
 func fromArray<X>(array : [X]) : Buffer<X>
 ```
 
-Creates a buffer containing elements from `array`.
+Crea un buffer que contiene los elementos de `array`.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 import Nat "mo:base/Nat";
 
@@ -1161,18 +1246,20 @@ let buf = Buffer.fromArray<Nat>(array); // => [2, 3]
 Buffer.toText(buf, Nat.toText);
 ```
 
-Runtime: O(size)
+Tiempo de ejecución: O(size)
 
-Space: O(size)
+Espacio: O(size)
 
 ## Function `fromVarArray`
-``` motoko no-repl
+
+```motoko no-repl
 func fromVarArray<X>(array : [var X]) : Buffer<X>
 ```
 
-Creates a buffer containing elements from `array`.
+Crea un buffer que contiene los elementos de `array`.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 import Nat "mo:base/Nat";
 
@@ -1182,18 +1269,20 @@ let buf = Buffer.fromVarArray<Nat>(array); // => [1, 2, 3]
 Buffer.toText(buf, Nat.toText);
 ```
 
-Runtime: O(size)
+Tiempo de ejecución: O(size)
 
-Space: O(size)
+Espacio: O(size)
 
 ## Function `fromIter`
-``` motoko no-repl
+
+```motoko no-repl
 func fromIter<X>(iter : { next : () -> ?X }) : Buffer<X>
 ```
 
-Creates a buffer containing elements from `iter`.
+Crea un buffer que contiene los elementos de `iter`.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 import Nat "mo:base/Nat";
 
@@ -1204,18 +1293,20 @@ let buf = Buffer.fromIter<Nat>(iter); // => [1, 1, 1]
 Buffer.toText(buf, Nat.toText);
 ```
 
-Runtime: O(size)
+Tiempo de ejecución: O(size)
 
-Space: O(size)
+Espacio: O(size)
 
 ## Function `trimToSize`
-``` motoko no-repl
+
+```motoko no-repl
 func trimToSize<X>(buffer : Buffer<X>)
 ```
 
-Reallocates the array underlying `buffer` such that capacity == size.
+Reubica el array subyacente de `buffer` de modo que la capacidad == tamaño.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 
 let buffer = Buffer.Buffer<Nat>(10);
@@ -1227,18 +1318,20 @@ Buffer.trimToSize<Nat>(buffer);
 buffer.capacity(); // => 3
 ```
 
-Runtime: O(size)
+Tiempo de ejecución: O(size)
 
-Space: O(size)
+Espacio: O(size)
 
 ## Function `map`
-``` motoko no-repl
+
+```motoko no-repl
 func map<X, Y>(buffer : Buffer<X>, f : X -> Y) : Buffer<Y>
 ```
 
-Creates a new buffer by applying `f` to each element in `buffer`.
+Crea un nuevo buffer aplicando `f` a cada elemento en `buffer`.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 import Nat "mo:base/Nat";
 
@@ -1250,20 +1343,23 @@ let newBuf = Buffer.map<Nat, Nat>(buffer, func (x) { x + 1 });
 Buffer.toText(newBuf, Nat.toText); // => [2, 3, 4]
 ```
 
-Runtime: O(size)
+Tiempo de ejecución: O(size)
 
-Space: O(size)
+Espacio: O(size)
 
-*Runtime and space assumes that `f` runs in O(1) time and space.
+\*El tiempo de ejecución y el espacio asumen que `f` se ejecuta en tiempo y
+espacio O(1).
 
 ## Function `iterate`
-``` motoko no-repl
+
+```motoko no-repl
 func iterate<X>(buffer : Buffer<X>, f : X -> ())
 ```
 
-Applies `f` to each element in `buffer`.
+Aplica `f` a cada elemento en `buffer`.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 import Nat "mo:base/Nat";
 import Debug "mo:base/Debug";
@@ -1277,20 +1373,23 @@ Buffer.iterate<Nat>(buffer, func (x) {
 });
 ```
 
-Runtime: O(size)
+Tiempo de ejecución: O(size)
 
-Space: O(size)
+Espacio: O(size)
 
-*Runtime and space assumes that `f` runs in O(1) time and space.
+\*El tiempo de ejecución y el espacio asumen que `f` se ejecuta en tiempo y
+espacio O(1).
 
 ## Function `mapEntries`
-``` motoko no-repl
+
+```motoko no-repl
 func mapEntries<X, Y>(buffer : Buffer<X>, f : (Nat, X) -> Y) : Buffer<Y>
 ```
 
-Applies `f` to each element in `buffer` and its index.
+Aplica `f` a cada elemento en `buffer` y su índice.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 import Nat "mo:base/Nat";
 
@@ -1302,21 +1401,24 @@ let newBuf = Buffer.mapEntries<Nat, Nat>(buffer, func (x, i) { x + i + 1 });
 Buffer.toText(newBuf, Nat.toText); // => [2, 4, 6]
 ```
 
-Runtime: O(size)
+Tiempo de ejecución: O(size)
 
-Space: O(size)
+Espacio: O(size)
 
-*Runtime and space assumes that `f` runs in O(1) time and space.
+\*El tiempo de ejecución y el espacio asumen que `f` se ejecuta en tiempo y
+espacio O(1).
 
 ## Function `mapFilter`
-``` motoko no-repl
+
+```motoko no-repl
 func mapFilter<X, Y>(buffer : Buffer<X>, f : X -> ?Y) : Buffer<Y>
 ```
 
-Creates a new buffer by applying `f` to each element in `buffer`,
-and keeping all non-null elements.
+Crea un nuevo buffer aplicando `f` a cada elemento en `buffer` y manteniendo
+todos los elementos no nulos.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 import Nat "mo:base/Nat";
 
@@ -1334,22 +1436,25 @@ let newBuf = Buffer.mapFilter<Nat, Nat>(buffer, func (x) {
 Buffer.toText(newBuf, Nat.toText); // => [4, 6]
 ```
 
-Runtime: O(size)
+Tiempo de ejecución: O(size)
 
-Space: O(size)
+Espacio: O(size)
 
-*Runtime and space assumes that `f` runs in O(1) time and space.
+\*El tiempo de ejecución y el espacio asumen que `f` se ejecuta en tiempo y
+espacio O(1).
 
 ## Function `mapResult`
-``` motoko no-repl
+
+```motoko no-repl
 func mapResult<X, Y, E>(buffer : Buffer<X>, f : X -> Result.Result<Y, E>) : Result.Result<Buffer<Y>, E>
 ```
 
-Creates a new buffer by applying `f` to each element in `buffer`.
-If any invocation of `f` produces an `#err`, returns an `#err`. Otherwise
-Returns an `#ok` containing the new buffer.
+Crea un nuevo buffer aplicando `f` a cada elemento en `buffer`. Si alguna
+invocación de `f` produce un `#err`, devuelve un `#err`. De lo contrario,
+devuelve un `#ok` que contiene el nuevo buffer.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 import Result "mo:base/Result";
 
@@ -1368,22 +1473,25 @@ let result = Buffer.mapResult<Nat, Nat, Text>(buffer, func (k) {
 Result.mapOk<Buffer.Buffer<Nat>, [Nat], Text>(result, func buffer = Buffer.toArray(buffer)) // => #ok([1, 2, 3])
 ```
 
-Runtime: O(size)
+Tiempo de ejecución: O(size)
 
-Space: O(size)
+Espacio: O(size)
 
-*Runtime and space assumes that `f` runs in O(1) time and space.
+\*El tiempo de ejecución y el espacio asumen que `f` se ejecuta en tiempo y
+espacio O(1).
 
 ## Function `chain`
-``` motoko no-repl
+
+```motoko no-repl
 func chain<X, Y>(buffer : Buffer<X>, k : X -> Buffer<Y>) : Buffer<Y>
 ```
 
-Creates a new buffer by applying `k` to each element in `buffer`,
-and concatenating the resulting buffers in order. This operation
-is similar to what in other functional languages is known as monadic bind.
+Crea un nuevo buffer aplicando `k` a cada elemento en `buffer` y concatenando
+los buffers resultantes en orden. Esta operación es similar a lo que en otros
+lenguajes funcionales se conoce como bind monádico.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 import Nat "mo:base/Nat";
 
@@ -1400,22 +1508,24 @@ let chain = Buffer.chain<Nat, Nat>(buffer, func (x) {
 Buffer.toText(chain, Nat.toText); // => [1, 2, 2, 4, 3, 6]
 ```
 
-Runtime: O(size)
+Tiempo de ejecución: O(size)
 
-Space: O(size)
+Espacio: O(size)
 
-*Runtime and space assumes that `k` runs in O(1) time and space.
+\*Tiempo de ejecución and space assumes that `k` runs in O(1) time and space.
 
 ## Function `foldLeft`
-``` motoko no-repl
+
+```motoko no-repl
 func foldLeft<A, X>(buffer : Buffer<X>, base : A, combine : (A, X) -> A) : A
 ```
 
-Collapses the elements in `buffer` into a single value by starting with `base`
-and progessively combining elements into `base` with `combine`. Iteration runs
-left to right.
+Colapsa los elementos en `buffer` en un único valor comenzando con `base` y
+combinando progresivamente los elementos en `base` con `combine`. La iteración
+se realiza de izquierda a derecha.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 import Nat "mo:base/Nat";
 
@@ -1426,22 +1536,25 @@ buffer.add(3);
 Buffer.foldLeft<Text, Nat>(buffer, "", func (acc, x) { acc # Nat.toText(x)}); // => "123"
 ```
 
-Runtime: O(size)
+Tiempo de ejecución: O(size)
 
-Space: O(1)
+Espacio: O(1)
 
-*Runtime and space assumes that `combine` runs in O(1) time and space.
+\*Tiempo de ejecución and space assumes that `combine` runs in O(1) time and
+space.
 
 ## Function `foldRight`
-``` motoko no-repl
+
+```motoko no-repl
 func foldRight<X, A>(buffer : Buffer<X>, base : A, combine : (X, A) -> A) : A
 ```
 
-Collapses the elements in `buffer` into a single value by starting with `base`
-and progessively combining elements into `base` with `combine`. Iteration runs
-right to left.
+Colapsa los elementos en `buffer` en un único valor comenzando con `base` y
+combinando progresivamente los elementos en `base` con `combine`. La iteración
+se realiza de derecha a izquierda.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 import Nat "mo:base/Nat";
 
@@ -1452,20 +1565,23 @@ buffer.add(3);
 Buffer.foldRight<Nat, Text>(buffer, "", func (x, acc) { Nat.toText(x) # acc }); // => "123"
 ```
 
-Runtime: O(size)
+Tiempo de ejecución: O(size)
 
-Space: O(1)
+Espacio: O(1)
 
-*Runtime and space assumes that `combine` runs in O(1) time and space.
+\*Tiempo de ejecución and space assumes that `combine` runs in O(1) time and
+space.
 
 ## Function `first`
-``` motoko no-repl
+
+```motoko no-repl
 func first<X>(buffer : Buffer<X>) : X
 ```
 
-Returns the first element of `buffer`. Traps if `buffer` is empty.
+Devuelve el primer elemento de `buffer`. Traps si `buffer` está vacío.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 
 buffer.add(1);
@@ -1475,18 +1591,20 @@ buffer.add(3);
 Buffer.first(buffer); // => 1
 ```
 
-Runtime: O(1)
+Tiempo de ejecución: O(1)
 
-Space: O(1)
+Espacio: O(1)
 
 ## Function `last`
-``` motoko no-repl
+
+```motoko no-repl
 func last<X>(buffer : Buffer<X>) : X
 ```
 
-Returns the last element of `buffer`. Traps if `buffer` is empty.
+Devuelve el último elemento de `buffer`. Traps si `buffer` está vacío.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 
 buffer.add(1);
@@ -1496,18 +1614,20 @@ buffer.add(3);
 Buffer.last(buffer); // => 3
 ```
 
-Runtime: O(1)
+Tiempo de ejecución: O(1)
 
-Space: O(1)
+Espacio: O(1)
 
 ## Function `make`
-``` motoko no-repl
+
+```motoko no-repl
 func make<X>(element : X) : Buffer<X>
 ```
 
-Returns a new buffer with capacity and size 1, containing `element`.
+Devuelve un nuevo buffer con capacidad y tamaño 1, que contiene `element`.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 import Nat "mo:base/Nat";
 
@@ -1515,18 +1635,20 @@ let buffer = Buffer.make<Nat>(1);
 Buffer.toText(buffer, Nat.toText); // => [1]
 ```
 
-Runtime: O(1)
+Tiempo de ejecución: O(1)
 
-Space: O(1)
+Espacio: O(1)
 
 ## Function `reverse`
-``` motoko no-repl
+
+```motoko no-repl
 func reverse<X>(buffer : Buffer<X>)
 ```
 
-Reverses the order of elements in `buffer`.
+Invierte el orden de los elementos en `buffer`.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 import Nat "mo:base/Nat";
 
@@ -1538,20 +1660,22 @@ Buffer.reverse(buffer);
 Buffer.toText(buffer, Nat.toText); // => [3, 2, 1]
 ```
 
-Runtime: O(size)
+Tiempo de ejecución: O(size)
 
-Space: O(1)
+Espacio: O(1)
 
 ## Function `merge`
-``` motoko no-repl
+
+```motoko no-repl
 func merge<X>(buffer1 : Buffer<X>, buffer2 : Buffer<X>, compare : (X, X) -> Order) : Buffer<X>
 ```
 
-Merges two sorted buffers into a single sorted buffer, using `compare` to define
-the ordering. The final ordering is stable. Behavior is undefined if either
-`buffer1` or `buffer2` is not sorted.
+Une dos buffers ordenados en un solo buffer ordenado, utilizando `compare` para
+definir el orden. El orden final es estable. El comportamiento no está definido
+si `buffer1` o `buffer2` no están ordenados.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 import Nat "mo:base/Nat";
 
@@ -1569,21 +1693,25 @@ let merged = Buffer.merge<Nat>(buffer1, buffer2, Nat.compare);
 Buffer.toText(merged, Nat.toText); // => [1, 2, 2, 4, 4, 6]
 ```
 
-Runtime: O(size1 + size2)
+Tiempo de ejecución: O(size1 + size2)
 
-Space: O(size1 + size2)
+Espacio: O(size1 + size2)
 
-*Runtime and space assumes that `compare` runs in O(1) time and space.
+\*El tiempo de ejecución y el espacio asumen que `compare` se ejecuta en tiempo
+y espacio O(1).
 
 ## Function `removeDuplicates`
-``` motoko no-repl
+
+```motoko no-repl
 func removeDuplicates<X>(buffer : Buffer<X>, compare : (X, X) -> Order)
 ```
 
-Eliminates all duplicate elements in `buffer` as defined by `compare`.
-Elimination is stable with respect to the original ordering of the elements.
+Elimina todos los elementos duplicados en `buffer` según lo definido por
+`compare`. La eliminación es estable con respecto al orden original de los
+elementos.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 import Nat "mo:base/Nat";
 
@@ -1598,19 +1726,22 @@ Buffer.removeDuplicates<Nat>(buffer, Nat.compare);
 Buffer.toText(buffer, Nat.toText); // => [1, 2, 3]
 ```
 
-Runtime: O(size * log(size))
+Tiempo de ejecución: O(size \* log(size))
 
-Space: O(size)
+Espacio: O(size)
 
 ## Function `partition`
-``` motoko no-repl
+
+```motoko no-repl
 func partition<X>(buffer : Buffer<X>, predicate : X -> Bool) : (Buffer<X>, Buffer<X>)
 ```
 
-Splits `buffer` into a pair of buffers where all elements in the left
-buffer satisfy `predicate` and all elements in the right buffer do not.
+Divide `buffer` en un par de buffers donde todos los elementos en el buffer
+izquierdo satisfacen `predicate` y todos los elementos en el buffer derecho no
+lo hacen.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 import Nat "mo:base/Nat";
 
@@ -1625,23 +1756,26 @@ let partitions = Buffer.partition<Nat>(buffer, func (x) { x % 2 == 0 });
 (Buffer.toArray(partitions.0), Buffer.toArray(partitions.1)) // => ([2, 4, 6], [1, 3, 5])
 ```
 
-Runtime: O(size)
+Tiempo de ejecución: O(size)
 
-Space: O(size)
+Espacio: O(size)
 
-*Runtime and space assumes that `predicate` runs in O(1) time and space.
+\*El tiempo de ejecución y el espacio asumen que `predicate` se ejecuta en
+tiempo y espacio O(1).
 
 ## Function `split`
-``` motoko no-repl
+
+```motoko no-repl
 func split<X>(buffer : Buffer<X>, index : Nat) : (Buffer<X>, Buffer<X>)
 ```
 
-Splits the buffer into two buffers at `index`, where the left buffer contains
-all elements with indices less than `index`, and the right buffer contains all
-elements with indices greater than or equal to `index`. Traps if `index` is out
-of bounds.
+Divide el buffer en dos buffers en `index`, donde el buffer izquierdo contiene
+todos los elementos con índices menores que `index`, y el buffer derecho
+contiene todos los elementos con índices mayores o iguales a `index`. Traps si
+`index` está fuera de los límites.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 import Nat "mo:base/Nat";
 
@@ -1656,22 +1790,25 @@ let split = Buffer.split<Nat>(buffer, 3);
 (Buffer.toArray(split.0), Buffer.toArray(split.1)) // => ([1, 2, 3], [4, 5, 6])
 ```
 
-Runtime: O(size)
+Tiempo de ejecución: O(size)
 
-Space: O(size)
+Espacio: O(size)
 
-*Runtime and space assumes that `compare` runs in O(1) time and space.
+\*El tiempo de ejecución y el espacio asumen que `compare` se ejecuta en tiempo
+y espacio O(1).
 
 ## Function `chunk`
-``` motoko no-repl
+
+```motoko no-repl
 func chunk<X>(buffer : Buffer<X>, size : Nat) : Buffer<Buffer<X>>
 ```
 
-Breaks up `buffer` into buffers of size `size`. The last chunk may
-have less than `size` elements if the number of elements is not divisible
-by the chunk size.
+Divide `buffer` en buffers de tamaño `size`. El último fragmento puede tener
+menos de `size` elementos si el número de elementos no es divisible por el
+tamaño del fragmento.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 import Nat "mo:base/Nat";
 
@@ -1686,18 +1823,20 @@ let chunks = Buffer.chunk<Nat>(buffer, 3);
 Buffer.toText<Buffer.Buffer<Nat>>(chunks, func buf = Buffer.toText(buf, Nat.toText)); // => [[1, 2, 3], [4, 5, 6]]
 ```
 
-Runtime: O(number of elements in buffer)
+Tiempo de ejecución: O(number of elements in buffer)
 
-Space: O(number of elements in buffer)
+Espacio: O(number of elements in buffer)
 
 ## Function `groupBy`
-``` motoko no-repl
+
+```motoko no-repl
 func groupBy<X>(buffer : Buffer<X>, equal : (X, X) -> Bool) : Buffer<Buffer<X>>
 ```
 
-Groups equal and adjacent elements in the list into sub lists.
+Agrupa elementos iguales y adyacentes en la lista en sublistas.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 import Nat "mo:base/Nat";
 
@@ -1712,20 +1851,23 @@ let grouped = Buffer.groupBy<Nat>(buffer, func (x, y) { x == y });
 Buffer.toText<Buffer.Buffer<Nat>>(grouped, func buf = Buffer.toText(buf, Nat.toText)); // => [[1], [2, 2], [4], [5, 5]]
 ```
 
-Runtime: O(size)
+Tiempo de ejecución: O(size)
 
-Space: O(size)
+Espacio: O(size)
 
-*Runtime and space assumes that `equal` runs in O(1) time and space.
+\*El tiempo de ejecución y el espacio asumen que `equal` se ejecuta en tiempo y
+espacio O(1).
 
 ## Function `flatten`
-``` motoko no-repl
+
+```motoko no-repl
 func flatten<X>(buffer : Buffer<Buffer<X>>) : Buffer<X>
 ```
 
-Flattens the buffer of buffers into a single buffer.
+Aplana el buffer de buffers en un solo buffer.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 import Nat "mo:base/Nat";
 
@@ -1747,20 +1889,22 @@ let flat = Buffer.flatten<Nat>(buffer);
 Buffer.toText<Nat>(flat, Nat.toText); // => [1, 2, 3, 4]
 ```
 
-Runtime: O(number of elements in buffer)
+Tiempo de ejecución: O(number of elements in buffer)
 
-Space: O(number of elements in buffer)
+Espacio: O(number of elements in buffer)
 
 ## Function `zip`
-``` motoko no-repl
+
+```motoko no-repl
 func zip<X, Y>(buffer1 : Buffer<X>, buffer2 : Buffer<Y>) : Buffer<(X, Y)>
 ```
 
-Combines the two buffers into a single buffer of pairs, pairing together
-elements with the same index. If one buffer is longer than the other, the
-remaining elements from the longer buffer are not included.
+Combina los dos buffers en un solo buffer de pares, emparejando los elementos
+con el mismo índice. Si un buffer es más largo que el otro, los elementos
+restantes del buffer más largo no se incluyen.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 
 let buffer1 = Buffer.Buffer<Nat>(2);
@@ -1776,21 +1920,22 @@ let zipped = Buffer.zip(buffer1, buffer2);
 Buffer.toArray(zipped); // => [(1, 4), (2, 5)]
 ```
 
-Runtime: O(min(size1, size2))
+Tiempo de ejecución: O(min(size1, size2))
 
-Space: O(min(size1, size2))
+Espacio: O(min(size1, size2))
 
 ## Function `zipWith`
-``` motoko no-repl
+
+```motoko no-repl
 func zipWith<X, Y, Z>(buffer1 : Buffer<X>, buffer2 : Buffer<Y>, zip : (X, Y) -> Z) : Buffer<Z>
 ```
 
-Combines the two buffers into a single buffer, pairing together
-elements with the same index and combining them using `zip`. If
-one buffer is longer than the other, the remaining elements from
-the longer buffer are not included.
+Combina los dos buffers en un solo buffer, emparejando los elementos con el
+mismo índice y combinándolos utilizando `zip`. Si un buffer es más largo que el
+otro, los elementos restantes del buffer más largo no se incluyen.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 
 let buffer1 = Buffer.Buffer<Nat>(2);
@@ -1807,21 +1952,24 @@ let zipped = Buffer.zipWith<Nat, Nat, Nat>(buffer1, buffer2, func (x, y) { x + y
 Buffer.toArray(zipped) // => [5, 7, 9]
 ```
 
-Runtime: O(min(size1, size2))
+Tiempo de ejecución: O(min(size1, size2))
 
-Space: O(min(size1, size2))
+Espacio: O(min(size1, size2))
 
-*Runtime and space assumes that `zip` runs in O(1) time and space.
+\*El tiempo de ejecución y el espacio asumen que `zip` se ejecuta en tiempo y
+espacio O(1).
 
 ## Function `takeWhile`
-``` motoko no-repl
+
+```motoko no-repl
 func takeWhile<X>(buffer : Buffer<X>, predicate : X -> Bool) : Buffer<X>
 ```
 
-Creates a new buffer taking elements in order from `buffer` until predicate
-returns false.
+Crea un nuevo buffer tomando elementos en orden de `buffer` hasta que
+`predicate` devuelva false.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 import Nat "mo:base/Nat";
 
@@ -1833,21 +1981,24 @@ let newBuf = Buffer.takeWhile<Nat>(buffer, func (x) { x < 3 });
 Buffer.toText(newBuf, Nat.toText); // => [1, 2]
 ```
 
-Runtime: O(size)
+Tiempo de ejecución: O(size)
 
-Space: O(size)
+Espacio: O(size)
 
-*Runtime and space assumes that `predicate` runs in O(1) time and space.
+\*El tiempo de ejecución y el espacio asumen que `predicate` se ejecuta en
+tiempo y espacio O(1).
 
 ## Function `dropWhile`
-``` motoko no-repl
+
+```motoko no-repl
 func dropWhile<X>(buffer : Buffer<X>, predicate : X -> Bool) : Buffer<X>
 ```
 
-Creates a new buffer excluding elements in order from `buffer` until predicate
-returns false.
+Crea un nuevo buffer excluyendo elementos en orden de `buffer` hasta que el
+predicado devuelva falso.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 import Nat "mo:base/Nat";
 
@@ -1859,8 +2010,9 @@ let newBuf = Buffer.dropWhile<Nat>(buffer, func x { x < 3 }); // => [3]
 Buffer.toText(newBuf, Nat.toText);
 ```
 
-Runtime: O(size)
+Tiempo de ejecución: O(size)
 
-Space: O(size)
+Espacio: O(size)
 
-*Runtime and space assumes that `predicate` runs in O(1) time and space.
+\*El tiempo de ejecución y el espacio asumen que `predicate` se ejecuta en
+tiempo y espacio O(1).

@@ -1,70 +1,78 @@
 # Stack
-Class `Stack<X>` provides a Minimal LIFO stack of elements of type `X`.
 
-See library `Deque` for mixed LIFO/FIFO behavior.
+La clase `Stack<X>` proporciona un stack (pila) LIFO mínima de elementos de tipo
+`X`.
 
-Example:
+Consulte la biblioteca `Deque` para obtener un comportamiento mixto LIFO/FIFO.
+
+Ejemplo:
+
 ```motoko name=initialize
 import Stack "mo:base/Stack";
 
-let stack = Stack.Stack<Nat>(); // create a stack
+let stack = Stack.Stack<Nat>(); // crea un stack
 ```
-Runtime: O(1)
 
-Space: O(1)
+Tiempo de ejecución: O(1)
 
-## Class `Stack<T>`
+Espacio: O(1)
 
-``` motoko no-repl
+## Clase `Stack<T>`
+
+```motoko no-repl
 class Stack<T>()
 ```
 
+### Función `push`
 
-### Function `push`
-``` motoko no-repl
+```motoko no-repl
 func push(x : T)
 ```
 
-Push an element on the top of the stack.
+Añade un elemento en la parte superior de el stack.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 stack.push(1);
 stack.push(2);
 stack.push(3);
-stack.peek(); // examine the top most element
+stack.peek(); // examina el elemento más superior
 ```
 
-Runtime: O(1)
+Tiempo de ejecución: O(1)
 
-Space: O(1)
+Espacio: O(1)
 
+### Función `isEmpty`
 
-### Function `isEmpty`
-``` motoko no-repl
+```motoko no-repl
 func isEmpty() : Bool
 ```
 
-True when the stack is empty and false otherwise.
+Devuelve verdadero cuando el stack está vacío y falso en caso contrario.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 stack.isEmpty();
 ```
 
-Runtime: O(1)
+Tiempo de ejecución: O(1)
 
-Space: O(1)
+Espacio: O(1)
 
+### Función `peek`
 
-### Function `peek`
-``` motoko no-repl
+```motoko no-repl
 func peek() : ?T
 ```
 
-Return (without removing) the top element, or return null if the stack is empty.
+Devuelve (sin eliminar) el elemento superior, o devuelve null si el stack está
+vacío.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 stack.push(1);
 stack.push(2);
@@ -72,25 +80,26 @@ stack.push(3);
 stack.peek();
 ```
 
-Runtime: O(1)
+Tiempo de ejecución: O(1)
 
-Space: O(1)
+Espacio: O(1)
 
+### Función `pop`
 
-### Function `pop`
-``` motoko no-repl
+```motoko no-repl
 func pop() : ?T
 ```
 
-Remove and return the top element, or return null if the stack is empty.
+Elimina y devuelve el elemento superior, o devuelve null si el stack está vacío.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 stack.push(1);
 ignore stack.pop();
 stack.isEmpty();
 ```
 
-Runtime: O(1)
+Tiempo de ejecución: O(1)
 
-Space: O(1)
+Espacio: O(1)

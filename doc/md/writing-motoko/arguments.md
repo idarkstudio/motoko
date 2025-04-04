@@ -2,15 +2,21 @@
 sidebar_position: 4
 ---
 
-# Arguments
+# Argumentos
 
+Los argumentos se pueden pasar a una función de un actor para que la función los
+use como entrada. Los argumentos pueden ser
+[valores primitivos](../getting-started/basic-concepts#valores-primitivos), como
+[`Int`](../base/Int.md), [`Nat`](../base/Nat.md), [`Bool`](../base/Bool.md) o
+[`Text`](../base/Text.md), o pueden ser valores no primitivos como tuplas,
+arreglos u objetos. Para mostrar un ejemplo básico de cómo un actor puede
+aceptar un argumento, esta página utilizará un actor de Motoko de ejemplo que
+acepta múltiples argumentos de texto.
 
+## Argumento de texto único
 
-Arguments can be passed to an actor's function for the function to use as input. Arguments can be [primitive values](../getting-started/basic-concepts#primitive-values), such as [`Int`](../base/Int.md), [`Nat`](../base/Nat.md), [`Bool`](../base/Bool.md), or [`Text`](../base/Text.md), or they can be non-primitive values such as tuples, arrays, or objects. To showcase a basic example of how an actor can accept an argument, this page will use an example Motoko actor that accepts multiple text arguments.
-
-## Single text argument
-
-First, define an argument that has a `location` function and the `name` argument with a `city` argument:
+Primero, define un argumento que tenga una función `location` y el argumento
+`name` con un argumento `city`:
 
 ```motoko
 persistent actor {
@@ -20,17 +26,22 @@ persistent actor {
 };
 ```
 
-Once your canister is [deployed](https://internetcomputer.org/docs/current/developer-docs/getting-started/deploy-and-manage), you can call the `location` method in the program and pass your `city` argument of type [`Text`](../base/Text.md) by running the following command:
+Una vez que tu canister esté
+[deployado](https://internetcomputer.org/docs/current/developer-docs/getting-started/deploy-and-manage),
+puedes llamar al método `location` en el programa y pasar tu argumento `city` de
+tipo [`Text`](../base/Text.md) ejecutando el siguiente comando:
 
 ```
 dfx canister call location_hello_backend location "San Francisco"
 ```
 
-## Passing multiple arguments
+## Pasando múltiples argumentos
 
-You might want to try modifying the source code to return different results. For example, you might want to modify the `location` function to return multiple city names.
+Es posible que desees intentar modificar el código fuente para devolver
+resultados diferentes. Por ejemplo, es posible que desees modificar la función
+`location` para devolver varios nombres de ciudades.
 
-Revise the `location` function with two new functions:
+Modifica la función `location` con dos nuevas funciones:
 
 ```motoko
 persistent actor {
@@ -50,16 +61,34 @@ persistent actor {
 
 ```
 
-You might notice that [`Text`](../base/Text.md) in this code example is enclosed by square (`[ ]`) brackets. By itself, [`Text`](../base/Text.md) represents a (UTF-8 encoded) sequence of Unicode characters. Placing square brackets around a type describes an **array** of that type. In this context, therefore, `[Text]` indicates an array of text values, enabling the program to accept multiple text values as an array.
+Puede que notes que [`Text`](../base/Text.md) en este ejemplo de código está
+encerrado entre corchetes cuadrados (`[ ]`). Por sí mismo,
+[`Text`](../base/Text.md) representa una secuencia (codificada en UTF-8) de
+caracteres Unicode. Al colocar corchetes cuadrados alrededor de un tipo, se
+describe un **arreglo (array)** de ese tipo. En este contexto, por lo tanto,
+`[Text]` indica un arreglo de valores de texto, lo que permite que el programa
+acepte múltiples valores de texto como un arreglo.
 
-For information about the functions that perform operations on arrays, see the description of the [Array module](../base/Array.md) in the Motoko base library or the **Motoko programming language reference**. For another example focused on the use of arrays, see the [quick sort](https://github.com/dfinity/examples/tree/master/motoko/quicksort) project in the [examples](https://github.com/dfinity/examples/) repository.
+Para obtener información sobre las funciones que realizan operaciones en
+arreglos, consulta la descripción del [módulo Array](../base/Array.md) en la
+biblioteca base de Motoko o la **referencia del lenguaje de programación
+Motoko**. Para otro ejemplo centrado en el uso de arreglos, consulta el proyecto
+de
+[ordenación rápida (quick sort)](https://github.com/dfinity/examples/tree/master/motoko/quicksort)
+en el repositorio de [ejemplos](https://github.com/dfinity/examples/).
 
-Call the `location` method in the program and pass your `city` argument using the Candid interface description syntax by running the following command:
+Llama al método `location` en el programa y pasa tu argumento `city` utilizando
+la sintaxis de descripción de la interfaz Candid ejecutando el siguiente
+comando:
 
 ```
 dfx canister call favorite_cities location '(vec {"San Francisco";"Paris";"Rome"})'
 ```
 
-The command uses the Candid interface description syntax `(vec { val1; val2; val3; })` to return a vector of values. For more information about the Candid interface description language, see the [Candid](https://internetcomputer.org/docs/current/developer-docs/smart-contracts/candid/candid-concepts) language guide.
+El comando utiliza la sintaxis de descripción de la interfaz Candid
+`(vec { val1; val2; val3; })` para devolver un vector de valores. Para obtener
+más información sobre el lenguaje de descripción de la interfaz Candid, consulta
+la guía del lenguaje
+[Candid](https://internetcomputer.org/docs/current/developer-docs/smart-contracts/candid/candid-concepts).
 
 <img src="https://github.com/user-attachments/assets/844ca364-4d71-42b3-aaec-4a6c3509ee2e" alt="Logo" width="150" height="150" />

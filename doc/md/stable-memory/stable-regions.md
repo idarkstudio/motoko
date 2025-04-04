@@ -2,35 +2,66 @@
 sidebar_position: 1
 ---
 
-# Stable regions
+# Regiones estables (Stable regions)
 
+La biblioteca `Region` proporciona acceso de bajo nivel a la función de memoria
+estable de ICP.
 
+Las regiones estables se introdujeron originalmente con la
+[persistencia ortogonal clásica](../canister-maintenance/orthogonal-persistence/classical.md)
+para permitir que datos a mayor escala se retuvieran a través de
+actualizaciones. Para este propósito, los programadores podían almacenar
+explícitamente datos persistentes en la memoria estable, con regiones que
+ayudaban a aislar diferentes instancias que usaban la memoria estable.
 
-The `Region` library provides low-level access to ICP stable memory feature.
+Esto ha sido reemplazado por la
+[persistencia ortogonal mejorada](../canister-maintenance/orthogonal-persistence/enhanced.md).
+Sin embargo, las regiones aún se ofrecen por compatibilidad hacia atrás y para
+casos de uso específicos donde los desarrolladores prefieren gestionar los datos
+explícitamente en una memoria lineal persistente.
 
-Stable regions were originally introduced with [classical orthogonal persistence](../canister-maintenance/orthogonal-persistence/classical.md) to allow larger scaled data to be retained across upgrades. For this purpose, programmers could explicitly store persistent data in stable memory, with regions helping to isolate different instances using stable memory.
+## La biblioteca `Region`
 
-This is superseded by [enhanced orthogonal persistence](../canister-maintenance/orthogonal-persistence/enhanced.md). Nevertheless, regions are still offered for backwards-compatibility and for specific use cases where developers prefer to manage data explicitly in a persistent linear memory.
+La biblioteca [`Region`](../base/Region.md) en el paquete `base` permite al
+programador asignar incrementalmente páginas de memoria estable de 64 bits y
+usar esas páginas para leer y escribir datos de manera incremental en un formato
+binario definido por el usuario.
 
-## The `Region` library
+Se pueden asignar varias páginas a la vez, y cada página contiene 64 KiB. La
+asignación puede fallar debido a los límites de recursos impuestos por ICP. Las
+páginas se inicializan con ceros.
 
-The [`Region`](../base/Region.md) library in package `base` allows the programmer to incrementally allocate pages of 64-bit stable memory and use those pages to incrementally read and write data in a user-defined binary format.
+Aunque el usuario asigna a nivel de páginas de 64 KiB, la implementación
+asignará a un nivel más grueso de un bloque, actualmente 128 páginas físicas de
+memoria estable.
 
-Several pages may be allocated at once, with each page containing 64KiB. Allocation may fail due to resource limits imposed by ICP. Pages are zero-initialized.
+El sistema de tiempo de ejecución de Motoko garantiza que no haya interferencia
+entre la abstracción presentada por la biblioteca `Region` y las variables
+estables de un actor, aunque ambas abstracciones finalmente usan las mismas
+instalidades subyacentes de memoria estable disponibles para todos los canisters
+de ICP. Este soporte del sistema de tiempo de ejecución significa que es seguro
+para un programa de Motoko explotar tanto las variables estables como `Region`,
+dentro de la misma aplicación.
 
-While the user allocates at the granularity of 64KiB pages, the implementation will allocate at the coarser granularity of a block, currently 128 of physical stable memory pages.
+Además, las `Region`s distintas usan páginas distintas de memoria estable,
+asegurando que dos `Region`s distintas no puedan interferir con las
+representaciones de datos de la otra durante la operación normal o durante una
+actualización.
 
-The Motoko runtime system ensures there is no interference between the abstraction presented by the `Region` library and an actor’s stable variables, even though the two abstractions ultimately use the same underlying stable memory facilities available to all ICP canisters. This runtime support means that is safe for a Motoko program to exploit both stable variables and `Region`, within the same application.
+## Uso de `Regions`
 
-Further, distinct `Region`s use distinct pages of stable memory, ensuring that two distinct `Region`s can not interfere with each other's data representations during normal operation, or during an upgrade.
+La interfaz de la biblioteca `Region` consta de funciones para consultar y
+aumentar el conjunto actual de páginas de memoria estable asignadas, además de
+pares coincidentes de operaciones `load` y `store` para la mayoría de los tipos
+escalares de tamaño fijo de Motoko.
 
-## Using `Regions`
+También están disponibles operaciones más generales como `loadBlob` y
+`storeBlob` para leer y escribir blobs binarios y otros tipos que pueden
+codificarse como [`Blob`](../base/Blob.md)s de tamaños arbitrarios, utilizando
+codificadores y decodificadores proporcionados por Motoko o definidos por el
+usuario.
 
-The interface to the `Region` library consists of functions for querying and growing the currently allocated set of stable memory pages, plus matching pairs of `load`, `store` operations for most of Motoko’s fixed-size scalar types.
-
-More general `loadBlob` and `storeBlob` operations are also available for reading and writing binary blobs and other types that can be encoded as [`Blob`](../base/Blob.md)s of arbitrary sizes, using Motoko supplied or user-provided encoders and decoders.
-
-``` motoko no-repl
+```motoko no-repl
 module {
 
   // A stateful handle to an isolated region of IC stable memory.
@@ -75,37 +106,56 @@ module {
 }
 ```
 
-:::danger
-A stable region exposes low-level linear memory and it is the programmer's task to properly manipulate and interpret this data.
-This can be very error-prone when managing data in a stable region.
-However, the safety of Motoko's native values heap objects is always guaranteed, independent of the stable region content.
-:::
+:::danger Una región estable expone una memoria lineal de bajo nivel y es tarea
+del programador manipular e interpretar correctamente estos datos. Esto puede
+ser propenso a errores al administrar datos en una región estable. Sin embargo,
+la seguridad de los objetos de heap de valores nativos de Motoko siempre está
+garantizada, independientemente del contenido de la región estable. :::
 
-:::note
-The cost of accessing stable regions is significantly higher than using Motoko's native memory, i.e. regular Motoko values and objects.
-:::
+:::note El costo de acceder a las regiones estables es significativamente mayor
+que el uso de la memoria nativa de Motoko, es decir, los valores y objetos
+regulares de Motoko. :::
 
-## Example
+## Ejemplo
 
-To demonstrate the `Region` library, the following is a simple implementation of a logging actor that records text messages in a scalable, persistent log.
+Para demostrar la biblioteca `Region`, a continuación se muestra una
+implementación simple de un actor de registro que registra mensajes de texto en
+un registro escalable y persistente.
 
-The example illustrates the simultaneous use of stable variables and stable memory. It uses a single stable variable, `state`, to keep track of the two regions and their size in bytes, but stores the contents of the log directly in stable memory.
+El ejemplo ilustra el uso simultáneo de variables estables y memoria estable.
+Utiliza una única variable estable, `state`, para realizar un seguimiento de las
+dos regiones y su tamaño en bytes, pero almacena el contenido del registro
+directamente en la memoria estable.
 
-``` motoko no-repl file=../examples/StableMultiLog.mo
+```motoko no-repl file=../examples/StableMultiLog.mo
+
 ```
 
-The shared `add(blob)` function allocates enough stable memory to store the given blob and writes the blob contents, its size, and its position into the pre-allocated regions.  One region is dedicated to storing the blobs of varying sizes, and the other is dedicated to storing their fixed-sized metadata.
+La función compartida `add(blob)` asigna suficiente memoria estable para
+almacenar el blob dado y escribe el contenido del blob, su tamaño y su posición
+en las regiones pre-asignadas. Una región está dedicada a almacenar los blobs de
+tamaños variables, y la otra está dedicada a almacenar sus metadatos de tamaño
+fijo.
 
-The shared `get(index)` query reads anywhere from the log without traversing any unrelated memory.
+La consulta compartida `get(index)` lee en cualquier parte del registro sin
+recorrer memoria no relacionada.
 
-`StableLog` allocates and maintains its potentially large log data directly in stable memory and uses a small and fixed amount of storage for actual stable variables. Upgrading `StableLog` to a new implementation should not consume many cycles, regardless of the current size of the log.
+`StableLog` asigna y mantiene sus datos de registro potencialmente grandes
+directamente en memoria estable y utiliza una cantidad pequeña y fija de
+almacenamiento para las variables estables reales. Actualizar `StableLog` a una
+nueva implementación no debería consumir muchos ciclos, independientemente del
+tamaño actual del registro.
 
-## Mops packages for stable regions
+## Paquetes de Mops para regiones estables
 
-- [`memory-region`](https://mops.one/memory-region): A library for abstraction over the `Region` type that supports reusing deallocated memory.
+- [`memory-region`](https://mops.one/memory-region): Una biblioteca para la
+  abstracción sobre el tipo `Region` que admite la reutilización de memoria
+  desasignada.
 
-- [`stable-enum`](https://mops.one/stable-enum): Enumerations implemented in stable regions.
+- [`stable-enum`](https://mops.one/stable-enum): Enumeraciones implementadas en
+  regiones estables.
 
-- [`stable-buffer`](https://mops.one/stable-buffer): Buffers implemented in stable regions.
+- [`stable-buffer`](https://mops.one/stable-buffer): Búferes implementados en
+  regiones estables.
 
 <img src="https://github.com/user-attachments/assets/844ca364-4d71-42b3-aaec-4a6c3509ee2e" alt="Logo" width="150" height="150" />

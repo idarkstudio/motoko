@@ -2,896 +2,1040 @@
 sidebar_position: 3
 ---
 
-# Motoko style guidelines
+# Guías de estilo de Motoko
 
+Para aumentar la legibilidad y uniformidad del código fuente de Motoko, la guía
+de estilo proporciona sugerencias para formatear el código fuente de Motoko y
+otras convenciones básicas.
 
+## Diseño
 
-To increase readability and uniformity of Motoko source code, the style guide provides suggestions for formatting Motoko sources and other basic conventions.
+### Espaciado
 
-## Layout
+- Coloque espacios alrededor de los operadores aritméticos, excepto para agrupar
+  visualmente subexpresiones de operadores con mayor prioridad.
 
-### Spacing
+  ```motoko no-repl
+  let z = - 2*x + 3*y + 4*(x*x + y*y);
+  ```
 
--   Put spaces around arithmetic operators, except to visually group sub-expressions of more tightly binding operators.
+- Coloque espacios alrededor de los operadores de comparación, operadores
+  booleanos y operadores de asignación.
 
-    ``` motoko no-repl
-    let z = - 2*x + 3*y + 4*(x*x + y*y);
-    ```
+  ```motoko no-repl
+  4 + 5 <= 5 + 4;
+  not (a or b and not c);
+  v := 0;
+  v += 1;
+  ```
 
--   Put spaces around comparison operators, Boolean operators, and assignment operators.
+- Coloque espacios alrededor de '='.
 
-    ``` motoko no-repl
-    4 + 5 <= 5 + 4;
-    not (a or b and not c);
-    v := 0;
-    v += 1;
-    ```
+  ```motoko no-repl
+  var v = 0;
+  let r = { a = 1; b = 2 };
+  ```
 
--   Put spaces around '='.
+- Analogamente, coloque espacios alrededor de `:`.
 
-    ``` motoko no-repl
-    var v = 0;
-    let r = { a = 1; b = 2 };
-    ```
+  ```motoko no-repl
+  var v : Nat = 0;
+  func foo(x : Nat, y : Nat) : Nat { x + y }
+  func bar((x, y) : (Nat, Nat)) : Nat { x + y }
+  let w = 1 ^ 0xff : Nat16;
+  ```
 
--   Analogously, put spaces around `:`.
+  La razón: ':' es para declaraciones lo que '=' es para definiciones. Además,
+  el lado izquierdo de una anotación de tipo puede ser generalmente una
+  expresión o patrón complejo arbitrario.
 
-    ``` motoko no-repl
-    var v : Nat = 0;
-    func foo(x : Nat, y : Nat) : Nat { x + y }
-    func bar((x, y) : (Nat, Nat)) : Nat { x + y }
-    let w = 1 ^ 0xff : Nat16;
-    ```
+- Coloque un espacio después de una coma o punto y coma, pero no antes.
 
-    Rationale: ':' is to declarations what '=' is to definitions. Moreover, the left-hand of a type annotation may generally be an arbitrary complex expression or pattern.
+  ```motoko no-repl
+  let tuple = (1, 2, 3);
+  let record = { a = 1; b = 2; c = 3 };
+  ```
 
--   Put a space after a comma or semicolon, but not before.
+- Coloque espacios dentro de las llaves, a menos que sean una variante o un
+  registro simple.
 
-    ``` motoko no-repl
-    let tuple = (1, 2, 3);
-    let record = { a = 1; b = 2; c = 3 };
-    ```
+  ```motoko no-repl
+  func f() { 0 };
+  f({ a = 1; b = 2; c = 3 });
+  f({a = 1; b = 2});  // okay as well
 
--   Put spaces inside braces, unless they are a simple variant or record.
+  type Vec3D = { x : Float; y : Float; y : Float };
+  type Order = { #less; #equal; #more };
 
-    ``` motoko no-repl
-    func f() { 0 };
-    f({ a = 1; b = 2; c = 3 });
-    f({a = 1; b = 2});  // okay as well
+  type Order = {#less; #equal; #more};  // okay as well
+  type Proc = {h : Nat; w : Nat} -> {#ok; #fail};
+  ```
 
-    type Vec3D = { x : Float; y : Float; y : Float };
-    type Order = { #less; #equal; #more };
+- Coloque espacios dentro de los corchetes si se extienden en varias líneas.
 
-    type Order = {#less; #equal; #more};  // okay as well
-    type Proc = {h : Nat; w : Nat} -> {#ok; #fail};
-    ```
+  ```motoko no-repl
+  foo(
+    firstArgument,
+    ( longTupleComponent, anotherLongExpression,
+      moreLongExpression
+    ),
+    [ 1, 2, 3,
+      4, 5, 6,
+    ],
+    { field1 = 4; field2 = 5;
+      field3 = 6;
+    }
+  );
+  ```
 
--   Put spaces inside brackets if they stretch multiple lines.
+- Coloca un espacio entre las palabras clave de las declaraciones y sus
+  operadores.
 
-    ``` motoko no-repl
-    foo(
-      firstArgument,
-      ( longTupleComponent, anotherLongExpression,
-        moreLongExpression
-      ),
-      [ 1, 2, 3,
-        4, 5, 6,
-      ],
-      { field1 = 4; field2 = 5;
-        field3 = 6;
-      }
-    );
-    ```
+  ```motoko no-repl
+  if (f()) A else B;
+  for (x in xs.values()) { ... };
+  switch (compare(x, y)) {
+    case (#less) { A };
+    case (_) { B };
+  }
 
--   Put a space between statement keywords and their operands.
+  assert (x < 100);
+  await (async (0));
+  ```
 
-    ``` motoko no-repl
-    if (f()) A else B;
-    for (x in xs.values()) { ... };
-    switch (compare(x, y)) {
-      case (#less) { A };
-      case (_) { B };
+- No coloque un espacio entre una etiqueta de función o variante y su tupla de
+  argumentos o alrededor de una lista de parámetros de tipo genérico.
+
+  ```motoko no-repl
+  type Pair<X> = (X, X);
+  type Id = <X>(X) -> X;
+
+  let ok = #ok(5);
+
+  func id<X>(x : X) : X { x };
+  id<Nat>(5);
+  ```
+
+- Coloque un espacio entre una función y su argumento si no es una tupla o una
+  expresión entre paréntesis (ver [paréntesis](#paréntesis)) o un registro
+  utilizado como lista de parámetros con nombre (ver
+  [selección de tipos](#selección-de-tipos)).
+
+  ```motoko no-repl
+  sin 0.0;
+  g [1, 2, 3];
+  f{arg1 = 0; arg2 = 0};
+  ```
+
+Razón: `g[1]` en particular se interpretará incorrectamente como una operación
+de indexación.
+
+- No coloque un espacio alrededor de los operadores de acceso como `.`, `?`, `!`
+  o corchetes de índice.
+
+  ```motoko no-repl
+  foo(bar).baz[5]().boo;
+  foom(?(bam()! + 1));
+  ```
+
+  ### Saltos de línea
+
+  - Elija un margen derecho fijo para las líneas y rompa las definiciones o
+    expresiones. 80 todavía se considera un límite adecuado por muchos.
+
+  ```motoko no-repl
+  let sum = a + b + 2*c + d +
+    e + f + g + h + i + k +
+    l + m + n + o + p;
+
+  // Or:
+  let sum =
+    a + b + 2*c + d + e +
+    f + g + h + i + k + l +
+    m + n + o + p;
+  ```
+
+  Razón: Entre otras razones, este estilo de formato:
+
+  1.  Evita que el código se oculte a la derecha en una ventana.
+
+  2.  Evita saltos de línea aleatorios en diferencias lado a lado. Por ejemplo,
+      como se muestra en GitHub u otras herramientas de revisión de código
+      similares.
+
+  3.  Permite una visualización más agradable en papel, sitios web u otros
+      medios.
+
+- Rompe las líneas después de un operador.
+
+  ```motoko no-repl
+  a + b + c +
+    d + f;
+
+  foo(bar, baz).
+    boo();
+  ```
+
+- Al dividir las definiciones o llamadas de funciones con listas de argumentos
+  largas, coloca cada argumento en una línea separada.
+
+  Además, considera usar registros para listas de parámetros largas, consulta
+  [picking types](#picking-types).
+
+  ```motoko no-repl
+  func someFunction(
+    arg1 : FirstType,
+    arg2 : SecondType,
+    anotherArg : Nat,
+    yetAnother : [Type],
+    func : Nat -> Nat,
+  ) : Nat {
+    ...
+  };
+
+  someFunction(
+    veryLongArgumentExpression,
+    anotherVeryLongArgumentExpression,
+    3,
+    aNestedFunctionCall(
+      alsoWithLongArguments,
+      andMoreSuchArguments,
+    ),
+    moreLongishArgument,
+  );
+  ```
+
+  Razón: Esto evita pasar por alto un argumento al leer el código y evita volver
+  a romper líneas al cambiar una de las expresiones.
+
+### Sangría
+
+- Cada nivel de sangría debe ser de 2 espacios.
+
+  ```motoko no-repl
+  actor A {
+    public func f() {
+      return;
+    }
+  }
+  ```
+
+  Razón: There may be a lot of nesting. Using only 2 spaces avoids wasting
+  screen estate.
+
+- Indentation should not depend on the lexical contents of previous lines.
+
+  In particular, do not vertically align indentation with inner characters from
+  previous lines.
+
+  ```motoko no-repl
+  let x = someFunction(
+    arg1, arg2, arg3, arg4, arg5);               // Do this.
+
+  let x = someFunction(arg1, arg2, arg3,
+    arg4, arg5);                                 // Or this.
+
+  let x =
+    someFunction(arg1, arg2, arg3, arg4, arg5);  // Or this.
+
+  let x = someFunction(                          // Or this.
+    longArg1,
+    longArg2,
+    longArg3,
+    longArg4,
+    longArg5,
+  );
+
+  // COUNTER EXAMPLE!
+  let x = someFunction(arg1, arg2, arg3,
+                       arg4, arg5);              // DO NOT DO THIS!
+  ```
+
+  Razón: Hay muchos problemas con la alineación vertical, por ejemplo:
+
+  1.  Se desperdicia mucho espacio horizontal.
+
+  2.  Crea niveles de sangría inconsistentes que obstruyen la estructura del
+      código.
+
+  3.  Puede generar cambios de alineación al modificar una línea, lo cual,
+      incluso cuando se automatiza con editores, infla y obstruye las
+      diferencias.
+
+  4.  Rompe por completo con las fuentes de ancho variable.
+
+  Regla general: no debe haber sangría que no sea múltiplo de 2.
+
+- No uses tabulaciones.
+
+  Razón: La interpretación de las tabulaciones varía ampliamente entre
+  herramientas y se pierden o se muestran incorrectamente en muchos contextos,
+  como páginas web, diferencias, etc.
+
+### Agrupación
+
+- Separa las definiciones complejas de varias líneas con líneas vacías. Las de
+  una sola línea pueden colocarse en líneas consecutivas.
+
+  ```motoko no-repl
+  func foo() {
+    // This function does a lot of interesting stuff.
+    // It's definition takes multiple lines.
+  }
+
+  func boo() {
+    // This is another complicated function.
+    // It's definition also takes multiple lines.
+  }
+
+  func add(x : Nat, y : Nat) { return x + y };
+  func mul(x : Nat, y : Nat) { return x * y };
+  ```
+
+- Separa grupos lógicos de definiciones con dos líneas vacías. Agrega un
+  comentario de una línea como un "encabezado de sección" para cada grupo.
+
+  ```motoko no-repl
+  // A very large class
+  class MuffleMiff(n : Nat) {
+
+    // Accessors
+
+    public func miffMuff() : Text {
+      ...
     }
 
-    assert (x < 100);
-    await (async (0));
-    ```
+    public func sniffMiff() : Nat {
+      ...
+    }
 
--   Do not put a space between a function or variant tag and its argument tuple or around a generic type parameter list.
+    // Mutators
 
-    ``` motoko no-repl
+    public func clearMurk() {
+      ...
+    }
+
+    public func addMuff(name : Text) {
+      ...
+    }
+
+    // Processing
+
+    public func murkMuffle(param : List<Gnobble>) {
+      ...
+    }
+
+    public func transformSneezler() {
+      ...
+    }
+
+    // Internal State
+
+    var miffCount = 0;
+    var mabbleMap = Map<Nat, Text>();
+
+  }
+  ```
+
+  ### Comentarios
+
+  - Utiliza comentarios de línea (`//...`). Utiliza comentarios de bloque
+    (`/* ... */`) solo cuando estés comentando en medio de una línea o para
+    comentar partes de código durante el desarrollo.
+
+  ```motoko no-repl
+  // The following function runs the current
+  // pallaboom on a given snibble. It returns
+  // suitable plexus if it can.
+  func paBoom(s : Snibble) : Handle<Plexus> {
+    let puglet = initPugs(s.crick, 0 /* size */, #local);
+  /* Don't do the odd stuff yet...
+    ...
+    ...
+  */
+    return polyfillNexus(puglet);  // for now
+  }
+  ```
+
+  Razón: Los comentarios de línea facilitan la inserción, eliminación o
+  intercambio de líneas individuales.
+
+- Coloque comentarios cortos que expliquen una sola línea al final de la línea,
+  separados por al menos 2 espacios.
+
+  ```motoko no-repl
+  paBoom(getSnibble());  // create new snibble
+  ```
+
+- Coloca los comentarios de varias líneas antes de una línea de código, con la
+  misma sangría que el código que describe.
+
+  ```motoko no-repl
+  func f() {
+    // Try to invoke the current pallaboom with
+    // the previous snibble. If that succeeds,
+    // we have the new plexus; if not, complain.
+    let plexusHandle = paBoom(getSnibble());
+  }
+  ```
+
+- Capitaliza los comentarios que están en líneas separadas. Utiliza un punto
+  final adecuado para las oraciones.
+
+## Puntuación
+
+### Punto y coma
+
+- Motoko uniformemente requiere un punto y coma para separar expresiones o
+  declaraciones locales en un bloque, independientemente de si la declaración
+  anterior termina en '}'.
+
+  Razón: Esto es diferente a otros lenguajes de estilo C, que tienden a tener
+  reglas bastante ad hoc.
+
+- Coloca un punto y coma después de la última expresión en un bloque, a menos
+  que todo el bloque esté escrito en una sola línea.
+
+  Lo mismo aplica para los tipos.
+
+  ```motoko no-repl
+  // No ; needed before closing } on same line
+
+  type Vec3D = {x : Float; y : Float; z : Float};
+  type Result<A> = {#ok : A; #error : Text};
+
+  func add(x : Nat, y : Nat) : Nat { return x + y };
+
+  // End last case with ;
+
+  type Address = {
+    first : Text;
+    last : Text;
+    street : Text;
+    nr : Nat;
+    zip : Nat;
+    city : Text;
+  };
+
+  type Expr = {
+    #const : Float;
+    #add : (Expr, Expr);
+    #mul : (Expr, Expr);
+  };
+
+  func eval(e : Expr) : Float {
+    switch (e) {
+      case (#const(x)) { x };
+      case (#add(e1, e2)) { eval(e1) + eval(e2) };
+      case (#mul(e1, e2)) { eval(e1) * eval(e2) };
+    };
+  }
+  ```
+
+  Razón: Terminar consistentemente las líneas con punto y coma simplifica
+  agregar, eliminar o intercambiar líneas.
+
+### Llaves
+
+- Coloca llaves alrededor de los cuerpos de las funciones, ramas `if` o `case`,
+  y cuerpos de bucles, a menos que aparezcan anidadas como una expresión y solo
+  contengan una única expresión.
+
+  ```motoko no-repl
+  func f(x) { f1(x); f2(x) };
+
+  let abs = if (v >= 0) v else -v;
+  let val = switch (f()) { case (#ok(x)) x; case (_) 0 };
+  func succ(x : Nat) : Nat = x + 1;
+  ```
+
+- Usa un diseño "estilo C" para subexpresiones entre llaves que abarcan varias
+  líneas.
+
+  ```motoko no-repl
+  func f() {
+    return;
+  };
+
+  if (cond) {
+    foo();
+  } else {
+    bar();
+  };
+
+  switch (opt) {
+    case (?x) {
+      f(x);
+    };
+    case (null) {};
+  };
+  ```
+
+  ### Paréntesis
+
+  - Motoko admite el estilo "sin paréntesis", lo que significa que los
+    paréntesis son opcionales en la mayoría de los lugares, como en las listas
+    de parámetros de funciones o en los operandos de las declaraciones, cuando
+    encierran una expresión que ya está entre corchetes. Por ejemplo, una tupla,
+    un objeto o un arreglo, o una constante o identificador simple.
+
+  ```motoko no-repl
+  type Op = Nat -> Nat;
+  let a2 = Array.map<Nat, Nat>(func x { x + 1 }, a);
+
+  let y = f x;
+  let z = f {};
+  let choice = if flag { f1() } else { f2() };
+
+  switch opt {
+    case null { tryAgain() };
+    case _ { proceed() };
+  };
+  ```
+
+- Evita el uso excesivo del estilo sin paréntesis.
+
+  En particular, no omitas paréntesis y llaves en las declaraciones al mismo
+  tiempo.
+
+  ```motoko no-repl
+  // COUNTER EXAMPLES!
+  let choice = if flag x + y else z;  // DO NOT DO THIS!
+
+  switch val {
+    case 0 f();    // DO NOT DO THIS!
+    case n n + 1;  // OR THIS!
+  };
+  ```
+
+  Razón: Omitir ambos al mismo tiempo hace que el código sea más difícil de
+  leer, ya que hay menos indicio visual de cómo se agrupa.
+
+- De manera similar, no omitas los paréntesis alrededor de los parámetros de
+  función si la función también tiene parámetros de tipo.
+
+  ```motoko no-repl
+  // COUNTER EXAMPLE!
+  foo<Nat> 0;   // DO NOT DO THIS!
+  ```
+
+- Omitir paréntesis alrededor de los tipos de argumentos de un tipo de función
+  con un solo argumento y sin parámetros de tipo.
+
+  Pero no omitirlos cuando las funciones o clases también tienen parámetros de
+  tipo.
+
+  ```motoko no-repl
+  type Inv = Nat -> Nat;
+  type Id = <T>(T) -> T;
+  type Get = <X>(C<X>) -> X;
+
+  // COUNTER EXAMPLE!
+  type Get = <X>C<X> -> X;   // DO NOT DO THIS!
+  ```
+
+  ### Varios
+
+  - Usa `_` para agrupar dígitos en números.
+
+    Agrupa de 3 dígitos en números decimales y de 4 en notación hexadecimal.
+
+  ```motoko no-repl
+  let billion = 1_000_000_000;
+  let pi = 3.141_592_653_589_793_12;
+  let mask : Nat32 = 0xff00_ff0f;
+  ```
+
+## Nomenclatura
+
+### Estilo
+
+- Utiliza `UpperCamelCase` para los nombres de tipos (incluyendo clases o
+  parámetros de tipo), nombres de módulos y nombres de actores.
+
+- Utiliza `lowerCamelCase` para todos los demás nombres, incluyendo constantes y
+  campos de variantes.
+
+  ```motoko no-repl
+  module MoreMuff {
+    type FileSize = Nat;
+    type Weekday = {#monday; #tuesday; #wednesday};
     type Pair<X> = (X, X);
-    type Id = <X>(X) -> X;
 
-    let ok = #ok(5);
+    class Container<X, Y>() { ... };
 
-    func id<X>(x : X) : X { x };
-    id<Nat>(5);
-    ```
+    func getValue<Name>(name : Name) : Pair<Name> { ... };
 
--   Put a space between a function and its argument if it is not a tuple or parenthesized expression (see [parentheses](#parentheses)) or a record used as a named parameter list (see [picking types](#picking-types)).
+    let zero = 0;
+    let pair = getValue<Text>("opus");
+    var nifty : Nat = 0;
 
-    ``` motoko no-repl
-    sin 0.0;
-    g [1, 2, 3];
-    f{arg1 = 0; arg2 = 0};
-    ```
+    object obj { ... };
 
-Rationale: `g[1]` in particular will be misparsed as an indexing operation.
+    actor ServerProxy { ... };
+  };
+  ```
 
--   Do not put a space around access operators like `.`, `?`, `!`, or index brackets.
+  Razón: La convención general es usar mayúsculas para entidades "estáticas"
+  como tipos y minúsculas para valores "dinámicos". Los módulos y actores son
+  bastante estáticos y pueden exportar tipos. Los objetos generalmente no
+  exportan tipos y tienden a ser utilizados principalmente como valores
+  dinámicos.
 
-    ``` motoko no-repl
-    foo(bar).baz[5]().boo;
-    foom(?(bam()! + 1));
-    ```
+- Escribe los acrónimos como palabras regulares.
 
-### Line breaks
+  ```motoko no-repl
+  type HttpHeader = ...;
+  func getUrl() { ... };
+  let urlDigest = ...;
+  ```
 
--   Pick a fixed right margin for lines and break definitions or expressions. 80 still is considered a good limit by many.
+- No uses nombres de identificadores que comiencen con un guion bajo `_`,
+  excepto para documentar que una variable en un patrón no se usa
+  intencionalmente.
 
-    ``` motoko no-repl
-    let sum = a + b + 2*c + d +
-      e + f + g + h + i + k +
-      l + m + n + o + p;
+  ```motoko no-repl
+  let (width, _color, name) = rumpler();
+  ...  // _color is not used here
 
-    // Or:
-    let sum =
-      a + b + 2*c + d + e +
-      f + g + h + i + k + l +
-      m + n + o + p;
-    ```
+  func foo(x : Nat, _futureFlag : Bool) { ... };
+  ```
 
-    Rationale: Among other reasons, this style of formatting:
+  Razón: Un verificador de tipos puede advertir sobre identificadores no
+  utilizados, lo cual se puede suprimir al anteponer explícitamente `_` a su
+  nombre para documentar la intención.
 
-    1.  Avoids code being hidden to the right in a window.
+  Esto se alinea con el uso de la palabra clave `_` para comodines de patrones.
 
-    2.  Avoids random line breaks in side-by-side diffs. For example, as shown by GitHub or similar code review tools.
+### Convenciones
 
-    3.  Allows prettier display on paper, web sites, or other media.
+- El nombre de las funciones que devuelven un valor debe describir ese valor.
 
--   Break lines after an operator.
+  Evita los prefijos redundantes de `get`.
 
-    ``` motoko no-repl
-    a + b + c +
-      d + f;
+  ```motoko no-repl
+  dict.size();
+  list.first();
+  sum(array);
+  ```
 
-    foo(bar, baz).
-      boo();
-    ```
+- El nombre de las funciones que realizan efectos secundarios u operaciones
+  complejas debe describir esa operación.
 
--   When breaking function definitions or calls with long argument lists, put each argument on a separate line.
+  ```motoko no-repl
+  dict.clear();
+  dict.set(key, value);
+  let result = traverse(graph);
+  ```
 
-    Also, consider using records for long parameter lists, see [picking types](#picking-types).
+- El nombre de las funciones de predicado que devuelven
+  [`Bool`](../base/Bool.md) debe usar un prefijo `es` o `tiene` o una
+  descripción similar de la propiedad probada.
 
-    ``` motoko no-repl
-    func someFunction(
-      arg1 : FirstType,
-      arg2 : SecondType,
-      anotherArg : Nat,
-      yetAnother : [Type],
-      func : Nat -> Nat,
-    ) : Nat {
-      ...
-    };
+  ```motoko no-repl
+  class Set<X>() {
+    public func size() : Nat { ... };
 
-    someFunction(
-      veryLongArgumentExpression,
-      anotherVeryLongArgumentExpression,
-      3,
-      aNestedFunctionCall(
-        alsoWithLongArguments,
-        andMoreSuchArguments,
-      ),
-      moreLongishArgument,
-    );
-    ```
+    public func add(x : X) { ... };
+    public func remove(x : X) { ... };
 
-    Rationale: This prevents overlooking an argument when reading code and avoids re-breaking lines when changing one of the expressions.
+    public func isEmpty() : Bool { ... };
+    public func contains(x : X) : Bool { ... };
+  };
+  ```
 
-### Indentation
+- Las funciones que convierten a o desde un tipo `X` se llaman `toX` y `fromX`,
+  respectivamente, si la fuente o el destino es el objeto del que la función es
+  un método, o el tipo principal del módulo en el que aparece esta función.
 
--   Each level of indentation should be 2 spaces.
+- En clases u objetos, utiliza un nombre que termine con `_` para distinguir las
+  variables privadas de los getters.
 
-    ``` motoko no-repl
-    actor A {
-      public func f() {
-        return;
-      }
-    }
-    ```
+  ```motoko no-repl
+  class Cart(length_ : Nat) {
+    var width_ = 0;
 
-    Rationale: There may be a lot of nesting. Using only 2 spaces avoids wasting screen estate.
+    public func length() : Nat { return length_ };
+    public func width() : Nat { return width_ };
+  }
+  ```
 
--   Indentation should not depend on the lexical contents of previous lines.
+  Razón: En Motoko, las funciones son valores de primera clase, por lo que las
+  funciones y otros identificadores de valor comparten el mismo espacio de
+  nombres.
 
-    In particular, do not vertically align indentation with inner characters from previous lines.
+  No se deben utilizar identificadores con un guion bajo `_` al principio para
+  estado privado, ya que eso indica un nombre no utilizado (ver
+  [estilo](#estilo)).
 
-    ``` motoko no-repl
-    let x = someFunction(
-      arg1, arg2, arg3, arg4, arg5);               // Do this.
+- Utiliza nombres más largos y descriptivos para identificadores globales o
+  públicos, o aquellos con un alcance amplio, y nombres cortos para los locales
+  con un alcance pequeño.
 
-    let x = someFunction(arg1, arg2, arg3,
-      arg4, arg5);                                 // Or this.
+  Está bien utilizar identificadores de un solo carácter cuando no hay nada
+  interesante que decir, especialmente cuando se utiliza el mismo esquema de
+  nomenclatura de manera consistente.
 
-    let x =
-      someFunction(arg1, arg2, arg3, arg4, arg5);  // Or this.
+  ```motoko no-repl
+  func map(x : Nat, y : Nat) : Nat { x + y };
 
-    let x = someFunction(                          // Or this.
-      longArg1,
-      longArg2,
-      longArg3,
-      longArg4,
-      longArg5,
-    );
-
-    // COUNTER EXAMPLE!
-    let x = someFunction(arg1, arg2, arg3,
-                         arg4, arg5);              // DO NOT DO THIS!
-    ```
-
-    Rationale: There are many problems with vertical alignment, for example:
-
-    1.  It wastes a lot of horizontal space.
-
-    2.  It creates wildly inconsistent indentation levels that obfuscate the structure of the code.
-
-    3.  It can produce realignment churn when changing a line, which, even when automated by editors, inflates and obfuscates diffs.
-
-    4.  It completely breaks with variable-width fonts.
-
-    Rule of thumb: there should be no indentation that is not a multiple of 2.
-
--   Do not use tabs.
-
-    Rationale: The interpretation of tabs varies wildly across tools and they get lost or are displayed incorrectly in many contexts, such as web pages, diffs, etc.
-
-### Grouping
-
--   Separate complex multi-line definitions with empty lines. One-liners can be put on consecutive lines.
-
-    ``` motoko no-repl
-    func foo() {
-      // This function does a lot of interesting stuff.
-      // It's definition takes multiple lines.
-    }
-
-    func boo() {
-      // This is another complicated function.
-      // It's definition also takes multiple lines.
-    }
-
-    func add(x : Nat, y : Nat) { return x + y };
-    func mul(x : Nat, y : Nat) { return x * y };
-    ```
-
--   Separate logic groups of definitions with two empty lines. Add a one-line comment as a "section header" for each group.
-
-    ``` motoko no-repl
-    // A very large class
-    class MuffleMiff(n : Nat) {
-
-      // Accessors
-
-      public func miffMuff() : Text {
-        ...
-      }
-
-      public func sniffMiff() : Nat {
-        ...
-      }
-
-      // Mutators
-
-      public func clearMurk() {
-        ...
-      }
-
-      public func addMuff(name : Text) {
-        ...
-      }
-
-      // Processing
-
-      public func murkMuffle(param : List<Gnobble>) {
-        ...
-      }
-
-      public func transformSneezler() {
-        ...
-      }
-
-      // Internal State
-
-      var miffCount = 0;
-      var mabbleMap = Map<Nat, Text>();
-
-    }
-    ```
-
-### Comments
-
--   Use line comments (`//…​`). Use block comments (`/* …​ */`) only when commenting in the middle of a line or for commenting out pieces of code during development.
-
-    ``` motoko no-repl
-    // The following function runs the current
-    // pallaboom on a given snibble. It returns
-    // suitable plexus if it can.
-    func paBoom(s : Snibble) : Handle<Plexus> {
-      let puglet = initPugs(s.crick, 0 /* size */, #local);
-    /* Don't do the odd stuff yet...
-      ...
-      ...
-    */
-      return polyfillNexus(puglet);  // for now
-    }
-    ```
-
-    Rationale: Line comments make it easier to insert, remove or swap individual lines.
-
--   Put short comments explaining a single line at the end of the line, separated by at least 2 spaces.
-
-    ``` motoko no-repl
-    paBoom(getSnibble()));  // create new snibble
-    ```
-
--   Put multi-line comments before a line of code, with the same indentation as the code it is describing.
-
-    ``` motoko no-repl
-    func f() {
-      // Try to invoke the current pallaboom with
-      // the previous snibble. If that succeeds,
-      // we have the new plexus; if not, complain.
-      let plexusHandle = paBoom(getSnibble()));
-    }
-    ```
-
--   Capitalize comments that are on separate lines. Use a proper full stop for sentences.
-
-## Punctuation
-
-### Semicolons
-
--   Motoko uniformly requires a semicolon to separate expressions or local declarations in a block, regardless of whether the preceding declaration ends in a closing '}'.
-
-    Rationale: This is unlike other C-style languages, which tend to have rather ad-hoc rules.
-
--   Put a semicolon after the last expression in a block, unless the whole block is written on a single line.
-
-    Similarly for types.
-
-    ``` motoko no-repl
-    // No ; needed before closing } on same line
-
-    type Vec3D = {x : Float; y : Float; z : Float};
-    type Result<A> = {#ok : A; #error : Text};
-
-    func add(x : Nat, y : Nat) : Nat { return x + y };
-
-    // End last case with ;
-
-    type Address = {
-      first : Text;
-      last : Text;
-      street : Text;
-      nr : Nat;
-      zip : Nat;
-      city : Text;
-    };
-
-    type Expr = {
-      #const : Float;
-      #add : (Expr, Expr);
-      #mul : (Expr, Expr);
-    };
-
-    func eval(e : Expr) : Float {
+  func eval(e : Expr) : Nat {
+    let n =
       switch (e) {
-        case (#const(x)) { x };
+        case (#neg(e1)) { - eval(e1) };
         case (#add(e1, e2)) { eval(e1) + eval(e2) };
         case (#mul(e1, e2)) { eval(e1) * eval(e2) };
       };
-    }
-    ```
+    Debug.print(n);
+    return n;
+  };
+  ```
 
-    Rationale: Consistently ending lines with semicolon simplifies adding, removing, or swapping lines.
+  Razón: Contrariamente a la creencia popular, los nombres locales demasiado
+  habladores pueden disminuir la legibilidad en lugar de aumentarla, al aumentar
+  el nivel de ruido.
 
-### Braces
+- En casos adecuados, utiliza la forma en plural para describir una colección de
+  elementos, como una lista o un array.
 
--   Put braces around function bodies, `if` or `case` branches, and loop bodies, unless they appear nested as an expression and only contain a single expression.
+  Esto también funciona para nombres cortos.
 
-    ``` motoko no-repl
-    func f(x) { f1(x); f2(x) };
+  ```motoko no-repl
+  func foreach<X>(xs : [X], f : X -> ()) {
+    for (x in xs.values()) { f(x) }
+  }
+  ```
 
-    let abs = if (v >= 0) v else -v;
-    let val = switch (f()) { case (#ok(x)) x; case (_) 0 };
-    func succ(x : Nat) : Nat = x + 1;
-    ```
+## Tipos
 
--   Use "C-style" layout for braced sub-expressions stretching multiple lines.
+### Anotaciones de tipo
 
-    ``` motoko no-repl
-    func f() {
-      return;
+- Coloca anotaciones de tipo en las definiciones que involucren tipos numéricos
+  de ancho fijo, para desambiguar el tipo de operadores y constantes aritméticas
+  sobrecargadas.
+
+  ```motoko no-repl
+  let mask : Nat32 = 0xfc03_ff00;
+  let pivot : Nat32 = (size + 1)/2;
+  let vec : [Int16] = [1, 3, -4, 0];
+  ```
+
+  :::note
+
+  Utiliza constantes de punto flotante para forzar el tipo `Float` sin una
+  anotación adicional. De manera similar, utiliza un signo `+` explícito para
+  producir un valor positivo de tipo [`Int`](../base/Int.md) en lugar de
+  [`Nat`](../base/Nat.md), si se desea.
+
+  :::
+
+  ```motoko no-repl
+  let zero = 1.0;    // type Float
+  let offset = +1;   // type Int
+  ```
+
+- De manera similar, coloca anotaciones de tipo en línea en expresiones
+  aritméticas con tipos diferentes a [`Nat`](../base/Nat.md) o
+  [`Int`](../base/Int.md).
+
+  ```motoko no-repl
+  if (x & mask == (1 : Nat32)) { ... };
+  ```
+
+  :::note
+
+  La necesidad de anotar constantes en casos como este es una limitación del
+  sistema de tipos de Motoko que esperamos abordar pronto.
+
+  :::
+
+  No se necesita una anotación en los argumentos de la función, ya que su tipo
+  generalmente se infiere de la función. La única excepción es cuando ese
+  argumento tiene un tipo genérico y se han omitido los argumentos de tipo.
+
+  ```motoko no-repl
+  func foo(len : Nat32, vec : [Nat16]) { ... };
+  func bar<X>(x : X) { ... };
+
+  foo(3, [0, 1, 2]);
+  bar<Nat16>(0);
+  bar(0 : Nat16);
+  ```
+
+- Coloca anotaciones de tipo en variables mutables, a menos que su tipo sea
+  obvio.
+
+  ```motoko no-repl
+  var name = "Motoko";
+  var balance = 0;
+
+  func f(i : Int) {
+    var j = i;
+  };
+
+  var balance : Int = 0;
+  var obj : Class = foo();
+  ```
+
+  Razón: Debido a la subtipificación, inferir el tipo a partir de la
+  inicialización no necesariamente deduciría el tipo deseado. Por ejemplo,
+  `balance` tendría tipo [`Nat`](../base/Nat.md) sin la anotación, descartando
+  asignaciones de enteros.
+
+- Coloque anotaciones de tipo en todos los campos públicos de una clase.
+
+  ```motoko no-repl
+  class C(init_ : Nat) {
+    public let init : Nat = init_;
+    public var count : Nat = 0;
+  }
+  ```
+
+- Omitir anotaciones de tipo de retorno de funciones cuando el tipo es `()`.
+
+  ```motoko no-repl
+  func twiceF() { f(); f() };  // no need to write ": ()"
+  ```
+
+- Omitir anotaciones de tipo en las funciones cuando se pasan como argumentos.
+
+  ```motoko no-repl
+  Array.map<Nat, Nat>(func n {n + 1}, a);
+  ```
+
+- Coloca anotaciones de tipo en las definiciones que involucren tipos numéricos
+  diferentes a [`Nat`](../base/Nat.md) o [`Int`](../base/Int.md), para resolver
+  la sobrecarga entre operadores aritméticos y constantes.
+
+  ```motoko no-repl
+  let mask : Nat32 = 0xfc03_ff00;
+  let offset : Nat32 = size + 1;
+  ```
+
+  ### Selección de tipos
+
+  - Utiliza [`Nat`](../base/Nat.md) para cualquier valor entero que no pueda ser
+    negativo.
+
+  - Utiliza `NatN` o `IntN` de ancho fijo solo cuando se almacenan muchos
+    valores y el uso de espacio es importante, cuando se requiere manipulación
+    de bits a nivel bajo o cuando se deben cumplir tipos impuestos por
+    requisitos externos, como otros canisters.
+
+  - Evita la proliferación de tipos de opción y, por lo tanto, de `null`.
+
+    Limita su uso al menor alcance posible. Descarta el caso de `null` y utiliza
+    tipos no opcionales siempre que sea posible.
+
+  - Considera utilizar registros en lugar de tuplas cuando haya más de 2 o 3
+    componentes. Los registros son simplemente objetos simples con campos
+    nombrados.
+
+    Ten en cuenta que los tipos de registro no necesitan ser declarados, sino
+    que se pueden utilizar en su lugar.
+
+  ```motoko no-repl
+    func nodeInfo(node : Node) : {parent : Node; left : Node; right : Node} { ... }
+  ```
+
+- Considera usar variantes en lugar de [`Bool`](../base/Bool.md) para
+  representar opciones binarias.
+
+  Ten en cuenta que los tipos de variantes no necesitan ser declarados, pero se
+  pueden usar en su lugar.
+
+  ```motoko no-repl
+  func capitalization(word : Text) : {#upper; #lower} { ... }
+  ```
+
+- Donde sea posible, utiliza el tipo de retorno `()` para las funciones cuyo
+  propósito principal es mutar el estado o causar otros efectos secundarios.
+
+  ```motoko no-repl
+  class Set<X>() {
+    public func add(x : X) { ... };
+    public func remove(x : X) { ... };
+    ...
+  };
+  ```
+
+- Considera usar un registro (un objeto con solo datos) como argumento para
+  listas de parámetros largas.
+
+  ```motoko no-repl
+  func process({seed : Float; delta : Float; data : [Record]; config : Config}) : Thing {
+    ...
+  };
+
+  process{config = Config(); data = read(); delta = 0.01; seed = 1.0};
+  ```
+
+  Razón: Esto expresa parámetros con nombre. De esta manera, los argumentos se
+  pueden reordenar libremente en el lugar de la llamada y se evita que los
+  llamadores los pasen accidentalmente en el orden incorrecto.
+
+- Las funciones de orden superior, como las funciones que toman un argumento de
+  devolución de llamada, deben colocar el parámetro de la función al final.
+
+  Razón: Hace que los lugares de llamada sean más legibles y, en ausencia de
+  currificación, no tiene sentido colocar la función primero, como a menudo se
+  haría en lenguajes funcionales.
+
+- No utilices valores centinela, como `-1`, para representar valores no válidos.
+
+  Utiliza en su lugar el tipo de opción.
+
+  ```motoko no-repl
+  func lookup(x : key) : ?Nat { ... }
+  ```
+
+- Los datos son inmutables en Motoko a menos que se especifique lo contrario.
+
+  Utiliza los tipos y definiciones de mutabilidad (`var`) con cuidado y solo
+  donde sea necesario.
+
+  Razón: Los datos mutables no se pueden comunicar ni compartir entre actores.
+  Son más propensos a errores y mucho más difíciles de razonar formalmente,
+  especialmente cuando se trata de concurrencia.
+
+## Características
+
+### Declaraciones
+
+- Utiliza bucles `for` en lugar de bucles `while` para iterar sobre un rango
+  numérico o un contenedor.
+
+  ```motoko no-repl
+  for (i in Iter.range(1, 10)) { ... };
+  for (x in array.values()) { ... };
+  ```
+
+  Razón: Los bucles `for` son menos propensos a errores y más fáciles de leer.
+
+  - Utiliza `if` o `switch` como expresiones cuando sea apropiado.
+
+  ```motoko no-repl
+  func abs(i : Int) : Int { if (i < 0) -i else i };
+
+  let delta = switch mode { case (#up) +1; case (#dn) -1 };
+  ```
+
+- Motoko requiere que todas las expresiones en un bloque tengan tipo `()`, para
+  evitar resultados descartados accidentalmente.
+
+  Usa `ignore` para descartar explícitamente los resultados. No uses `ignore`
+  cuando no sea necesario.
+
+  ```motoko no-repl
+  ignore async f();  // fire of a computation
+  ```
+
+- Motoko permite omitir el `return` al final de una función, porque un bloque se
+  evalúa a su última expresión.
+
+  Utiliza esto cuando una función es corta y está en estilo "funcional", es
+  decir, la función no contiene un flujo de control complejo o efectos
+  secundarios.
+
+  Utiliza `return` explícito al final cuando la función contiene otros `return`
+  o un flujo de control imperativo.
+
+  ```motoko no-repl
+  func add(i : Nat, j : Nat) : Nat { i + j };
+
+  func foo(a : Float, b : Float) : Float {
+    let c = a*a + b*b;
+    c + 2*c*c;
+  };
+
+  func gcd(i : Nat, j : Nat) : Nat {
+    if (j == 0) i else gcd(j, i % j);
+  };
+
+  func gcd2(i : Nat, j : Nat) : Nat {
+    var a = i;
+    var b = j;
+    while (b > 0) {
+      let c = a;
+      a := b;
+      b := c % b;
     };
+    return a;
+  };
+  ```
 
-    if (cond) {
-      foo();
-    } else {
-      bar();
-    };
+### Objetos y registros
 
-    switch (opt) {
-      case (?x) {
-        f(x);
-      };
-      case (null) {};
-    };
-    ```
+- Usa la sintaxis abreviada de objetos `{x1 = e1; …​ ; xN = eN}` cuando uses
+  objetos como registros simples, es decir, estructuras de datos sin estado
+  privado y sin métodos.
 
-### Parentheses
+- Usa `object` cuando crees objetos singleton.
 
--   Motoko supports "parenless" style, meaning that parentheses are optional in most places, such as function parameter lists, or statement operands, when they enclose an expression that either is bracketed already. For example, a tuple, object, or array, or a simple constant or identifier.
+- Limita el uso de objetos a registros siempre que sea posible.
 
-    ``` motoko no-repl
-    type Op = Nat -> Nat;
-    let a2 = Array.map<Nat, Nat>(func x { x + 1 }, a);
+  **Razón:** Solo los registros pueden enviarse como parámetros o resultados de
+  mensajes y pueden almacenarse en variables estables. Los objetos con métodos
+  también son más costosos de crear y representar en memoria.
 
-    let y = f x;
-    let z = f {};
-    let choice = if flag { f1() } else { f2() };
+- Usa objetos completos solo como un medio para encapsular estado o
+  comportamiento.
 
-    switch opt {
-      case null { tryAgain() };
-      case _ { proceed() };
-    };
-    ```
+### Clases
 
--   Avoid overuse of parenless style.
+- Usa `class` para crear múltiples objetos con la misma forma.
 
-    In particular, do not omit parentheses and braces on statements at the same time.
+- Nombra las clases según su funcionalidad conceptual, no su implementación,
+  excepto cuando sea necesario distinguir múltiples implementaciones diferentes
+  del mismo concepto. Por ejemplo, `OrderedMap` vs `HashMap`.
 
-    ``` motoko no-repl
-    // COUNTER EXAMPLES!
-    let choice = if flag x + y else z;  // DO NOT DO THIS!
+- Las clases son tanto definiciones de tipos como funciones de fábrica para
+  objetos.
 
-    switch val {
-      case 0 f();    // DO NOT DO THIS!
-      case n n + 1;  // OR THIS!
-    };
-    ```
+  No uses clases a menos que ambos roles sean intencionales; usa alias de tipos
+  simples o funciones que devuelvan un objeto en otros casos.
 
-    Rationale: Omitting both at the same time makes the code harder to read, since there is less visual clue how it groups.
+- No abuses de las clases.
 
--   Similarly, do not omit parentheses around function parameters if the function also has type parameters.
+  Usa un módulo que defina un tipo simple y funciones sobre él cuando sea
+  apropiado. Usa clases solo como un medio para encapsular estado o
+  comportamiento.
 
-    ``` motoko no-repl
-    // COUNTER EXAMPLE!
-    foo<Nat> 0;   // DO NOT DO THIS!
-    ```
+  **Razón:** Los objetos con métodos tienen desventajas sobre los tipos de
+  registro simples con funciones separadas (ver arriba).
 
--   Omit parentheses around argument types of a function type with a single argument and no type parameters.
+- Si los valores de una clase están destinados a ser enviables (compartidos), la
+  clase debe proporcionar un par de métodos `share`/`unshare` que conviertan
+  a/desde una representación compartible, por ejemplo, como un registro.
 
-    But do not omit them around when functions or classes also have type parameters.
+  :::note
 
-    ``` motoko no-repl
-    type Inv = Nat -> Nat;
-    type Id = <T>(T) -> T;
-    type Get = <X>(C<X>) -> X;
+  Para clases inmutables, puede parecer más natural hacer que `unshare` sea una
+  especie de función estática. Sin embargo, incluso para las inmutables, puede
+  depender de los argumentos del constructor (como una función de ordenación),
+  por lo que un patrón como `Map(compareInt).unshare(x)` parece apropiado.
 
-    // COUNTER EXAMPLE!
-    type Get = <X>C<X> -> X;   // DO NOT DO THIS!
-    ```
+  :::
 
-### Miscellaneous
+- Por el momento, evita sobrecargar las clases con demasiados métodos, ya que
+  actualmente es costoso.
 
--   Use `_` to group digits in numbers.
+  Limítate a un conjunto suficientemente pequeño de métodos canónicos y
+  convierte los menos esenciales que puedan implementarse sobre esos en
+  funciones dentro del módulo envolvente.
 
-    Group by 3 digits in decimal numbers and by 4 in hexadecimal notation.
+- Usa módulos para clases o métodos "estáticos".
 
-    ``` motoko no-repl
-    let billion = 1_000_000_000;
-    let pi = 3.141_592_653_589_793_12;
-    let mask : Nat32 = 0xff00_ff0f;
-    ```
+### Módulos
 
-## Naming
+- Usa `module` para agrupar definiciones, incluyendo tipos, y crear un espacio
+  de nombres para ellos.
 
-### Style
+- Cuando sea aplicable, nombra los módulos según el tipo o clase principal que
+  implementan o para el que proporcionan funciones.
 
--   Use `UpperCamelCase` for type names (including classes or type parameters), module names, and actor names.
-
--   Use `lowerCamelCase` for all other names, including constants and variant fields.
-
-    ``` motoko no-repl
-    module MoreMuff {
-      type FileSize = Nat;
-      type Weekday = {#monday; #tuesday; #wednesday};
-      type Pair<X> = (X, X);
-
-      class Container<X, Y>() { ... };
-
-      func getValue<Name>(name : Name) : Pair<Name> { ... };
-
-      let zero = 0;
-      let pair = getValue<Text>("opus");
-      var nifty : Nat = 0;
-
-      object obj { ... };
-
-      actor ServerProxy { ... };
-    };
-    ```
-
-    Rationale: The general convention is upper case for "static" entities like types and lower case for "dynamic" values. Modules and actors are fairly static and can export types. Objects usually don’t export types and tend to be used mostly as dynamic values.
-
--   Spell acronyms as regular words.
-
-    ``` motoko no-repl
-    type HttpHeader = ...;
-    func getUrl() { ... };
-    let urlDigest = ...;
-    ```
-
--   Do not use identifier names that start with an underscore `_`, except to document that a variable in a pattern is intentionally unused.
-
-    ``` motoko no-repl
-    let (width, _color, name) = rumpler();
-    ...  // _color is not used here
-
-    func foo(x : Nat, _futureFlag : Bool) { ... };
-    ```
-
-    Rationale: A type checker can warn about unused identifiers, which can be suppressed by explicitly prepending `_` to its name to document intention.
-
-    This aligns with the use of the keyword `_` for pattern wildcards.
-
-### Conventions
-
--   The name of functions returning a value should describe that value.
-
-    Avoid redundant `get` prefixes.
-
-    ``` motoko no-repl
-    dict.size();
-    list.first();
-    sum(array);
-    ```
-
--   The name of functions performing side effects or complex operations should describe that operation.
-
-    ``` motoko no-repl
-    dict.clear();
-    dict.set(key, value);
-    let result = traverse(graph);
-    ```
-
--   The name of predicate functions returning [`Bool`](../base/Bool.md) should use an `is` or `has` prefix or a similar description of the tested property.
-
-    ``` motoko no-repl
-    class Set<X>() {
-      public func size() : Nat { ... };
-
-      public func add(x : X) { ... };
-      public func remove(x : X) { ... };
-
-      public func isEmpty() : Bool { ... };
-      public func contains(x : X) : Bool { ... };
-    };
-    ```
-
--   Functions converting to or from a type `X` are named `toX` and `fromX`, respectively, if the source, resp. target, is either the object the function is a method of, or the primary type of the module this function appears in.
-
--   In classes or objects, use a name ending with `_` to distinguish private variables from getters.
-
-    ``` motoko no-repl
-    class Cart(length_ : Nat) {
-      var width_ = 0;
-
-      public func length() : Nat { return length_ };
-      public func width() : Nat { return width_ };
-    }
-    ```
-
-    Rationale: In Motoko, functions are first-class values, so functions and other value identifiers share the same name space.
-
-    Identifiers with a leading `_` should *not* be used for private state, since that indicates an unused name (see [style](#style)).
-
--   Use longer, more descriptive names for global or public identifier or ones with large scope, and short names for local ones with small scope.
-
-    It is fine to use single character identifiers when there is nothing interesting to say, especially when using the same naming scheme consistently.
-
-    ``` motoko no-repl
-    func map(x : Nat, y : Nat) : Nat { x + y };
-
-    func eval(e : Expr) : Nat {
-      let n =
-        switch (e) {
-          case (#neg(e1)) { - eval(e1) };
-          case (#add(e1, e2)) { eval(e1) + eval(e2) };
-          case (#mul(e1, e2)) { eval(e1) * eval(e2) };
-        };
-      Debug.print(n);
-      return n;
-    };
-    ```
-
-    Rationale: Contrary to popular belief, overly chatty local names can decrease readability instead of increasing it, by increasing the noise level.
-
--   In suitable cases, use plural form for describing a collection of items, such as a list or array.
-
-    This also works for short names.
-
-    ``` motoko no-repl
-    func foreach<X>(xs : [X], f : X -> ()) {
-      for (x in xs.values()) { f(x) }
-    }
-    ```
-
-## Types
-
-### Type annotations
-
--   Put type annotations on definitions that involve fixed-width numeric types, to disambiguate the type of overloaded arithmetic operators and constants.
-
-    ``` motoko no-repl
-    let mask : Nat32 = 0xfc03_ff00;
-    let pivot : Nat32 = (size + 1)/2;
-    let vec : [Int16] = [1, 3, -4, 0];
-    ```
-
-    :::note
-
-    Use floating point constants to enforce type `Float` without an extra annotation. Similarly, use an explicit `+` sign to produce a positive value of type [`Int`](../base/Int.md) instead of [`Nat`](../base/Nat.md), if desired.
-
-    :::
-
-    ``` motoko no-repl
-    let zero = 1.0;    // type Float
-    let offset = +1;   // type Int
-    ```
-
--   Similarly, put inline type annotations on arithmetic expressions with types other than [`Nat`](../base/Nat.md) or [`Int`](../base/Int.md).
-
-    ``` motoko no-repl
-    if (x & mask == (1 : Nat32)) { ... };
-    ```
-
-    :::note
-
-    The need to annotate constants in cases like this is a short-coming of Motoko’s type system that we hope to address soon.
-
-    :::
-
-    An annotation is not needed on function arguments, since their type is usually inferred from the function. The only exception is when that argument has generic type and the type arguments have been omitted.
-
-    ``` motoko no-repl
-    func foo(len : Nat32, vec : [Nat16]) { ... };
-    func bar<X>(x : X) { ... };
-
-    foo(3, [0, 1, 2]);
-    bar<Nat16>(0);
-    bar(0 : Nat16);
-    ```
-
--   Put type annotations on mutable variables, unless their type is obvious.
-
-    ``` motoko no-repl
-    var name = "Motoko";
-    var balance = 0;
-
-    func f(i : Int) {
-      var j = i;
-    };
-
-    var balance : Int = 0;
-    var obj : Class = foo();
-    ```
-
-    Rationale: Due to subtyping, inferring the type from the initialization would not necessarily deduce the intended type. For example, `balance` would have type [`Nat`](../base/Nat.md) without the annotation, ruling out assignments of integers.
-
--   Put type annotations on all public fields in a class.
-
-    ``` motoko no-repl
-    class C(init_ : Nat) {
-      public let init : Nat = init_;
-      public var count : Nat = 0;
-    }
-    ```
-
--   Omit return type annotations of functions when the type is `()`.
-
-    ``` motoko no-repl
-    func twiceF() { f(); f() };  // no need to write ": ()"
-    ```
-
--   Omit type annotations on functions when they are passed as arguments.
-
-    ``` motoko no-repl
-    Array.map<Nat, Nat>(func n {n + 1}, a);
-    ```
-
--   Put type annotations on definitions that involve numeric types other than [`Nat`](../base/Nat.md) or [`Int`](../base/Int.md), to resolve the overloading between arithmetic operators and constants.
-
-    ``` motoko no-repl
-    let mask : Nat32 = 0xfc03_ff00;
-    let offset : Nat32 = size + 1;
-    ```
-
-### Picking types
-
--   Use [`Nat`](../base/Nat.md) for any integral value that cannot be negative.
-
--   Use fixed-width `NatN` or `IntN` only when storing many values and space usage matters, when bit-fiddling requires the low-level interpretation of a number as a vector of bits or when matching types imposed by external requirements, such as other canisters.
-
--   Avoid proliferation of option types, and therefore `null`.
-
-    Limit their use to as small a scope as possible. Rule out the `null` case and use non-option types wherever possible.
-
--   Consider using records instead of tuples when there are more than 2 or 3 components. Records are just simple objects with named fields.
-
-    Note that record types need not be declared but can be used in place.
-
-    ``` motoko no-repl
-      func nodeInfo(node : Node) : {parent : Node; left : Node; right : Node} { ... }
-    ```
-
--   Consider using variants instead of [`Bool`](../base/Bool.md) to represent binary choices.
-
-    Note that variant types need not be declared but can be used in place.
-
-    ``` motoko no-repl
-    func capitalization(word : Text) : {#upper; #lower} { ... }
-    ```
-
--   Where possible, use return type `()` for functions whose primary purpose is to mutate state or cause other side effects.
-
-    ``` motoko no-repl
-    class Set<X>() {
-      public func add(x : X) { ... };
-      public func remove(x : X) { ... };
-      ...
-    };
-    ```
-
--   Consider using a record (an object with just data) as argument for long parameter lists.
-
-    ``` motoko no-repl
-    func process({seed : Float; delta : Float; data : [Record]; config : Config}) : Thing {
-      ...
-    };
-
-    process{config = Config(); data = read(); delta = 0.01; seed = 1.0};
-    ```
-
-    Rationale: This expresses named parameters. This way, arguments can be freely reordered at the call site and callers are prevented from accidentally passing them in the wrong order.
-
--   Higher-order functions, such as functions that take a callback argument, should put the function parameter last.
-
-    Rationale: Makes call sites more readable, and in the absence of currying, there is no point in putting the function first, like you often would in functional languages.
-
--   Do not use sentinel values, such as `-1`, to represent invalid values.
-
-    Use the option type instead.
-
-    ``` motoko no-repl
-    func lookup(x : key) : ?Nat { ... }
-    ```
-
--   Data is immutable in Motoko unless explicitly stated otherwise.
-
-    Use mutability types and definitions (`var`) with care and only where needed.
-
-    Rationale: Mutable data cannot be communicated or share across actors. It is more error-prone and much more difficult to formally reason about, especially when concurrency is involved.
-
-## Features
-
-### Statements
-
--   Use `for` loops instead of `while` loops for iterating over a numeric range or a container.
-
-    ``` motoko no-repl
-    for (i in Iter.range(1, 10)) { ... };
-    for (x in array.values()) { ... };
-    ```
-
-    Rationale: For loops are less error-prone and easier to read.
-
--   Use `if` or `switch` as expressions where appropriate.
-
-    ``` motoko no-repl
-    func abs(i : Int) : Int { if (i < 0) -i else i };
-
-    let delta = switch mode { case (#up) +1; case (#dn) -1 };
-    ```
-
--   Motoko requires that all expressions in a block have type `()`, in order to prevent accidentally dropped results.
-
-    Use `ignore` to explicitly drop results. Do *not* use `ignore` when it’s not needed.
-
-    ``` motoko no-repl
-    ignore async f();  // fire of a computation
-    ```
-
--   Motoko allows to omit the `return` at the end of a function, because a block evaluates to its last expression.
-
-    Use this when a function is short and in "functional" style, that is, the function does not contain complex control flow or side effects.
-
-    Use explicit `return` at the end when the function contains other `return` statements or imperative control flow.
-
-    ``` motoko no-repl
-    func add(i : Nat, j : Nat) : Nat { i + j };
-
-    func foo(a : Float, b : Float) : Float {
-      let c = a*a + b*b;
-      c + 2*c*c;
-    };
-
-    func gcd(i : Nat, j : Nat) : Nat {
-      if (j == 0) i else gcd(j, i % j);
-    };
-
-    func gcd2(i : Nat, j : Nat) : Nat {
-      var a = i;
-      var b = j;
-      while (b > 0) {
-        let c = a;
-        a := b;
-        b := c % b;
-      };
-      return a;
-    };
-    ```
-
-### Objects and records
-
--   Use the short-hand object syntax `{x1 = e1; …​ ; xN = eN}` when using objects as simple records, i.e., data structures with no private state and no methods.
-
--   Use `object` when creating singleton objects.
-
--   Limit the use of objects to records where possible.
-
-    Rationale: Only records can be sent as message parameters or results and can be stored in stable variables. Objects with methods are also more expensive to create and represent in memory.
-
--   Use full objects only as a means for encapsulating state or behavior.
-
-### Classes
-
--   Use `class` to create multiple objects of the same shape.
-
--   Name classes after their conceptual functionality, not their implementation, except when having to distinguish multiple different implementations of the same concept. For example, `OrderedMap` vs `HashMap`).
-
--   Classes are both type definitions and factory functions for objects.
-
-    Do not use classes unless both these roles are intended; use plain type aliases or functions returning an object in other cases.
-
--   Do not overuse classes.
-
-    Use a module defining a plain type and functions on it where appropriate. Use classes only as a means for encapsulating state or behavior.
-
-    Rationale: Objects with methods have disadvantages over simple record types with separate functions (see above).
-
--   If values of a class are meant to be sendable (shared), the class needs to provide a pair of `share`/`unshare` methods that convert to/from a sharable representation, for example, as a record.
-
-    :::note
-
-    For immutable classes it may seem more natural to make `unshare` a kind of static function. However, even for immutable ones it may depend on constructor arguments (such as an ordering function), so that the a pattern like `Map(compareInt).unshare(x)` seems appropriate.
-
-    :::
-
--   For the time being, avoid overloading classes with too many methods, since that is currently expensive.
-
-    Restrict to a sufficiently small set of canonical methods and make less essential ones that can be implemented on top of those into functions in the enclosing module.
-
--   Use modules for "static" classes or methods.
-
-### Modules
-
--   Use `module` to group definitions, including types, and create a name spae for them.
-
--   Where applicable, name modules after the main type or class they implement or provide functions for.
-
--   Limit each module to a single main concept/type/class or closely entangled family of concepts/types/classes.
+- Limita cada módulo a un concepto/tipo/clase principal o una familia
+  estrechamente relacionada de conceptos/tipos/clases.
 
 <!--
 === To be extended

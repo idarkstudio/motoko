@@ -1,71 +1,96 @@
 # Region
-Byte-level access to isolated, (virtual) stable memory _regions_.
 
-This is a moderately lightweight abstraction over IC _stable memory_ and supports persisting
-regions of binary data across Motoko upgrades.
-Use of this module is fully compatible with Motoko's use of
-_stable variables_, whose persistence mechanism also uses (real) IC stable memory internally, but does not interfere with this API.
-It is also fully compatible with existing uses of the `ExperimentalStableMemory` library, which has a similar interface, but,
-only supported a single memory region, without isolation between different applications.
+Acceso a nivel de byte a regiones de memoria aisladas y estables (virtuales).
 
-The `Region` type is stable and can be used in stable data structures.
+Esta es una abstracción moderadamente liviana sobre la memoria estable de IC y
+admite la persistencia de regiones de datos binarios en las actualizaciones de
+Motoko. El uso de este módulo es totalmente compatible con el uso de variables
+estables de Motoko, cuyo mecanismo de persistencia también utiliza memoria
+estable de IC (real) internamente, pero no interfiere con esta API. También es
+totalmente compatible con los usos existentes de la biblioteca
+`ExperimentalStableMemory`, que tiene una interfaz similar, pero solo admite una
+region de memoria, sin aislamiento entre diferentes aplicaciones.
 
-A new, empty `Region` is allocated using function `new()`.
+El tipo `Region` es estable y se puede utilizar en estructuras de datos
+estables.
 
-Regions are stateful objects and can be distinguished by the numeric identifier returned by function `id(region)`.
-Every region owns an initially empty, but growable sequence of virtual IC stable memory pages. 
-The current size, in pages, of a region is returned by function `size(region)`.
-The size of a region determines the range, [ 0, ..., size(region)*2^16 ), of valid byte-offsets into the region; these offsets are used as the source and destination of `load`/`store` operations on the region.
+Se asigna una nueva `Region` vacía utilizando la función `new()`.
 
-Memory is allocated to a region, using function `grow(region, pages)`, sequentially and on demand, in units of 64KiB logical pages, starting with 0 allocated pages.
-A call to `grow` may succeed, returning the previous size of the region, or fail, returning a sentinel value. New pages are zero initialized.
+Las regiones son objetos con estado y se pueden distinguir por el identificador
+numérico devuelto por la función `id(region)`. Cada region posee una secuencia
+inicialmente vacía pero ampliable de páginas virtuales de memoria estable de IC.
+El tamaño actual, en páginas, de una region se devuelve mediante la función
+`size(region)`. El tamaño de una region determina el rango, [ 0, ...,
+tamaño(region)\*2^16 ), de desplazamientos de bytes válidos en la region; estos
+desplazamientos se utilizan como origen y destino de las operaciones de
+`load`/`store` en la region.
 
-A size of a region can only grow and never shrink.
-In addition, the stable memory pages allocated to a region will *not* be reclaimed by garbage collection, even
-if the region object itself becomes unreachable. 
+La memoria se asigna a una region utilizando la función `grow(region, páginas)`,
+de forma secuencial y bajo demanda, en unidades de páginas lógicas de 64KiB,
+comenzando con 0 páginas asignadas. Una llamada a `grow` puede tener éxito,
+devolviendo el tamaño anterior de la region, o fallar, devolviendo un valor
+centinela. Las nuevas páginas se inicializan a cero.
 
-Growth is capped by a soft limit on physical page count controlled by compile-time flag
-`--max-stable-pages <n>` (the default is 65536, or 4GiB).
+El tamaño de una region solo puede crecer y nunca disminuir. Además, las páginas
+de memoria estable asignadas a una region no se recuperarán mediante la
+recolección de basura, incluso si el objeto de la region en sí se vuelve
+inalcanzable.
 
-Each `load` operation loads from region relative byte address `offset` in little-endian
-format using the natural bit-width of the type in question.
-The operation traps if attempting to read beyond the current region size.
+El crecimiento está limitado por un límite suave en el recuento de páginas
+físicas controlado por la bandera de tiempo de compilación
+`--max-stable-pages <n>` (el valor predeterminado es 65536, o 4GiB).
 
-Each `store` operation stores to region relative byte address `offset` in little-endian format using the natural bit-width of the type in question.
-The operation traps if attempting to write beyond the current region size.
+Cada operación de `load` carga desde la dirección de byte relativa `offset` en
+la region en formato little-endian utilizando el ancho de bits natural del tipo
+en cuestión. La operación se interrumpe si se intenta leer más allá del tamaño
+actual de la region.
 
-Text values can be handled by using `Text.decodeUtf8` and `Text.encodeUtf8`, in conjunction with `loadBlob` and `storeBlob`.
+Cada operación de `store` almacena en la dirección de byte relativa `offset` en
+la region en formato little-endian utilizando el ancho de bits natural del tipo
+en cuestión. La operación se interrumpe si se intenta escribir más allá del
+tamaño actual de la region.
 
-The current region allocation and region contents are preserved across upgrades.
+Los valores de texto se pueden manejar utilizando `Text.decodeUtf8` y
+`Text.encodeUtf8`, en conjunto con `loadBlob` y `storeBlob`.
 
-NB: The IC's actual stable memory size (`ic0.stable_size`) may exceed the
-total page size reported by summing all regions sizes.
-This (and the cap on growth) are to accommodate Motoko's stable variables and bookkeeping for regions.
-Applications that plan to use Motoko stable variables sparingly or not at all can
-increase `--max-stable-pages` as desired, approaching the IC maximum (initially 8GiB, then 32Gib, currently 64Gib).
-All applications should reserve at least one page for stable variable data, even when no stable variables are used.
+La asignación actual de la region y el contenido de la region se conservan en
+las actualizaciones.
 
-Usage:
+NB: El tamaño real de la memoria estable de IC (`ic0.stable_size`) puede superar
+el tamaño total de página informado al sumar todos los tamaños de las regiones.
+Esto (y el límite de crecimiento) se deben a las variables estables de Motoko y
+al registro de regiones. Las aplicaciones que planeen utilizar variables
+estables de Motoko con moderación o no en absoluto pueden aumentar
+`--max-stable-pages` según sea necesario, acercándose al máximo de IC
+(inicialmente 8GiB, luego 32GiB, actualmente 64GiB). Todas las aplicaciones
+deben reservar al menos una página para los datos de variables estables, incluso
+cuando no se utilizan variables estables.
+
+Uso:
+
 ```motoko no-repl
 import Region "mo:base/Region";
 ```
 
-## Type `Region`
-``` motoko no-repl
+## Tipo `Region`
+
+```motoko no-repl
 type Region = Prim.Types.Region
 ```
 
-A stateful handle to an isolated region of IC stable memory.
-`Region` is a stable type and regions can be stored in stable variables.
+Un identificador con estado para una region aislada de memoria estable de IC.
+`Region` es un tipo estable y las regiones se pueden almacenar en variables
+estables.
 
 ## Function `new`
-``` motoko no-repl
+
+```motoko no-repl
 func new() : Region
 ```
 
-Allocate a new, isolated Region of size 0.
+Asigna una nueva Region aislada de tamaño 0.
 
-Example:
+Ejemplo:
 
 ```motoko no-repl
 let region = Region.new();
@@ -73,17 +98,17 @@ assert Region.size(region) == 0;
 ```
 
 ## Function `id`
-``` motoko no-repl
+
+```motoko no-repl
 func id(_ : Region) : Nat
 ```
 
-Return a Nat identifying the given region.
-Maybe be used for equality, comparison and hashing.
-NB: Regions returned by `new()` are numbered from 16
-(regions 0..15 are currently reserved for internal use).
-Allocate a new, isolated Region of size 0.
+Devuelve un Nat que identifica la region dada. Puede usarse para la igualdad, la
+comparación y el hash. NB: Las regiones devueltas por `new()` se numeran a
+partir de 16 (las regiones 0..15 están actualmente reservadas para uso interno).
+Asigna una nueva Region aislada de tamaño 0.
 
-Example:
+Ejemplo:
 
 ```motoko no-repl
 let region = Region.new();
@@ -91,17 +116,17 @@ assert Region.id(region) == 16;
 ```
 
 ## Function `size`
-``` motoko no-repl
+
+```motoko no-repl
 func size(region : Region) : (pages : Nat64)
 ```
 
-Current size of `region`, in pages.
-Each page is 64KiB (65536 bytes).
-Initially `0`.
-Preserved across upgrades, together with contents of allocated
-stable memory.
+Tamaño actual de `region`, en páginas. Cada página es de 64KiB (65536 bytes).
+Inicialmente `0`. Se conserva en las actualizaciones, junto con el contenido de
+la memoria estable asignada.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let region = Region.new();
 let beforeSize = Region.size(region);
@@ -111,19 +136,21 @@ afterSize - beforeSize // => 10
 ```
 
 ## Function `grow`
-``` motoko no-repl
+
+```motoko no-repl
 func grow(region : Region, newPages : Nat64) : (oldPages : Nat64)
 ```
 
-Grow current `size` of `region` by the given number of pages.
-Each page is 64KiB (65536 bytes).
-Returns the previous `size` when able to grow.
-Returns `0xFFFF_FFFF_FFFF_FFFF` if remaining pages insufficient.
-Every new page is zero-initialized, containing byte 0x00 at every offset.
-Function `grow` is capped by a soft limit on `size` controlled by compile-time flag
- `--max-stable-pages <n>` (the default is 65536, or 4GiB).
+Aumenta el `size` actual de `region` en la cantidad de páginas dada. Cada página
+es de 64KiB (65536 bytes). Devuelve el `size` anterior cuando puede crecer.
+Devuelve `0xFFFF_FFFF_FFFF_FFFF` si las páginas restantes son insuficientes.
+Cada nueva página se inicializa a cero, conteniendo el byte 0x00 en cada offset.
+La función `grow` está limitada por un límite suave en el `size` controlado por
+la bandera de tiempo de compilación `--max-stable-pages <n>` (el valor
+predeterminado es 65536, o 4 GiB).
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 import Error "mo:base/Error";
 
@@ -137,14 +164,16 @@ afterSize - beforeSize // => 10
 ```
 
 ## Function `loadNat8`
-``` motoko no-repl
+
+```motoko no-repl
 func loadNat8(region : Region, offset : Nat64) : Nat8
 ```
 
-Within `region`, load a `Nat8` value from `offset`.
-Traps on an out-of-bounds access.
+Dentro de `region`, carga un valor `Nat8` desde `offset`. Se interrumpe en caso
+de acceso fuera de límites.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let region = Region.new();
 let offset = 0;
@@ -154,14 +183,16 @@ Region.loadNat8(region, offset) // => 123
 ```
 
 ## Function `storeNat8`
-``` motoko no-repl
+
+```motoko no-repl
 func storeNat8(region : Region, offset : Nat64, value : Nat8) : ()
 ```
 
-Within `region`, store a `Nat8` value at `offset`.
-Traps on an out-of-bounds access.
+Dentro de `region`, almacena un valor `Nat8` en `offset`. Se interrumpe en caso
+de acceso fuera de límites.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let region = Region.new();
 let offset = 0;
@@ -171,14 +202,16 @@ Region.loadNat8(region, offset) // => 123
 ```
 
 ## Function `loadNat16`
-``` motoko no-repl
+
+```motoko no-repl
 func loadNat16(region : Region, offset : Nat64) : Nat16
 ```
 
-Within `region`, load a `Nat16` value from `offset`.
-Traps on an out-of-bounds access.
+Dentro de `region`, carga un valor `Nat16` desde `offset`. Se interrumpe en caso
+de acceso fuera de límites.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let region = Region.new();
 let offset = 0;
@@ -188,14 +221,16 @@ Region.loadNat16(region, offset) // => 123
 ```
 
 ## Function `storeNat16`
-``` motoko no-repl
+
+```motoko no-repl
 func storeNat16(region : Region, offset : Nat64, value : Nat16) : ()
 ```
 
-Within `region`, store a `Nat16` value at `offset`.
-Traps on an out-of-bounds access.
+Dentro de `region`, almacena un valor `Nat16` en `offset`. Se interrumpe en caso
+de acceso fuera de límites.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let region = Region.new();
 let offset = 0;
@@ -205,14 +240,16 @@ Region.loadNat16(region, offset) // => 123
 ```
 
 ## Function `loadNat32`
-``` motoko no-repl
+
+```motoko no-repl
 func loadNat32(region : Region, offset : Nat64) : Nat32
 ```
 
-Within `region`, load a `Nat32` value from `offset`.
-Traps on an out-of-bounds access.
+Dentro de `region`, carga un valor `Nat32` desde `offset`. Se interrumpe en caso
+de acceso fuera de límites.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let region = Region.new();
 let offset = 0;
@@ -222,14 +259,16 @@ Region.loadNat32(region, offset) // => 123
 ```
 
 ## Function `storeNat32`
-``` motoko no-repl
+
+```motoko no-repl
 func storeNat32(region : Region, offset : Nat64, value : Nat32) : ()
 ```
 
-Within `region`, store a `Nat32` value at `offset`.
-Traps on an out-of-bounds access.
+Dentro de `region`, almacena un valor `Nat32` en `offset`. Se interrumpe en caso
+de acceso fuera de límites.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let region = Region.new();
 let offset = 0;
@@ -239,14 +278,16 @@ Region.loadNat32(region, offset) // => 123
 ```
 
 ## Function `loadNat64`
-``` motoko no-repl
+
+```motoko no-repl
 func loadNat64(region : Region, offset : Nat64) : Nat64
 ```
 
-Within `region`, load a `Nat64` value from `offset`.
-Traps on an out-of-bounds access.
+Dentro de `region`, carga un valor `Nat64` desde `offset`. Se interrumpe en caso
+de acceso fuera de límites.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let region = Region.new();
 let offset = 0;
@@ -256,14 +297,16 @@ Region.loadNat64(region, offset) // => 123
 ```
 
 ## Function `storeNat64`
-``` motoko no-repl
+
+```motoko no-repl
 func storeNat64(region : Region, offset : Nat64, value : Nat64) : ()
 ```
 
-Within `region`, store a `Nat64` value at `offset`.
-Traps on an out-of-bounds access.
+Dentro de `region`, almacena un valor `Nat64` en `offset`. Se interrumpe en caso
+de acceso fuera de límites.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let region = Region.new();
 let offset = 0;
@@ -273,14 +316,16 @@ Region.loadNat64(region, offset) // => 123
 ```
 
 ## Function `loadInt8`
-``` motoko no-repl
+
+```motoko no-repl
 func loadInt8(region : Region, offset : Nat64) : Int8
 ```
 
-Within `region`, load a `Int8` value from `offset`.
-Traps on an out-of-bounds access.
+Dentro de `region`, carga un valor `Int8` desde `offset`. Se interrumpe en caso
+de acceso fuera de límites.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let region = Region.new();
 let offset = 0;
@@ -290,14 +335,16 @@ Region.loadInt8(region, offset) // => 123
 ```
 
 ## Function `storeInt8`
-``` motoko no-repl
+
+```motoko no-repl
 func storeInt8(region : Region, offset : Nat64, value : Int8) : ()
 ```
 
-Within `region`, store a `Int8` value at `offset`.
-Traps on an out-of-bounds access.
+Dentro de `region`, almacena un valor `Int8` en `offset`. Se interrumpe en caso
+de acceso fuera de límites.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let region = Region.new();
 let offset = 0;
@@ -307,14 +354,16 @@ Region.loadInt8(region, offset) // => 123
 ```
 
 ## Function `loadInt16`
-``` motoko no-repl
+
+```motoko no-repl
 func loadInt16(region : Region, offset : Nat64) : Int16
 ```
 
-Within `region`, load a `Int16` value from `offset`.
-Traps on an out-of-bounds access.
+Dentro de `region`, carga un valor `Int16` desde `offset`. Se interrumpe en caso
+de acceso fuera de límites.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let region = Region.new();
 let offset = 0;
@@ -324,14 +373,16 @@ Region.loadInt16(region, offset) // => 123
 ```
 
 ## Function `storeInt16`
-``` motoko no-repl
+
+```motoko no-repl
 func storeInt16(region : Region, offset : Nat64, value : Int16) : ()
 ```
 
-Within `region`, store a `Int16` value at `offset`.
-Traps on an out-of-bounds access.
+Dentro de `region`, almacena un valor `Int16` en `offset`. Se interrumpe en caso
+de acceso fuera de límites.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let region = Region.new();
 let offset = 0;
@@ -341,14 +392,16 @@ Region.loadInt16(region, offset) // => 123
 ```
 
 ## Function `loadInt32`
-``` motoko no-repl
+
+```motoko no-repl
 func loadInt32(region : Region, offset : Nat64) : Int32
 ```
 
-Within `region`, load a `Int32` value from `offset`.
-Traps on an out-of-bounds access.
+Dentro de `region`, carga un valor `Int32` desde `offset`. Se interrumpe en caso
+de acceso fuera de límites.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let region = Region.new();
 let offset = 0;
@@ -358,14 +411,16 @@ Region.loadInt32(region, offset) // => 123
 ```
 
 ## Function `storeInt32`
-``` motoko no-repl
+
+```motoko no-repl
 func storeInt32(region : Region, offset : Nat64, value : Int32) : ()
 ```
 
-Within `region`, store a `Int32` value at `offset`.
-Traps on an out-of-bounds access.
+Dentro de `region`, almacena un valor `Int32` en `offset`. Se interrumpe en caso
+de acceso fuera de límites.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let region = Region.new();
 let offset = 0;
@@ -375,14 +430,16 @@ Region.loadInt32(region, offset) // => 123
 ```
 
 ## Function `loadInt64`
-``` motoko no-repl
+
+```motoko no-repl
 func loadInt64(region : Region, offset : Nat64) : Int64
 ```
 
-Within `region`, load a `Int64` value from `offset`.
-Traps on an out-of-bounds access.
+Dentro de `region`, carga un valor `Int64` desde `offset`. Se interrumpe en caso
+de acceso fuera de límites.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let region = Region.new();
 let offset = 0;
@@ -392,14 +449,16 @@ Region.loadInt64(region, offset) // => 123
 ```
 
 ## Function `storeInt64`
-``` motoko no-repl
+
+```motoko no-repl
 func storeInt64(region : Region, offset : Nat64, value : Int64) : ()
 ```
 
-Within `region`, store a `Int64` value at `offset`.
-Traps on an out-of-bounds access.
+Dentro de `region`, almacena un valor `Int64` en `offset`. Se interrumpe en caso
+de acceso fuera de límites.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let region = Region.new();
 let offset = 0;
@@ -409,14 +468,16 @@ Region.loadInt64(region, offset) // => 123
 ```
 
 ## Function `loadFloat`
-``` motoko no-repl
+
+```motoko no-repl
 func loadFloat(region : Region, offset : Nat64) : Float
 ```
 
-Within `region`, loads a `Float` value from the given `offset`.
-Traps on an out-of-bounds access.
+Dentro de `region`, carga un valor `Float` desde el `offset` dado. Se interrumpe
+en caso de acceso fuera de límites.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let region = Region.new();
 let offset = 0;
@@ -426,14 +487,16 @@ Region.loadFloat(region, offset) // => 1.25
 ```
 
 ## Function `storeFloat`
-``` motoko no-repl
+
+```motoko no-repl
 func storeFloat(region : Region, offset : Nat64, value : Float) : ()
 ```
 
-Within `region`, store float `value` at the given `offset`.
-Traps on an out-of-bounds access.
+Dentro de `region`, almacena el valor de tipo `Float` en la posición `offset`.
+Se interrumpe en caso de acceso fuera de límites.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 let region = Region.new();
 let offset = 0;
@@ -443,14 +506,16 @@ Region.loadFloat(region, offset) // => 1.25
 ```
 
 ## Function `loadBlob`
-``` motoko no-repl
+
+```motoko no-repl
 func loadBlob(region : Region, offset : Nat64, size : Nat) : Blob
 ```
 
-Within `region,` load `size` bytes starting from `offset` as a `Blob`.
-Traps on an out-of-bounds access.
+Dentro de `region`, carga `size` bytes comenzando desde `offset` como un `Blob`.
+Se interrumpe en caso de acceso fuera de límites.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 import Blob "mo:base/Blob";
 
@@ -463,14 +528,16 @@ Blob.toArray(Region.loadBlob(region, offset, size)) // => [1, 2, 3]
 ```
 
 ## Function `storeBlob`
-``` motoko no-repl
+
+```motoko no-repl
 func storeBlob(region : Region, offset : Nat64, value : Blob) : ()
 ```
 
-Within `region, write `blob.size()` bytes of `blob` beginning at `offset`.
-Traps on an out-of-bounds access.
+Dentro de `region`, escribe `blob.size()` bytes de `blob` comenzando en
+`offset`. Se interrumpe en caso de acceso fuera de límites.
 
-Example:
+Ejemplo:
+
 ```motoko no-repl
 import Blob "mo:base/Blob";
 

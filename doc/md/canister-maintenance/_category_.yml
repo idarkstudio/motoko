@@ -1,5 +1,4 @@
 position: 3
-label: 'Canister maintenance'
+label: "Mantenimiento de Canisters"
 collapsible: true # make the category collapsible
-collapsed: true 
-
+collapsed: true

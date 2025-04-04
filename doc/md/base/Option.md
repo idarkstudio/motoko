@@ -1,9 +1,10 @@
 # Option
-Typesafe nulls
 
-Optional values can be seen as a typesafe `null`. A value of type `?Int` can
-be constructed with either `null` or `?42`. The simplest way to get at the
-contents of an optional is to use pattern matching:
+Nulos seguros
+
+Los valores opcionales se pueden ver como un `null` seguro. Un valor de tipo
+`?Int` se puede construir con `null` o `?42`. La forma más sencilla de acceder
+al contenido de un opcional es utilizar el emparejamiento de patrones:
 
 ```motoko
 let optionalInt1 : ?Int = ?42;
@@ -22,44 +23,50 @@ let int2orZero : Int = switch optionalInt2 {
 assert int2orZero == 0;
 ```
 
-The functions in this module capture some common operations when working
-with optionals that can be more succinct than using pattern matching.
+Las funciones en este módulo capturan algunas operaciones comunes al trabajar
+con opcionales que pueden ser más concisas que utilizar el emparejamiento de
+patrones.
 
-## Function `get`
-``` motoko no-repl
+## Función `get`
+
+```motoko no-repl
 func get<T>(x : ?T, default : T) : T
 ```
 
-Unwraps an optional value, with a default value, i.e. `get(?x, d) = x` and
-`get(null, d) = d`.
+Desenvuelve un valor opcional, con un valor predeterminado, es decir,
+`get(?x, d) = x` y `get(null, d) = d`.
 
-## Function `getMapped`
-``` motoko no-repl
+## Función `getMapped`
+
+```motoko no-repl
 func getMapped<A, B>(x : ?A, f : A -> B, default : B) : B
 ```
 
-Unwraps an optional value using a function, or returns the default, i.e.
-`option(?x, f, d) = f x` and `option(null, f, d) = d`.
+Desenvuelve un valor opcional utilizando una función, o devuelve el valor
+predeterminado, es decir, `option(?x, f, d) = f x` y `option(null, f, d) = d`.
 
-## Function `map`
-``` motoko no-repl
+## Función `map`
+
+```motoko no-repl
 func map<A, B>(x : ?A, f : A -> B) : ?B
 ```
 
-Applies a function to the wrapped value. `null`'s are left untouched.
+Aplica una función al valor envuelto. Los `null` se mantienen sin cambios.
+
 ```motoko
 import Option "mo:base/Option";
 assert Option.map<Nat, Nat>(?42, func x = x + 1) == ?43;
 assert Option.map<Nat, Nat>(null, func x = x + 1) == null;
 ```
 
-## Function `iterate`
-``` motoko no-repl
+## Función `iterate`
+
+```motoko no-repl
 func iterate<A>(x : ?A, f : A -> ())
 ```
 
-Applies a function to the wrapped value, but discards the result. Use
-`iterate` if you're only interested in the side effect `f` produces.
+Aplica una función al valor envuelto, pero descarta el resultado. Utiliza
+`iterate` si solo estás interesado en el efecto secundario que produce `f`.
 
 ```motoko
 import Option "mo:base/Option";
@@ -70,28 +77,32 @@ Option.iterate(null, func (x : Nat) { counter += x });
 assert counter == 5;
 ```
 
-## Function `apply`
-``` motoko no-repl
+## Función `apply`
+
+```motoko no-repl
 func apply<A, B>(x : ?A, f : ?(A -> B)) : ?B
 ```
 
-Applies an optional function to an optional value. Returns `null` if at
-least one of the arguments is `null`.
+Aplica una función opcional a un valor opcional. Devuelve `null` si al menos uno
+de los argumentos es `null`.
 
-## Function `chain`
-``` motoko no-repl
+## Función `chain`
+
+```motoko no-repl
 func chain<A, B>(x : ?A, f : A -> ?B) : ?B
 ```
 
-Applies a function to an optional value. Returns `null` if the argument is
-`null`, or the function returns `null`.
+Aplica una función a un valor opcional. Devuelve `null` si el argumento es
+`null`, o si la función devuelve `null`.
 
-## Function `flatten`
-``` motoko no-repl
+## Función `flatten`
+
+```motoko no-repl
 func flatten<A>(x : ??A) : ?A
 ```
 
-Given an optional optional value, removes one layer of optionality.
+Dado un valor opcional opcional, elimina una capa de opcionalidad.
+
 ```motoko
 import Option "mo:base/Option";
 assert Option.flatten(?(?(42))) == ?42;
@@ -99,59 +110,71 @@ assert Option.flatten(?(null)) == null;
 assert Option.flatten(null) == null;
 ```
 
-## Function `make`
-``` motoko no-repl
+## Función `make`
+
+```motoko no-repl
 func make<A>(x : A) : ?A
 ```
 
-Creates an optional value from a definite value.
+Crea un valor opcional a partir de un valor definido.
+
 ```motoko
 import Option "mo:base/Option";
 assert Option.make(42) == ?42;
 ```
 
-## Function `isSome`
-``` motoko no-repl
+## Función `isSome`
+
+```motoko no-repl
 func isSome(x : ?Any) : Bool
 ```
 
-Returns true if the argument is not `null`, otherwise returns false.
+Devuelve verdadero si el argumento no es `null`, de lo contrario devuelve falso.
 
-## Function `isNull`
-``` motoko no-repl
+## Función `isNull`
+
+```motoko no-repl
 func isNull(x : ?Any) : Bool
 ```
 
-Returns true if the argument is `null`, otherwise returns false.
+Devuelve verdadero si el argumento es `null`, de lo contrario devuelve falso.
 
-## Function `equal`
-``` motoko no-repl
+## Función `equal`
+
+```motoko no-repl
 func equal<A>(x : ?A, y : ?A, eq : (A, A) -> Bool) : Bool
 ```
 
-Returns true if the optional arguments are equal according to the equality function provided, otherwise returns false.
+Devuelve verdadero si los argumentos opcionales son iguales según la función de
+igualdad proporcionada, de lo contrario devuelve falso.
 
-## Function `assertSome`
-``` motoko no-repl
+## Función `assertSome`
+
+```motoko no-repl
 func assertSome(x : ?Any)
 ```
 
-Asserts that the value is not `null`; fails otherwise.
-@deprecated Option.assertSome will be removed soon; use an assert expression instead
+Asegura que el valor no sea `null`; falla en caso contrario. @deprecated
+Option.assertSome se eliminará pronto; en su lugar, utiliza una expresión de
+aserción.
 
-## Function `assertNull`
-``` motoko no-repl
+## Función `assertNull`
+
+```motoko no-repl
 func assertNull(x : ?Any)
 ```
 
-Asserts that the value _is_ `null`; fails otherwise.
-@deprecated Option.assertNull will be removed soon; use an assert expression instead
+Asegura que el valor _sea_ `null`; falla en caso contrario. @deprecated
+Option.assertNull se eliminará pronto; en su lugar, utiliza una expresión de
+aserción.
 
-## Function `unwrap`
-``` motoko no-repl
+## Función `unwrap`
+
+```motoko no-repl
 func unwrap<T>(x : ?T) : T
 ```
 
-Unwraps an optional value, i.e. `unwrap(?x) = x`.
+Desenvuelve un valor opcional, es decir, `unwrap(?x) = x`.
 
-@deprecated Option.unwrap is unsafe and fails if the argument is null; it will be removed soon; use a `switch` or `do?` expression instead
+@deprecated Option.unwrap no es seguro y falla si el argumento es `null`; se
+eliminará pronto; en su lugar, utiliza una expresión `switch` o `do?`.

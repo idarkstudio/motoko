@@ -1,46 +1,58 @@
 # OrderedSet
-Stable ordered set implemented as a red-black tree.
 
-A red-black tree is a balanced binary search tree ordered by the elements.
+Conjunto ordenado estable implementado como un árbol red-black (RBTree).
 
-The tree data structure internally colors each of its nodes either red or black,
-and uses this information to balance the tree during the modifying operations.
+Un árbol red-black es un árbol de búsqueda binario equilibrado ordenado por los
+elementos.
 
-Performance:
-* Runtime: `O(log(n))` worst case cost per insertion, removal, and retrieval operation.
-* Space: `O(n)` for storing the entire tree.
-`n` denotes the number of elements (i.e. nodes) stored in the tree.
+La estructura de datos del árbol colorea internamente cada uno de sus nodos como
+rojo o negro, y utiliza esta información para equilibrar el árbol durante las
+operaciones de modificación.
 
-Credits:
+Rendimiento:
 
-The core of this implementation is derived from:
+- Tiempo de ejecución: `O(log(n))` costo en el peor de los casos por inserción,
+  eliminación y recuperación operación.
+- Espacio: `O(n)` para almacenar todo el árbol. `n` denota el número de
+  elementos (es decir, nodos) almacenados en el árbol.
 
-* Ken Friis Larsen's [RedBlackMap.sml](https://github.com/kfl/mosml/blob/master/src/mosmllib/Redblackmap.sml), which itself is based on:
-* Stefan Kahrs, "Red-black trees with types", Journal of Functional Programming, 11(4): 425-432 (2001), [version 1 in web appendix](http://www.cs.ukc.ac.uk/people/staff/smk/redblack/rb.html).
+Créditos:
 
-## Type `Set`
-``` motoko no-repl
+El núcleo de esta implementación se deriva de:
+
+- Ken Friis Larsen's
+  [RedBlackMap.sml](https://github.com/kfl/mosml/blob/master/src/mosmllib/Redblackmap.sml),
+  que a su vez se basa en:
+- Stefan Kahrs, "Red-black trees with types", Journal of Functional Programming,
+  11(4): 425-432 (2001),
+  [versión 1 en el apéndice web](http://www.cs.ukc.ac.uk/people/staff/smk/redblack/rb.html).
+
+## Tipo `Set`
+
+```motoko no-repl
 type Set<T> = { size : Nat; root : Tree<T> }
 ```
 
-Ordered collection of unique elements of the generic type `T`.
-If type `T` is stable then `Set<T>` is also stable.
-To ensure that property the `Set<T>` does not have any methods,
-instead they are gathered in the functor-like class `Operations` (see example there).
+Colección ordenada de elementos únicos del tipo genérico `T`. Si el tipo `T` es
+estable, entonces `Set<T>` también es estable. Para garantizar esa propiedad, el
+`Set<T>` no tiene ningún método, en su lugar se recopilan en la clase tipo
+functor `Operations` (ver ejemplo allí).
 
-## Class `Operations<T>`
+## Clase `Operations<T>`
 
-``` motoko no-repl
+```motoko no-repl
 class Operations<T>(compare : (T, T) -> O.Order)
 ```
 
-Class that captures element type `T` along with its ordering function `compare`
-and provide all operations to work with a set of type `Set<T>`.
+Clase que captura el tipo de elemento `T` junto con su función de ordenación
+`compare` y proporciona todas las operaciones para trabajar con un conjunto de
+tipo `Set<T>`.
 
-An instance object should be created once as a canister field to ensure
-that the same ordering function is used for every operation.
+Se debe crear un objeto de instancia una vez como un campo del canister para
+asegurar que el mismo función de ordenación se utiliza para cada operación.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Set "mo:base/OrderedSet";
 import Nat "mo:base/Nat";
@@ -48,26 +60,28 @@ import Nat "mo:base/Nat";
 actor {
   let natSet = Set.Make<Nat>(Nat.compare); // : Operations<Nat>
   stable var usedIds : Set.Set<Nat> = natSet.empty();
-  
+
   public func createId(id : Nat) : async () {
     usedIds := natSet.put(usedIds, id);
   };
-  
+
   public func idIsUsed(id: Nat) : async Bool {
      natSet.contains(usedIds, id)
   }
 }
 ```
 
-### Function `fromIter`
-``` motoko no-repl
+### Función `fromIter`
+
+```motoko no-repl
 func fromIter(i : I.Iter<T>) : Set<T>
 ```
 
-Returns a new Set, containing all entries given by the iterator `i`.
-If there are multiple identical entries only one is taken.
+Devuelve un nuevo conjunto, que contiene todas las entradas dadas por el
+iterador `i`. Si hay múltiples entradas idénticas, solo se toma una.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Set "mo:base/OrderedSet";
 import Nat "mo:base/Nat";
@@ -81,23 +95,24 @@ Debug.print(debug_show(Iter.toArray(natSet.vals(set))));
 // [0, 1, 2]
 ```
 
-Runtime: `O(n * log(n))`.
-Space: `O(n)` retained memory plus garbage, see the note below.
-where `n` denotes the number of elements stored in the set and
-assuming that the `compare` function implements an `O(1)` comparison.
+Tiempo de ejecución: `O(n * log(n))`. Espacio: `O(n)` memoria retenida más
+basura, ver la nota a continuación. donde `n` denota el número de elementos
+almacenados en el conjunto y asumiendo que la función `compare` implementa una
+comparación `O(1)`.
 
-Note: Creates `O(n * log(n))` temporary objects that will be collected as garbage.
+Nota: Crea `O(n * log(n))` objetos temporales que se recogerán como basura.
 
+### Función `put`
 
-### Function `put`
-``` motoko no-repl
+```motoko no-repl
 func put(s : Set<T>, value : T) : Set<T>
 ```
 
-Insert the value `value` into the set `s`. Has no effect if `value` is already
-present in the set. Returns a modified set.
+Inserta el valor `value` en el conjunto `s`. No tiene efecto si `value` ya está
+presente en el conjunto. Devuelve un conjunto modificado.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Set "mo:base/OrderedSet";
 import Nat "mo:base/Nat";
@@ -115,25 +130,26 @@ Debug.print(debug_show(Iter.toArray(natSet.vals(set))));
 // [0, 1, 2]
 ```
 
-Runtime: `O(log(n))`.
-Space: `O(log(n))`.
-where `n` denotes the number of elements stored in the set and
-assuming that the `compare` function implements an `O(1)` comparison.
+Tiempo de ejecución: `O(log(n))`. Espacio: `O(log(n))`. donde `n` denota el
+número de elementos almacenados en el conjunto y asumiendo que la función
+`compare` implementa una comparación `O(1)`.
 
-Note: The returned set shares with the `s` most of the tree nodes. 
-Garbage collecting one of sets (e.g. after an assignment `m := natSet.delete(m, k)`)
-causes collecting `O(log(n))` nodes.
+Nota: El conjunto devuelto comparte con el `s` la mayoría de los nodos del
+árbol. Recolectar basura uno de los conjuntos (por ejemplo, después de una
+asignación `m := natSet.delete(m, k)`) causa la recolección de `O(log(n))`
+nodos.
 
+### Función `delete`
 
-### Function `delete`
-``` motoko no-repl
+```motoko no-repl
 func delete(s : Set<T>, value : T) : Set<T>
 ```
 
-Deletes the value `value` from the set `s`. Has no effect if `value` is not
-present in the set. Returns modified set.
+Elimina el valor `value` del conjunto `s`. No tiene efecto si `value` no está
+presente en el conjunto. Devuelve el conjunto modificado.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Set "mo:base/OrderedSet";
 import Nat "mo:base/Nat";
@@ -149,24 +165,25 @@ Debug.print(debug_show(Iter.toArray(natSet.vals(natSet.delete(set, 42)))));
 // [0, 1, 2]
 ```
 
-Runtime: `O(log(n))`.
-Space: `O(log(n))`.
-where `n` denotes the number of elements stored in the set and
-assuming that the `compare` function implements an `O(1)` comparison.
+Tiempo de ejecución: `O(log(n))`. Espacio: `O(log(n))`. donde `n` denota el
+número de elementos almacenados en el conjunto y asumiendo que la función
+`compare` implementa una comparación `O(1)`.
 
-Note: The returned set shares with the `s` most of the tree nodes. 
-Garbage collecting one of sets (e.g. after an assignment `m := natSet.delete(m, k)`)
-causes collecting `O(log(n))` nodes.
+Nota: El conjunto devuelto comparte con el `s` la mayoría de los nodos del
+árbol. Recolectar basura uno de los conjuntos (por ejemplo, después de una
+asignación `m := natSet.delete(m, k)`) causa la recolección de `O(log(n))`
+nodos.
 
+### Función `contains`
 
-### Function `contains`
-``` motoko no-repl
+```motoko no-repl
 func contains(s : Set<T>, value : T) : Bool
 ```
 
-Test if the set 's' contains a given element.
+Prueba si el conjunto 's' contiene un elemento dado.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Set "mo:base/OrderedSet";
 import Nat "mo:base/Nat";
@@ -180,20 +197,22 @@ Debug.print(debug_show natSet.contains(set, 1)); // => true
 Debug.print(debug_show natSet.contains(set, 42)); // => false
 ```
 
-Runtime: `O(log(n))`.
-Space: `O(1)` retained memory plus garbage, see the note below.
-where `n` denotes the number of elements stored in the set and
-assuming that the `compare` function implements an `O(1)` comparison.
+Tiempo de ejecución: `O(log(n))`. Espacio: `O(1)` memoria retenida más basura,
+ver la nota a continuación. donde `n` denota el número de elementos almacenados
+en el conjunto y asumiendo que la función `compare` implementa una comparación
+`O(1)`.
 
+### Función `max`
 
-### Function `max`
-``` motoko no-repl
+```motoko no-repl
 func max(s : Set<T>) : ?T
 ```
 
-Get a maximal element of the set `s` if it is not empty, otherwise returns `null`
+Obtiene un elemento maximal del conjunto `s` si no está vacío, de lo contrario
+devuelve `null`
 
-Example:
+Ejemplo:
+
 ```motoko
 import Set "mo:base/OrderedSet";
 import Nat "mo:base/Nat";
@@ -208,19 +227,20 @@ Debug.print(debug_show(natSet.max(s1))); // => ?2
 Debug.print(debug_show(natSet.max(s2))); // => null
 ```
 
-Runtime: `O(log(n))`.
-Space: `O(1)`.
-where `n` denotes the number of elements in the set
+Tiempo de ejecución: `O(log(n))`. Espacio: `O(1)`. donde `n` denota el número de
+elementos en el conjunto
 
+### Función `min`
 
-### Function `min`
-``` motoko no-repl
+```motoko no-repl
 func min(s : Set<T>) : ?T
 ```
 
-Get a minimal element of the set `s` if it is not empty, otherwise returns `null`
+Obtiene un elemento mínimo del conjunto `s` si no está vacío, de lo contrario
+devuelve `null`
 
-Example:
+Ejemplo:
+
 ```motoko
 import Set "mo:base/OrderedSet";
 import Nat "mo:base/Nat";
@@ -235,19 +255,20 @@ Debug.print(debug_show(natSet.min(s1))); // => ?0
 Debug.print(debug_show(natSet.min(s2))); // => null
 ```
 
-Runtime: `O(log(n))`.
-Space: `O(1)`.
-where `n` denotes the number of elements in the set
+Tiempo de ejecución: `O(log(n))`. Espacio: `O(1)`. donde `n` denota el número de
+elementos en el conjunto
 
+### Función `union`
 
-### Function `union`
-``` motoko no-repl
+```motoko no-repl
 func union(s1 : Set<T>, s2 : Set<T>) : Set<T>
 ```
 
-[Set union](https://en.wikipedia.org/wiki/Union_(set_theory)) operation.
+Operación de
+[unión de conjuntos](<https://en.wikipedia.org/wiki/Union_(set_theory)>).
 
-Example:
+Ejemplo:
+
 ```motoko
 import Set "mo:base/OrderedSet";
 import Nat "mo:base/Nat";
@@ -262,21 +283,23 @@ Debug.print(debug_show Iter.toArray(natSet.vals(natSet.union(set1, set2))));
 // [0, 1, 2, 3, 4]
 ```
 
-Runtime: `O(m * log(n))`.
-Space: `O(m)`, retained memory plus garbage, see the note below.
-where `m` and `n` denote the number of elements in the sets, and `m <= n`.
+Tiempo de ejecución: `O(m * log(n))`. Espacio: `O(m)`, memoria retenida más
+basura, ver la nota a continuación. donde `m` y `n` denotan el número de
+elementos en los conjuntos, y `m <= n`.
 
-Note: Creates `O(m * log(n))` temporary objects that will be collected as garbage.
+Nota: Crea `O(m * log(n))` objetos temporales que se recogerán como basura.
 
+### Función `intersect`
 
-### Function `intersect`
-``` motoko no-repl
+```motoko no-repl
 func intersect(s1 : Set<T>, s2 : Set<T>) : Set<T>
 ```
 
-[Set intersection](https://en.wikipedia.org/wiki/Intersection_(set_theory)) operation.
+Operación de
+[intersección de conjuntos](<https://en.wikipedia.org/wiki/Intersection_(set_theory)>).
 
-Example:
+Ejemplo:
+
 ```motoko
 import Set "mo:base/OrderedSet";
 import Nat "mo:base/Nat";
@@ -291,21 +314,22 @@ Debug.print(debug_show Iter.toArray(natSet.vals(natSet.intersect(set1, set2))));
 // [1, 2]
 ```
 
-Runtime: `O(m * log(n))`.
-Space: `O(m)`, retained memory plus garbage, see the note below.
-where `m` and `n` denote the number of elements in the sets, and `m <= n`.
+Tiempo de ejecución: `O(m * log(n))`. Espacio: `O(m)`, memoria retenida más
+basura, ver la nota a continuación. donde `m` y `n` denotan el número de
+elementos en los conjuntos, y `m <= n`.
 
-Note: Creates `O(m)` temporary objects that will be collected as garbage.
+Nota: Crea `O(m)` objetos temporales que se recogerán como basura.
 
+### Función `diff`
 
-### Function `diff`
-``` motoko no-repl
+```motoko no-repl
 func diff(s1 : Set<T>, s2 : Set<T>) : Set<T>
 ```
 
-[Set difference](https://en.wikipedia.org/wiki/Difference_(set_theory)).
+[Diferencia de conjuntos](<https://en.wikipedia.org/wiki/Difference_(set_theory)>).
 
-Example:
+Ejemplo:
+
 ```motoko
 import Set "mo:base/OrderedSet";
 import Nat "mo:base/Nat";
@@ -320,24 +344,25 @@ Debug.print(debug_show Iter.toArray(natSet.vals(natSet.diff(set1, set2))));
 // [0]
 ```
 
-Runtime: `O(m * log(n))`.
-Space: `O(m)`, retained memory plus garbage, see the note below.
-where `m` and `n` denote the number of elements in the sets, and `m <= n`.
+Tiempo de ejecución: `O(m * log(n))`. Espacio: `O(m)`, memoria retenida más
+basura, ver la nota a continuación. donde `m` y `n` denotan el número de
+elementos en los conjuntos, y `m <= n`.
 
-Note: Creates `O(m * log(n))` temporary objects that will be collected as garbage.
+Nota: Crea `O(m * log(n))` objetos temporales que se recogerán como basura.
 
+### Función `map`
 
-### Function `map`
-``` motoko no-repl
+```motoko no-repl
 func map<T1>(s : Set<T1>, f : T1 -> T) : Set<T>
 ```
 
-Creates a new `Set` by applying `f` to each entry in the set `s`. Each element
-`x` in the old set is transformed into a new entry `x2`, where
-the new value `x2` is created by applying `f` to `x`.
-The result set may be smaller than the original set due to duplicate elements.
+Crea un nuevo `Set` aplicando `f` a cada entrada en el conjunto `s`. Cada
+elemento `x` en el conjunto antiguo se transforma en una nueva entrada `x2`,
+donde el nuevo valor `x2` se crea aplicando `f` a `x`. El conjunto resultante
+puede ser más pequeño que el conjunto original debido a elementos duplicados.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Set "mo:base/OrderedSet";
 import Nat "mo:base/Nat";
@@ -355,25 +380,25 @@ Debug.print(debug_show(Iter.toArray(natSet.vals(resSet))));
 // [0, 1]
 ```
 
-Cost of mapping all the elements:
-Runtime: `O(n * log(n))`.
-Space: `O(n)` retained memory
-where `n` denotes the number of elements stored in the set.
+Costo de mapear todos los elementos: Tiempo de ejecución: `O(n * log(n))`.
+Espacio: `O(n)` memoria retenida donde `n` denota el número de elementos
+almacenados en el conjunto.
 
-Note: Creates `O(n * log(n))` temporary objects that will be collected as garbage.
+Nota: Crea `O(n * log(n))` objetos temporales que se recogerán como basura.
 
+### Función `mapFilter`
 
-### Function `mapFilter`
-``` motoko no-repl
+```motoko no-repl
 func mapFilter<T1>(s : Set<T1>, f : T1 -> ?T) : Set<T>
 ```
 
-Creates a new set by applying `f` to each element in the set `s`. For each element
-`x` in the old set, if `f` evaluates to `null`, the element is discarded.
-Otherwise, the entry is transformed into a new entry `x2`, where
-the new value `x2` is the result of applying `f` to `x`.
+Crea un nuevo conjunto aplicando `f` a cada elemento en el conjunto `s`. Para
+cada elemento `x` en el conjunto original, si `f` evalúa a `null`, el elemento
+se descarta. De lo contrario, la entrada se transforma en una nueva entrada
+`x2`, donde el nuevo valor `x2` es el resultado de aplicar `f` a `x`.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Set "mo:base/OrderedSet";
 import Nat "mo:base/Nat";
@@ -394,22 +419,23 @@ Debug.print(debug_show(Iter.toArray(natSet.vals(newRbSet))));
 // [2, 4, 6]
 ```
 
-Runtime: `O(n * log(n))`.
-Space: `O(n)` retained memory plus garbage, see the note below.
-where `n` denotes the number of elements stored in the set and
-assuming that the `compare` function implements an `O(1)` comparison.
+Tiempo de ejecución: `O(n * log(n))`. Espacio: `O(n)` memoria retenida más
+basura, ver la nota a continuación, donde `n` denota el número de elementos
+almacenados en el conjunto y asumiendo que la función `compare` implementa una
+comparación `O(1)`.
 
-Note: Creates `O(n * log(n))` temporary objects that will be collected as garbage.
+Nota: Crea `O(n * log(n))` objetos temporales que se recogerán como basura.
 
+### Función `isSubset`
 
-### Function `isSubset`
-``` motoko no-repl
+```motoko no-repl
 func isSubset(s1 : Set<T>, s2 : Set<T>) : Bool
 ```
 
-Test if `set1` is subset of `set2`.
+Comprueba si `set1` es un subconjunto de `set2`.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Set "mo:base/OrderedSet";
 import Nat "mo:base/Nat";
@@ -423,20 +449,21 @@ let set2 = natSet.fromIter(Iter.fromArray([0, 2, 1]));
 Debug.print(debug_show natSet.isSubset(set1, set2)); // => true
 ```
 
-Runtime: `O(m * log(n))`.
-Space: `O(1)` retained memory plus garbage, see the note below.
-where `m` and `n` denote the number of elements stored in the sets set1 and set2, respectively,
-and assuming that the `compare` function implements an `O(1)` comparison.
+Tiempo de ejecución: `O(m * log(n))`. Espacio: `O(1)` memoria retenida más
+basura, ver la nota a continuación, donde `m` y `n` denotan el número de
+elementos almacenados en los conjuntos set1 y set2, respectivamente, y asumiendo
+que la función `compare` implementa una comparación `O(1)`.
 
+### Función `equals`
 
-### Function `equals`
-``` motoko no-repl
+```motoko no-repl
 func equals(s1 : Set<T>, s2 : Set<T>) : Bool
 ```
 
-Test if two sets are equal.
+Comprueba si dos conjuntos son iguales.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Set "mo:base/OrderedSet";
 import Nat "mo:base/Nat";
@@ -451,22 +478,23 @@ Debug.print(debug_show natSet.equals(set1, set1)); // => true
 Debug.print(debug_show natSet.equals(set1, set2)); // => false
 ```
 
-Runtime: `O(m * log(n))`.
-Space: `O(1)` retained memory plus garbage, see the note below.
-where `m` and `n` denote the number of elements stored in the sets set1 and set2, respectively,
-and assuming that the `compare` function implements an `O(1)` comparison.
+Tiempo de ejecución: `O(m * log(n))`. Espacio: `O(1)` memoria retenida más
+basura, ver la nota a continuación, donde `m` y `n` denotan el número de
+elementos almacenados en los conjuntos set1 y set2, respectivamente, y asumiendo
+que la función `compare` implementa una comparación `O(1)`.
 
+### Función `vals`
 
-### Function `vals`
-``` motoko no-repl
+```motoko no-repl
 func vals(s : Set<T>) : I.Iter<T>
 ```
 
-Returns an Iterator (`Iter`) over the elements of the set.
-Iterator provides a single method `next()`, which returns
-elements in ascending order, or `null` when out of elements to iterate over.
+Devuelve un Iterador (`Iter`) sobre los elementos del conjunto. El iterador
+proporciona un método `next()`, que devuelve los elementos en orden ascendente,
+o `null` cuando no hay más elementos para iterar.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Set "mo:base/OrderedSet";
 import Nat "mo:base/Nat";
@@ -479,22 +507,25 @@ let set = natSet.fromIter(Iter.fromArray([0, 2, 1]));
 Debug.print(debug_show(Iter.toArray(natSet.vals(set))));
 // [0, 1, 2]
 ```
-Cost of iteration over all elements:
-Runtime: `O(n)`.
-Space: `O(log(n))` retained memory plus garbage, see the note below.
-where `n` denotes the number of elements stored in the set.
 
-Note: Full set iteration creates `O(n)` temporary objects that will be collected as garbage.
+Costo de iteración sobre todos los elementos: Tiempo de ejecución: `O(n)`.
+Espacio: `O(log(n))` memoria retenida más basura, ver la nota a continuación,
+donde `n` denota el número de elementos almacenados en el conjunto.
 
+Nota: La iteración completa del conjunto crea `O(n)` objetos temporales que se
+recogerán como basura.
 
-### Function `valsRev`
-``` motoko no-repl
+### Función `valsRev`
+
+```motoko no-repl
 func valsRev(s : Set<T>) : I.Iter<T>
 ```
 
-Same as `vals()` but iterates over elements of the set `s` in the descending order.
+Igual que `vals()`, pero itera sobre los elementos del conjunto `s` en orden
+descendente.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Set "mo:base/OrderedSet";
 import Nat "mo:base/Nat";
@@ -507,22 +538,24 @@ let set = natSet.fromIter(Iter.fromArray([0, 2, 1]));
 Debug.print(debug_show(Iter.toArray(natSet.valsRev(set))));
 // [2, 1, 0]
 ```
-Cost of iteration over all elements:
-Runtime: `O(n)`.
-Space: `O(log(n))` retained memory plus garbage, see the note below.
-where `n` denotes the number of elements stored in the set.
 
-Note: Full set iteration creates `O(n)` temporary objects that will be collected as garbage.
+Costo de iteración sobre todos los elementos: Tiempo de ejecución: `O(n)`.
+Espacio: `O(log(n))` memoria retenida más basura, ver la nota a continuación,
+donde `n` denota el número de elementos almacenados en el conjunto.
 
+Nota: La iteración completa del conjunto crea `O(n)` objetos temporales que se
+recogerán como basura.
 
-### Function `empty`
-``` motoko no-repl
+### Función `empty`
+
+```motoko no-repl
 func empty() : Set<T>
 ```
 
-Create a new empty Set.
+Crea un nuevo conjunto vacío.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Set "mo:base/OrderedSet";
 import Nat "mo:base/Nat";
@@ -534,19 +567,19 @@ let set = natSet.empty();
 Debug.print(debug_show(natSet.size(set))); // => 0
 ```
 
-Cost of empty set creation
-Runtime: `O(1)`.
-Space: `O(1)`
+Costo de creación de un conjunto vacío: Tiempo de ejecución: `O(1)`. Espacio:
+`O(1)`
 
+### Función `size`
 
-### Function `size`
-``` motoko no-repl
+```motoko no-repl
 func size(s : Set<T>) : Nat
 ```
 
-Returns the number of elements in the set.
+Devuelve el número de elementos en el conjunto.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Set "mo:base/OrderedSet";
 import Nat "mo:base/Nat";
@@ -559,20 +592,20 @@ let set = natSet.fromIter(Iter.fromArray([0, 2, 1]));
 Debug.print(debug_show(natSet.size(set))); // => 3
 ```
 
-Runtime: `O(1)`.
-Space: `O(1)`.
+Tiempo de ejecución: `O(1)`. Espacio: `O(1)`.
 
+### Función `foldLeft`
 
-### Function `foldLeft`
-``` motoko no-repl
+```motoko no-repl
 func foldLeft<Accum>(set : Set<T>, base : Accum, combine : (Accum, T) -> Accum) : Accum
 ```
 
-Collapses the elements in `set` into a single value by starting with `base`
-and progessively combining elements into `base` with `combine`. Iteration runs
-left to right.
+Combina los elementos en `set` en un solo valor comenzando con `base` y
+combinando progresivamente los elementos en `base` con `combine`. La iteración
+se realiza de izquierda a derecha.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Set "mo:base/OrderedSet";
 import Nat "mo:base/Nat";
@@ -588,24 +621,25 @@ Debug.print(debug_show(natSet.foldLeft(set, 0, folder)));
 // 3
 ```
 
-Cost of iteration over all elements:
-Runtime: `O(n)`.
-Space: depends on `combine` function plus garbage, see the note below.
-where `n` denotes the number of elements stored in the set.
+Costo de iteración sobre todos los elementos: Tiempo de ejecución: `O(n)`.
+Espacio: depende de la función `combine` más basura, ver la nota a continuación,
+donde `n` denota el número de elementos almacenados en el conjunto.
 
-Note: Full set iteration creates `O(n)` temporary objects that will be collected as garbage.
+Nota: La iteración completa del conjunto crea `O(n)` objetos temporales que se
+recogerán como basura.
 
+### Función `foldRight`
 
-### Function `foldRight`
-``` motoko no-repl
+```motoko no-repl
 func foldRight<Accum>(set : Set<T>, base : Accum, combine : (T, Accum) -> Accum) : Accum
 ```
 
-Collapses the elements in `set` into a single value by starting with `base`
-and progessively combining elements into `base` with `combine`. Iteration runs
-right to left.
+Combina los elementos en `set` en un solo valor comenzando con `base` y
+combinando progresivamente los elementos en `base` con `combine`. La iteración
+se realiza de derecha a izquierda.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Set "mo:base/OrderedSet";
 import Nat "mo:base/Nat";
@@ -621,22 +655,23 @@ Debug.print(debug_show(natSet.foldRight(set, 0, folder)));
 // 3
 ```
 
-Cost of iteration over all elements:
-Runtime: `O(n)`.
-Space: depends on `combine` function plus garbage, see the note below.
-where `n` denotes the number of elements stored in the set.
+Costo de iteración sobre todos los elementos: Tiempo de ejecución: `O(n)`.
+Espacio: depende de la función `combine` más basura, ver la nota a continuación,
+donde `n` denota el número de elementos almacenados en el conjunto.
 
-Note: Full set iteration creates `O(n)` temporary objects that will be collected as garbage.
+Nota: La iteración completa del conjunto crea `O(n)` objetos temporales que se
+recogerán como basura.
 
+### Función `isEmpty`
 
-### Function `isEmpty`
-``` motoko no-repl
+```motoko no-repl
 func isEmpty(s : Set<T>) : Bool
 ```
 
-Test if the given set `s` is empty.
+Comprueba si el conjunto `s` dado está vacío.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Set "mo:base/OrderedSet";
 import Nat "mo:base/Nat";
@@ -648,18 +683,19 @@ let set = natSet.empty();
 Debug.print(debug_show(natSet.isEmpty(set))); // => true
 ```
 
-Runtime: `O(1)`.
-Space: `O(1)`.
+Tiempo de ejecución: `O(1)`. Espacio: `O(1)`.
 
+### Función `all`
 
-### Function `all`
-``` motoko no-repl
+```motoko no-repl
 func all(s : Set<T>, pred : T -> Bool) : Bool
 ```
 
-Test whether all values in the set `s` satisfy a given predicate `pred`.
+Comprueba si todos los valores en el conjunto `s` satisfacen un predicado `pred`
+dado.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Set "mo:base/OrderedSet";
 import Nat "mo:base/Nat";
@@ -675,19 +711,20 @@ Debug.print(debug_show(natSet.all(set, func (v) = (v < 2))));
 // false
 ```
 
-Runtime: `O(n)`.
-Space: `O(1)`.
-where `n` denotes the number of elements stored in the set.
+Tiempo de ejecución: `O(n)`. Espacio: `O(1)`. donde `n` denota el número de
+elementos almacenados en el conjunto.
 
+### Función `some`
 
-### Function `some`
-``` motoko no-repl
+```motoko no-repl
 func some(s : Set<T>, pred : (T) -> Bool) : Bool
 ```
 
-Test if there exists an element in the set `s` satisfying the given predicate `pred`.
+Comprueba si existe un elemento en el conjunto `s` que cumple el predicado
+`pred` dado.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Set "mo:base/OrderedSet";
 import Nat "mo:base/Nat";
@@ -703,28 +740,29 @@ Debug.print(debug_show(natSet.some(set, func (v) = (v >= 0))));
 // true
 ```
 
-Runtime: `O(n)`.
-Space: `O(1)`.
-where `n` denotes the number of elements stored in the set.
+Tiempo de ejecución: `O(n)`. Espacio: `O(1)`. donde `n` denota el número de
+elementos almacenados en el conjunto.
 
+### Función `validate`
 
-### Function `validate`
-``` motoko no-repl
+```motoko no-repl
 func validate(s : Set<T>) : ()
 ```
 
-Test helper that check internal invariant for the given set `s`. 
-Raise an error (for a stack trace) if invariants are violated.
+Función auxiliar de prueba que verifica la invariante interna del conjunto `s`.
+Lanza un error (para obtener una traza de la pila) si se violan las invariantes.
 
 ## Function `Make`
-``` motoko no-repl
+
+```motoko no-repl
 func Make<T>(compare : (T, T) -> O.Order) : Operations<T>
 ```
 
-Create `OrderedSet.Operations` object capturing element type `T` and `compare` function. 
-It is an alias for the `Operations` constructor.
+Crear un objeto `OrderedSet.Operations` que capture el tipo de elemento `T` y la
+función `compare`. Es un alias para el constructor `Operations`.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Set "mo:base/OrderedSet";
 import Nat "mo:base/Nat";

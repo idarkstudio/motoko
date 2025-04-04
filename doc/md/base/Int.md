@@ -1,105 +1,125 @@
 # Int
-Signed integer numbers with infinite precision (also called big integers).
 
-Most operations on integer numbers (e.g. addition) are available as built-in operators (e.g. `-1 + 1`).
-This module provides equivalent functions and `Text` conversion.
+Números enteros con precisión infinita (también conocidos como enteros grandes /
+big integers).
 
-Import from the base library to use this module.
+La mayoría de las operaciones en números enteros (por ejemplo, la suma) están
+disponibles como operadores integrados (por ejemplo, `-1 + 1`). Este módulo
+proporciona funciones equivalentes y conversión a `Text`.
+
+Importa desde la libreria base para usar este módulo.
+
 ```motoko name=import
 import Int "mo:base/Int";
 ```
 
-## Type `Int`
-``` motoko no-repl
+## Tipo `Int`
+
+```motoko no-repl
 type Int = Prim.Types.Int
 ```
 
-Infinite precision signed integers.
+Enteros con precisión infinita.
 
-## Function `abs`
-``` motoko no-repl
+## Función `abs`
+
+```motoko no-repl
 func abs(x : Int) : Nat
 ```
 
-Returns the absolute value of `x`.
+Devuelve el valor absoluto de `x`.
 
-Example:
+Ejemplo:
+
 ```motoko include=import
 Int.abs(-12) // => 12
 ```
 
-## Function `toText`
-``` motoko no-repl
+## Función `toText`
+
+```motoko no-repl
 func toText(x : Int) : Text
 ```
 
-Converts an integer number to its textual representation. Textual
-representation _do not_ contain underscores to represent commas.
+Convierte un número entero en su representación textual. La representación
+textual _no_ contiene guiones bajos para representar comas.
 
-Example:
+Ejemplo:
+
 ```motoko include=import
 Int.toText(-1234) // => "-1234"
 ```
 
-## Function `min`
-``` motoko no-repl
+## Función `min`
+
+```motoko no-repl
 func min(x : Int, y : Int) : Int
 ```
 
-Returns the minimum of `x` and `y`.
+Devuelve el mínimo entre `x` e `y`.
 
-Example:
+Ejemplo:
+
 ```motoko include=import
 Int.min(2, -3) // => -3
 ```
 
-## Function `max`
-``` motoko no-repl
+## Función `max`
+
+```motoko no-repl
 func max(x : Int, y : Int) : Int
 ```
 
-Returns the maximum of `x` and `y`.
+Devuelve el máximo entre `x` e `y`.
 
-Example:
+Ejemplo:
+
 ```motoko include=import
 Int.max(2, -3) // => 2
 ```
 
-## Function `hash`
-``` motoko no-repl
+## Función `hash`
+
+```motoko no-repl
 func hash(i : Int) : Hash.Hash
 ```
 
-Computes a hash from the least significant 32-bits of `i`, ignoring other bits.
-@deprecated For large `Int` values consider using a bespoke hash function that considers all of the argument's bits.
+Calcula un hash a partir de los 32 bits menos significativos de `i`, ignorando
+otros bits. @deprecated Para valores grandes de `Int`, considera usar una
+función de hash personalizada que tenga en cuenta todos los bits del argumento.
 
-## Function `hashAcc`
-``` motoko no-repl
+## Función `hashAcc`
+
+```motoko no-repl
 func hashAcc(h1 : Hash.Hash, i : Int) : Hash.Hash
 ```
 
-Computes an accumulated hash from `h1` and the least significant 32-bits of `i`, ignoring other bits in `i`.
-@deprecated For large `Int` values consider using a bespoke hash function that considers all of the argument's bits.
+Calcula un hash acumulado a partir de `h1` y los 32 bits menos significativos de
+`i`, ignorando otros bits en `i`. @deprecated Para valores grandes de `Int`,
+considera usar una función de hash personalizada que tenga en cuenta todos los
+bits del argumento.
 
-## Function `equal`
-``` motoko no-repl
+## Función `equal`
+
+```motoko no-repl
 func equal(x : Int, y : Int) : Bool
 ```
 
-Equality function for Int types.
-This is equivalent to `x == y`.
+Función de igualdad para tipos `Int`. Esto es equivalente a `x == y`.
 
-Example:
+Ejemplo:
+
 ```motoko include=import
 Int.equal(-1, -1); // => true
 ```
 
-Note: The reason why this function is defined in this library (in addition
-to the existing `==` operator) is so that you can use it as a function
-value to pass to a higher order function. It is not possible to use `==`
-as a function value at the moment.
+Nota: La razón por la que esta función está definida en esta biblioteca (además
+del operador `==` existente) es para que puedas usarla como un valor de función
+para pasar a una función de orden superior. No es posible usar `==` como un
+valor de función en este momento.
 
-Example:
+Ejemplo:
+
 ```motoko include=import
 import Buffer "mo:base/Buffer";
 
@@ -110,265 +130,292 @@ buffer2.add(-3);
 Buffer.equal(buffer1, buffer2, Int.equal) // => true
 ```
 
-## Function `notEqual`
-``` motoko no-repl
+## Función `notEqual`
+
+```motoko no-repl
 func notEqual(x : Int, y : Int) : Bool
 ```
 
-Inequality function for Int types.
-This is equivalent to `x != y`.
+Función de desigualdad para tipos `Int`. Esto es equivalente a `x != y`.
 
-Example:
+Ejemplo:
+
 ```motoko include=import
 Int.notEqual(-1, -2); // => true
 ```
 
-Note: The reason why this function is defined in this library (in addition
-to the existing `!=` operator) is so that you can use it as a function
-value to pass to a higher order function. It is not possible to use `!=`
-as a function value at the moment.
+Nota: La razón por la que esta función está definida en esta biblioteca (además
+del operador `!=` existente) es para que puedas usarla como un valor de función
+para pasar a una función de orden superior. No es posible usar `!=` como un
+valor de función en este momento.
 
-## Function `less`
-``` motoko no-repl
+## Función `less`
+
+```motoko no-repl
 func less(x : Int, y : Int) : Bool
 ```
 
-"Less than" function for Int types.
-This is equivalent to `x < y`.
+Función "menor que" para tipos `Int`. Esto es equivalente a `x < y`.
 
-Example:
+Ejemplo:
+
 ```motoko include=import
 Int.less(-2, 1); // => true
 ```
 
-Note: The reason why this function is defined in this library (in addition
-to the existing `<` operator) is so that you can use it as a function
-value to pass to a higher order function. It is not possible to use `<`
-as a function value at the moment.
+Nota: La razón por la que esta función está definida en esta biblioteca (además
+del operador `<` existente) es para que puedas usarla como un valor de función
+para pasar a una función de orden superior. No es posible usar `<` como un valor
+de función en este momento.
 
-## Function `lessOrEqual`
-``` motoko no-repl
+## Función `lessOrEqual`
+
+```motoko no-repl
 func lessOrEqual(x : Int, y : Int) : Bool
 ```
 
-"Less than or equal" function for Int types.
-This is equivalent to `x <= y`.
+Función "menor o igual que" para tipos `Int`. Esto es equivalente a `x <= y`.
 
-Example:
+Ejemplo:
+
 ```motoko include=import
 Int.lessOrEqual(-2, 1); // => true
 ```
 
-Note: The reason why this function is defined in this library (in addition
-to the existing `<=` operator) is so that you can use it as a function
-value to pass to a higher order function. It is not possible to use `<=`
-as a function value at the moment.
+Nota: La razón por la que esta función está definida en esta biblioteca (además
+del operador `<=` existente) es para que puedas usarla como un valor de función
+para pasar a una función de orden superior. No es posible usar `<=` como un
+valor de función en este momento.
 
-## Function `greater`
-``` motoko no-repl
+## Función `greater`
+
+```motoko no-repl
 func greater(x : Int, y : Int) : Bool
 ```
 
-"Greater than" function for Int types.
-This is equivalent to `x > y`.
+Función "mayor que" para tipos `Int`. Esto es equivalente a `x > y`.
 
-Example:
+Ejemplo:
+
 ```motoko include=import
 Int.greater(1, -2); // => true
 ```
 
-Note: The reason why this function is defined in this library (in addition
-to the existing `>` operator) is so that you can use it as a function
-value to pass to a higher order function. It is not possible to use `>`
-as a function value at the moment.
+Nota: La razón por la que esta función está definida en esta biblioteca (además
+del operador `>` existente) es para que puedas usarla como un valor de función
+para pasar a una función de orden superior. No es posible usar `>` como un valor
+de función en este momento.
 
-## Function `greaterOrEqual`
-``` motoko no-repl
+## Función `greaterOrEqual`
+
+```motoko no-repl
 func greaterOrEqual(x : Int, y : Int) : Bool
 ```
 
-"Greater than or equal" function for Int types.
-This is equivalent to `x >= y`.
+Función "mayor o igual que" para tipos `Int`. Esto es equivalente a `x >= y`.
 
-Example:
+Ejemplo:
+
 ```motoko include=import
 Int.greaterOrEqual(1, -2); // => true
 ```
 
-Note: The reason why this function is defined in this library (in addition
-to the existing `>=` operator) is so that you can use it as a function
-value to pass to a higher order function. It is not possible to use `>=`
-as a function value at the moment.
+Nota: La razón por la que esta función está definida en esta biblioteca (además
+del operador `>=` existente) es para que puedas usarla como un valor de función
+para pasar a una función de orden superior. No es posible usar `>=` como un
+valor de función en este momento.
 
-## Function `compare`
-``` motoko no-repl
+## Función `compare`
+
+```motoko no-repl
 func compare(x : Int, y : Int) : {#less; #equal; #greater}
 ```
 
-General-purpose comparison function for `Int`. Returns the `Order` (
-either `#less`, `#equal`, or `#greater`) of comparing `x` with `y`.
+Función de comparación de propósito general para `Int`. Devuelve el `Order` (ya
+sea `#less`, `#equal` o `#greater`) al comparar `x` con `y`.
 
-Example:
+Ejemplo:
+
 ```motoko include=import
 Int.compare(-3, 2) // => #less
 ```
 
-This function can be used as value for a high order function, such as a sort function.
+Esta función se puede usar como valor para una función de orden superior, como
+una función de ordenación.
 
-Example:
+Ejemplo:
+
 ```motoko include=import
 import Array "mo:base/Array";
 Array.sort([1, -2, -3], Int.compare) // => [-3, -2, 1]
 ```
 
-## Function `neg`
-``` motoko no-repl
+## Función `neg`
+
+```motoko no-repl
 func neg(x : Int) : Int
 ```
 
-Returns the negation of `x`, `-x` .
+Devuelve la negación de `x`, `-x`.
 
-Example:
+Ejemplo:
+
 ```motoko include=import
 Int.neg(123) // => -123
 ```
 
-Note: The reason why this function is defined in this library (in addition
-to the existing `-` operator) is so that you can use it as a function
-value to pass to a higher order function. It is not possible to use `-`
-as a function value at the moment.
+Nota: La razón por la que esta función está definida en esta biblioteca (además
+del operador `-` existente) es para que puedas usarla como un valor de función
+para pasar a una función de orden superior. No es posible usar `-` como un valor
+de función en este momento.
 
-## Function `add`
-``` motoko no-repl
+## Función `add`
+
+```motoko no-repl
 func add(x : Int, y : Int) : Int
 ```
 
-Returns the sum of `x` and `y`, `x + y`.
+Devuelve la suma de `x` e `y`, `x + y`.
 
-No overflow since `Int` has infinite precision.
+Sin desbordamiento ya que `Int` tiene precisión infinita.
 
-Example:
+Ejemplo:
+
 ```motoko include=import
 Int.add(1, -2); // => -1
 ```
 
-Note: The reason why this function is defined in this library (in addition
-to the existing `+` operator) is so that you can use it as a function
-value to pass to a higher order function. It is not possible to use `+`
-as a function value at the moment.
+Nota: La razón por la que esta función está definida en esta biblioteca (además
+del operador `+` existente) es para que puedas usarla como un valor de función
+para pasar a una función de orden superior. No es posible usar `+` como un valor
+de función en este momento.
 
-Example:
+Ejemplo:
+
 ```motoko include=import
 import Array "mo:base/Array";
 Array.foldLeft([1, -2, -3], 0, Int.add) // => -4
 ```
 
-## Function `sub`
-``` motoko no-repl
+## Función `sub`
+
+```motoko no-repl
 func sub(x : Int, y : Int) : Int
 ```
 
-Returns the difference of `x` and `y`, `x - y`.
+Devuelve la diferencia de `x` e `y`, `x - y`.
 
-No overflow since `Int` has infinite precision.
+Sin desbordamiento ya que `Int` tiene precisión infinita.
 
-Example:
+Ejemplo:
+
 ```motoko include=import
 Int.sub(1, 2); // => -1
 ```
 
-Note: The reason why this function is defined in this library (in addition
-to the existing `-` operator) is so that you can use it as a function
-value to pass to a higher order function. It is not possible to use `-`
-as a function value at the moment.
+Nota: La razón por la que esta función está definida en esta biblioteca (además
+del operador `-` existente) es para que puedas usarla como un valor de función
+para pasar a una función de orden superior. No es posible usar `-` como un valor
+de función en este momento.
 
-Example:
+Ejemplo:
+
 ```motoko include=import
 import Array "mo:base/Array";
 Array.foldLeft([1, -2, -3], 0, Int.sub) // => 4
 ```
 
-## Function `mul`
-``` motoko no-repl
+## Función `mul`
+
+```motoko no-repl
 func mul(x : Int, y : Int) : Int
 ```
 
-Returns the product of `x` and `y`, `x * y`.
+Devuelve el producto de `x` e `y`, `x * y`.
 
-No overflow since `Int` has infinite precision.
+Sin desbordamiento ya que `Int` tiene precisión infinita.
 
-Example:
+Ejemplo:
+
 ```motoko include=import
 Int.mul(-2, 3); // => -6
 ```
 
-Note: The reason why this function is defined in this library (in addition
-to the existing `*` operator) is so that you can use it as a function
-value to pass to a higher order function. It is not possible to use `*`
-as a function value at the moment.
+Nota: La razón por la que esta función está definida en esta biblioteca (además
+del operador `*` existente) es para que puedas usarla como un valor de función
+para pasar a una función de orden superior. No es posible usar `*` como un valor
+de función en este momento.
 
-Example:
+Ejemplo:
+
 ```motoko include=import
 import Array "mo:base/Array";
 Array.foldLeft([1, -2, -3], 1, Int.mul) // => 6
 ```
 
-## Function `div`
-``` motoko no-repl
+## Función `div`
+
+```motoko no-repl
 func div(x : Int, y : Int) : Int
 ```
 
-Returns the signed integer division of `x` by `y`,  `x / y`.
-Rounds the quotient towards zero, which is the same as truncating the decimal places of the quotient.
+Devuelve la división entera con signo de `x` entre `y`, `x / y`. Redondea el
+cociente hacia cero, lo cual es lo mismo que truncar los lugares decimales del
+cociente.
 
-Traps when `y` is zero.
+Provoca una trampa cuando `y` es cero.
 
-Example:
+Ejemplo:
+
 ```motoko include=import
 Int.div(6, -2); // => -3
 ```
 
-Note: The reason why this function is defined in this library (in addition
-to the existing `/` operator) is so that you can use it as a function
-value to pass to a higher order function. It is not possible to use `/`
-as a function value at the moment.
+Nota: La razón por la que esta función está definida en esta biblioteca (además
+del operador `/` existente) es para que puedas usarla como un valor de función
+para pasar a una función de orden superior. No es posible usar `/` como un valor
+de función en este momento.
 
-## Function `rem`
-``` motoko no-repl
+## Función `rem`
+
+```motoko no-repl
 func rem(x : Int, y : Int) : Int
 ```
 
-Returns the remainder of the signed integer division of `x` by `y`, `x % y`,
-which is defined as `x - x / y * y`.
+Devuelve el resto de la división entera con signo de `x` entre `y`, `x % y`, que
+se define como `x - x / y * y`.
 
-Traps when `y` is zero.
+Provoca una trampa cuando `y` es cero.
 
-Example:
+Ejemplo:
+
 ```motoko include=import
 Int.rem(6, -4); // => 2
 ```
 
-Note: The reason why this function is defined in this library (in addition
-to the existing `%` operator) is so that you can use it as a function
-value to pass to a higher order function. It is not possible to use `%`
-as a function value at the moment.
+Nota: La razón por la que esta función está definida en esta biblioteca (además
+del operador `%` existente) es para que puedas usarla como un valor de función
+para pasar a una función de orden superior. No es posible usar `%` como un valor
+de función en este momento.
 
-## Function `pow`
-``` motoko no-repl
+## Función `pow`
+
+```motoko no-repl
 func pow(x : Int, y : Int) : Int
 ```
 
-Returns `x` to the power of `y`, `x ** y`.
+Devuelve `x` elevado a la potencia de `y`, `x ** y`.
 
-Traps when `y` is negative or `y > 2 ** 32 - 1`.
-No overflow since `Int` has infinite precision.
+Provoca una trampa cuando `y` es negativo o `y > 2 ** 32 - 1`. Sin
+desbordamiento ya que `Int` tiene precisión infinita.
 
-Example:
+Ejemplo:
+
 ```motoko include=import
 Int.pow(-2, 3); // => -8
 ```
 
-Note: The reason why this function is defined in this library (in addition
-to the existing `**` operator) is so that you can use it as a function
-value to pass to a higher order function. It is not possible to use `**`
-as a function value at the moment.
+Nota: La razón por la que esta función está definida en esta biblioteca (además
+del operador `**` existente) es para que puedas usarla como un valor de función
+para pasar a una función de orden superior. No es posible usar `**` como un
+valor de función en este momento.

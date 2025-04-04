@@ -1,19 +1,23 @@
 # Result
-Error handling with the Result type.
 
-## Type `Result`
-``` motoko no-repl
+Manejo de errores con el tipo Result.
+
+## Tipo `Result`
+
+```motoko no-repl
 type Result<Ok, Err> = {#ok : Ok; #err : Err}
 ```
 
-`Result<Ok, Err>` is the type used for returning and propagating errors. It
-is a type with the variants, `#ok(Ok)`, representing success and containing
-a value, and `#err(Err)`, representing error and containing an error value.
+`Result<Ok, Err>` es el tipo utilizado para devolver y propagar errores. Es un
+tipo con las variantes `#ok(Ok)`, que representa el éxito y contiene un valor, y
+`#err(Err)`, que representa un error y contiene un valor de error.
 
-The simplest way of working with `Result`s is to pattern match on them:
+La forma más sencilla de trabajar con `Result`s es hacer coincidir patrones en
+ellos:
 
-For example, given a function `createUser(user : User) : Result<Id, String>`
-where `String` is an error message we could use it like so:
+Por ejemplo, dada una función `createUser(user : User) : Result<Id, String>`
+donde `String` es un mensaje de error, podríamos usarla de la siguiente manera:
+
 ```motoko no-repl
 switch(createUser(myUser)) {
   case (#ok(id)) { Debug.print("Created new user with id: " # id) };
@@ -21,25 +25,27 @@ switch(createUser(myUser)) {
 }
 ```
 
-## Function `equal`
-``` motoko no-repl
+## Función `equal`
+
+```motoko no-repl
 func equal<Ok, Err>(eqOk : (Ok, Ok) -> Bool, eqErr : (Err, Err) -> Bool, r1 : Result<Ok, Err>, r2 : Result<Ok, Err>) : Bool
 ```
 
+## Función `compare`
 
-## Function `compare`
-``` motoko no-repl
+```motoko no-repl
 func compare<Ok, Err>(compareOk : (Ok, Ok) -> Order.Order, compareErr : (Err, Err) -> Order.Order, r1 : Result<Ok, Err>, r2 : Result<Ok, Err>) : Order.Order
 ```
 
+## Función `chain`
 
-## Function `chain`
-``` motoko no-repl
+```motoko no-repl
 func chain<R1, R2, Error>(x : Result<R1, Error>, y : R1 -> Result<R2, Error>) : Result<R2, Error>
 ```
 
-Allows sequencing of `Result` values and functions that return
-`Result`'s themselves.
+Permite la secuenciación de valores y funciones `Result` que devuelven `Result`s
+ellos mismos.
+
 ```motoko
 import Result "mo:base/Result";
 type Result<T,E> = Result.Result<T, E>;
@@ -57,12 +63,13 @@ assert(between10And20(9) == #err("Not larger than 10."));
 assert(between10And20(21) == #err("Not smaller than 20."));
 ```
 
-## Function `flatten`
-``` motoko no-repl
+## Función `flatten`
+
+```motoko no-repl
 func flatten<Ok, Error>(result : Result<Result<Ok, Error>, Error>) : Result<Ok, Error>
 ```
 
-Flattens a nested Result.
+Aplana un `Result` anidado.
 
 ```motoko
 import Result "mo:base/Result";
@@ -71,51 +78,60 @@ assert(Result.flatten<Nat, Text>(#err("Wrong")) == #err("Wrong"));
 assert(Result.flatten<Nat, Text>(#ok(#err("Wrong"))) == #err("Wrong"));
 ```
 
-## Function `mapOk`
-``` motoko no-repl
+## Función `mapOk`
+
+```motoko no-repl
 func mapOk<Ok1, Ok2, Error>(x : Result<Ok1, Error>, f : Ok1 -> Ok2) : Result<Ok2, Error>
 ```
 
-Maps the `Ok` type/value, leaving any `Error` type/value unchanged.
+Mapea el tipo/valor `Ok`, dejando inalterado cualquier tipo/valor `Error`.
 
-## Function `mapErr`
-``` motoko no-repl
+## Función `mapErr`
+
+```motoko no-repl
 func mapErr<Ok, Error1, Error2>(x : Result<Ok, Error1>, f : Error1 -> Error2) : Result<Ok, Error2>
 ```
 
-Maps the `Err` type/value, leaving any `Ok` type/value unchanged.
+Mapea el tipo/valor `Error`, dejando inalterado cualquier tipo/valor `Ok`.
 
-## Function `fromOption`
-``` motoko no-repl
+## Función `fromOption`
+
+```motoko no-repl
 func fromOption<R, E>(x : ?R, err : E) : Result<R, E>
 ```
 
-Create a result from an option, including an error value to handle the `null` case.
+Crea un resultado a partir de una opción, incluyendo un valor de error para
+manejar el caso `null`.
+
 ```motoko
 import Result "mo:base/Result";
 assert(Result.fromOption(?42, "err") == #ok(42));
 assert(Result.fromOption(null, "err") == #err("err"));
 ```
 
-## Function `toOption`
-``` motoko no-repl
+## Función `toOption`
+
+```motoko no-repl
 func toOption<R, E>(r : Result<R, E>) : ?R
 ```
 
-Create an option from a result, turning all #err into `null`.
+Crea una opción a partir de un resultado, convirtiendo todos los `#err` en
+`null`.
+
 ```motoko
 import Result "mo:base/Result";
 assert(Result.toOption(#ok(42)) == ?42);
 assert(Result.toOption(#err("err")) == null);
 ```
 
-## Function `iterate`
-``` motoko no-repl
+## Función `iterate`
+
+```motoko no-repl
 func iterate<Ok, Err>(res : Result<Ok, Err>, f : Ok -> ())
 ```
 
-Applies a function to a successful value, but discards the result. Use
-`iterate` if you're only interested in the side effect `f` produces.
+Aplica una función a un valor exitoso, pero descarta el resultado. Usa `iterar`
+si solo te interesa el efecto secundario que produce `f`.
 
 ```motoko
 import Result "mo:base/Result";
@@ -126,46 +142,52 @@ Result.iterate<Nat, Text>(#err("Wrong"), func (x : Nat) { counter += x });
 assert(counter == 5);
 ```
 
-## Function `isOk`
-``` motoko no-repl
+## Función `isOk`
+
+```motoko no-repl
 func isOk(r : Result<Any, Any>) : Bool
 ```
 
+## Función `isErr`
 
-## Function `isErr`
-``` motoko no-repl
+```motoko no-repl
 func isErr(r : Result<Any, Any>) : Bool
 ```
 
+## Función `assertOk`
 
-## Function `assertOk`
-``` motoko no-repl
+```motoko no-repl
 func assertOk(r : Result<Any, Any>)
 ```
 
-Asserts that its argument is an `#ok` result, traps otherwise.
+Asegura que su argumento sea un resultado `#ok`, de lo contrario, se detiene.
 
-## Function `assertErr`
-``` motoko no-repl
+## Función `assertErr`
+
+```motoko no-repl
 func assertErr(r : Result<Any, Any>)
 ```
 
-Asserts that its argument is an `#err` result, traps otherwise.
+Asegura que su argumento sea un resultado `#err`, de lo contrario, se detiene.
 
-## Function `fromUpper`
-``` motoko no-repl
+## Función `fromUpper`
+
+```motoko no-repl
 func fromUpper<Ok, Err>(result : {#Ok : Ok; #Err : Err}) : Result<Ok, Err>
 ```
 
-Converts an upper cased `#Ok`, `#Err` result type into a lowercased `#ok`, `#err` result type.
-On the IC, a common convention is to use `#Ok` and `#Err` as the variants of a result type,
-but in Motoko, we use `#ok` and `#err` instead.
+Convierte un tipo de resultado en mayúsculas `#Ok`, `#Err` en un tipo de
+resultado en minúsculas `#ok`, `#err`. En el IC, una convención común es usar
+`#Ok` y `#Err` como las variantes de un tipo de resultado, pero en Motoko,
+usamos `#ok` y `#err` en su lugar.
 
-## Function `toUpper`
-``` motoko no-repl
+## Función `toUpper`
+
+```motoko no-repl
 func toUpper<Ok, Err>(result : Result<Ok, Err>) : {#Ok : Ok; #Err : Err}
 ```
 
-Converts a lower cased `#ok`, `#err` result type into an upper cased `#Ok`, `#Err` result type.
-On the IC, a common convention is to use `#Ok` and `#Err` as the variants of a result type,
-but in Motoko, we use `#ok` and `#err` instead.
+Convierte un tipo de resultado en minúsculas `#ok`, `#err` en un tipo de
+resultado en mayúsculas `#Ok`, `#Err`. En el IC, una convención común es usar
+`#Ok` y `#Err` como las variantes de un tipo de resultado, pero en Motoko,
+usamos `#ok` y `#err` en su lugar.

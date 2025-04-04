@@ -1,83 +1,97 @@
 # Float
-Double precision (64-bit) floating-point numbers in IEEE 754 representation.
 
-This module contains common floating-point constants and utility functions.
+Doble precisión (64 bits) números de punto flotante en la representación
+IEEE 754.
 
-Notation for special values in the documentation below:
-`+inf`: Positive infinity
-`-inf`: Negative infinity
-`NaN`: "not a number" (can have different sign bit values, but `NaN != NaN` regardless of the sign).
+Este módulo contiene constantes comunes de punto flotante y funciones de
+utilidad.
 
-Note:
-Floating point numbers have limited precision and operations may inherently result in numerical errors.
+Notación para valores especiales en la documentación a continuación: `+inf`:
+Infinito positivo `-inf`: Infinito negativo `NaN`: "no es un número" (puede
+tener diferentes valores de bit de signo, pero `NaN != NaN` independientemente
+del signo).
 
-Examples of numerical errors:
-  ```motoko
-  0.1 + 0.1 + 0.1 == 0.3 // => false
-  ```
+Nota: Los números de punto flotante tienen una precisión limitada y las
+operaciones pueden resultar en errores numéricos.
 
-  ```motoko
- 1e16 + 1.0 != 1e16 // => false
-  ```
+Ejemplos de errores numéricos:
 
- (and many more cases)
+```motoko
+0.1 + 0.1 + 0.1 == 0.3 // => false
+```
 
-Advice:
-* Floating point number comparisons by `==` or `!=` are discouraged. Instead, it is better to compare
-  floating-point numbers with a numerical tolerance, called epsilon.
+```motoko
+1e16 + 1.0 != 1e16 // => false
+```
 
-  Example:
+(y muchos más casos)
+
+Aviso:
+
+- Comparación de números de punto flotante con `==` o `!=` se desaconseja. En su
+  lugar, es mejor comparar números de punto flotante con una tolerancia
+  numérica, llamada epsilon.
+
+  Ejemplo:
+
   ```motoko
   import Float "mo:base/Float";
   let x = 0.1 + 0.1 + 0.1;
   let y = 0.3;
 
-  let epsilon = 1e-6; // This depends on the application case (needs a numerical error analysis).
+  let epsilon = 1e-6; // Esto depende del caso de aplicación (necesita un análisis de errores numéricos).
   Float.equalWithin(x, y, epsilon) // => true
   ```
 
-* For absolute precision, it is recommened to encode the fraction number as a pair of a Nat for the base
-  and a Nat for the exponent (decimal point).
+- Para la precisión absoluta, se recomienda codificar el número de fracción como
+  un par de un Nat para la base y un Nat para el exponente (punto decimal).
 
-NaN sign:
-* The NaN sign is only applied by `abs`, `neg`, and `copySign`. Other operations can have an arbitrary
-  sign bit for NaN results.
+Signo de NaN:
 
-## Type `Float`
-``` motoko no-repl
+- El signo de NaN solo se aplica mediante `abs`, `neg` y `copySign`. Otras
+  operaciones pueden tener un bit de signo arbitrario para los resultados NaN.
+
+## Tipo `Float`
+
+```motoko no-repl
 type Float = Prim.Types.Float
 ```
 
-64-bit floating point number type.
+Numero de punto flotante de 64 bits.
 
-## Value `pi`
-``` motoko no-repl
+## Valor `pi`
+
+```motoko no-repl
 let pi : Float
 ```
 
-Ratio of the circumference of a circle to its diameter.
-Note: Limited precision.
+Radio de la circunferencia de un círculo a su diámetro. Nota: Precisión
+limitada.
 
-## Value `e`
-``` motoko no-repl
+## Valor `e`
+
+```motoko no-repl
 let e : Float
 ```
 
-Base of the natural logarithm.
-Note: Limited precision.
+Base de los logaritmos naturales. Nota: Precisión limitada.
 
-## Function `isNaN`
-``` motoko no-repl
+## Función `isNaN`
+
+```motoko no-repl
 func isNaN(number : Float) : Bool
 ```
 
-Determines whether the `number` is a `NaN` ("not a number" in the floating point representation).
-Notes:
-* Equality test of `NaN` with itself or another number is always `false`.
-* There exist many internal `NaN` value representations, such as positive and negative NaN,
-  signalling and quiet NaNs, each with many different bit representations.
+Determina si el `número` es un `NaN` ("Not a Number" en la representación de
+punto flotante). Notas:
 
-Example:
+- La prueba de igualdad de `NaN` consigo mismo u otro número siempre es `false`.
+- Existen muchas representaciones internas de `NaN`, como `NaN` positivo y
+  negativo, `NaN` señalizado y silencioso, cada uno con muchas representaciones
+  de bits diferentes.
+
+Ejemplo:
+
 ```motoko
 import Float "mo:base/Float";
 
@@ -85,13 +99,15 @@ Float.isNaN(0.0/0.0) // => true
 ```
 
 ## Function `abs`
-``` motoko no-repl
+
+```motoko no-repl
 func abs(x : Float) : Float
 ```
 
-Returns the absolute value of `x`.
+Devuelve el valor absoluto de `x`.
 
-Special cases:
+Casos especiales:
+
 ```
 abs(+inf) => +inf
 abs(-inf) => +inf
@@ -99,7 +115,8 @@ abs(-NaN)  => +NaN
 abs(-0.0) => 0.0
 ```
 
-Example:
+Ejemplo:
+
 ```motoko
 import Float "mo:base/Float";
 
@@ -107,13 +124,15 @@ Float.abs(-1.2) // => 1.2
 ```
 
 ## Function `sqrt`
-``` motoko no-repl
+
+```motoko no-repl
 func sqrt(x : Float) : Float
 ```
 
-Returns the square root of `x`.
+Devuelve la raíz cuadrada de `x`.
 
-Special cases:
+Casos especiales:
+
 ```
 sqrt(+inf) => +inf
 sqrt(-0.0) => -0.0
@@ -121,7 +140,8 @@ sqrt(x)    => NaN if x < 0.0
 sqrt(NaN)  => NaN
 ```
 
-Example:
+Ejemplo:
+
 ```motoko
 import Float "mo:base/Float";
 
@@ -129,13 +149,15 @@ Float.sqrt(6.25) // => 2.5
 ```
 
 ## Function `ceil`
-``` motoko no-repl
+
+```motoko no-repl
 func ceil(x : Float) : Float
 ```
 
-Returns the smallest integral float greater than or equal to `x`.
+Devuelve el número entero flotante más pequeño mayor o igual a `x`.
 
-Special cases:
+Casos especiales:
+
 ```
 ceil(+inf) => +inf
 ceil(-inf) => -inf
@@ -144,7 +166,8 @@ ceil(0.0)  => 0.0
 ceil(-0.0) => -0.0
 ```
 
-Example:
+Ejemplo:
+
 ```motoko
 import Float "mo:base/Float";
 
@@ -152,13 +175,15 @@ Float.ceil(1.2) // => 2.0
 ```
 
 ## Function `floor`
-``` motoko no-repl
+
+```motoko no-repl
 func floor(x : Float) : Float
 ```
 
-Returns the largest integral float less than or equal to `x`.
+Devuelve el número entero flotante más grande menor o igual a `x`.
 
-Special cases:
+Casos especiales:
+
 ```
 floor(+inf) => +inf
 floor(-inf) => -inf
@@ -167,7 +192,8 @@ floor(0.0)  => 0.0
 floor(-0.0) => -0.0
 ```
 
-Example:
+Ejemplo:
+
 ```motoko
 import Float "mo:base/Float";
 
@@ -175,14 +201,16 @@ Float.floor(1.2) // => 1.0
 ```
 
 ## Function `trunc`
-``` motoko no-repl
+
+```motoko no-repl
 func trunc(x : Float) : Float
 ```
 
-Returns the nearest integral float not greater in magnitude than `x`.
-This is equivalent to returning `x` with truncating its decimal places.
+Devuelve el número entero flotante más cercano no mayor en magnitud que `x`.
+Esto es equivalente a devolver `x` con truncar sus lugares decimales.
 
-Special cases:
+Casos especiales:
+
 ```
 trunc(+inf) => +inf
 trunc(-inf) => -inf
@@ -191,7 +219,8 @@ trunc(0.0)  => 0.0
 trunc(-0.0) => -0.0
 ```
 
-Example:
+Ejemplo:
+
 ```motoko
 import Float "mo:base/Float";
 
@@ -199,15 +228,16 @@ Float.trunc(2.75) // => 2.0
 ```
 
 ## Function `nearest`
-``` motoko no-repl
+
+```motoko no-repl
 func nearest(x : Float) : Float
 ```
 
-Returns the nearest integral float to `x`.
-A decimal place of exactly .5 is rounded up for `x > 0`
-and rounded down for `x < 0`
+Devuelve el número entero flotante más cercano a `x`. Un lugar decimal de
+exactamente .5 se redondea hacia arriba para `x > 0` y hacia abajo para `x < 0`.
 
-Special cases:
+Casos especiales:
+
 ```
 nearest(+inf) => +inf
 nearest(-inf) => -inf
@@ -216,7 +246,8 @@ nearest(0.0)  => 0.0
 nearest(-0.0) => -0.0
 ```
 
-Example:
+Ejemplo:
+
 ```motoko
 import Float "mo:base/Float";
 
@@ -224,15 +255,18 @@ Float.nearest(2.75) // => 3.0
 ```
 
 ## Function `copySign`
-``` motoko no-repl
+
+```motoko no-repl
 func copySign(x : Float, y : Float) : Float
 ```
 
-Returns `x` if `x` and `y` have same sign, otherwise `x` with negated sign.
+Devuelve `x` si `x` e `y` tienen el mismo signo, de lo contrario `x` con el
+signo negado.
 
-The sign bit of zero, infinity, and `NaN` is considered.
+El bit de signo de cero, infinito y `NaN` se considera.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Float "mo:base/Float";
 
@@ -240,19 +274,22 @@ Float.copySign(1.2, -2.3) // => -1.2
 ```
 
 ## Function `min`
-``` motoko no-repl
+
+```motoko no-repl
 func min(x : Float, y : Float) : Float
 ```
 
-Returns the smaller value of `x` and `y`.
+Devuelve el valor más pequeño de `x` e `y`.
 
-Special cases:
+Casos especiales:
+
 ```
 min(NaN, y) => NaN for any Float y
 min(x, NaN) => NaN for any Float x
 ```
 
-Example:
+Ejemplo:
+
 ```motoko
 import Float "mo:base/Float";
 
@@ -260,19 +297,22 @@ Float.min(1.2, -2.3) // => -2.3 (with numerical imprecision)
 ```
 
 ## Function `max`
-``` motoko no-repl
+
+```motoko no-repl
 func max(x : Float, y : Float) : Float
 ```
 
-Returns the larger value of `x` and `y`.
+Devuelve el valor más grande de `x` e `y`.
 
-Special cases:
+Casos especiales:
+
 ```
 max(NaN, y) => NaN for any Float y
 max(x, NaN) => NaN for any Float x
 ```
 
-Example:
+Ejemplo:
+
 ```motoko
 import Float "mo:base/Float";
 
@@ -280,20 +320,23 @@ Float.max(1.2, -2.3) // => 1.2
 ```
 
 ## Function `sin`
-``` motoko no-repl
+
+```motoko no-repl
 func sin(x : Float) : Float
 ```
 
-Returns the sine of the radian angle `x`.
+Devuelve el seno del ángulo en radianes `x`.
 
-Special cases:
+Casos especiales:
+
 ```
 sin(+inf) => NaN
 sin(-inf) => NaN
 sin(NaN) => NaN
 ```
 
-Example:
+Ejemplo:
+
 ```motoko
 import Float "mo:base/Float";
 
@@ -301,20 +344,23 @@ Float.sin(Float.pi / 2) // => 1.0
 ```
 
 ## Function `cos`
-``` motoko no-repl
+
+```motoko no-repl
 func cos(x : Float) : Float
 ```
 
-Returns the cosine of the radian angle `x`.
+Devuelve el coseno del ángulo en radianes `x`.
 
-Special cases:
+Casos especiales:
+
 ```
 cos(+inf) => NaN
 cos(-inf) => NaN
 cos(NaN)  => NaN
 ```
 
-Example:
+Ejemplo:
+
 ```motoko
 import Float "mo:base/Float";
 
@@ -322,20 +368,23 @@ Float.cos(Float.pi / 2) // => 0.0 (with numerical imprecision)
 ```
 
 ## Function `tan`
-``` motoko no-repl
+
+```motoko no-repl
 func tan(x : Float) : Float
 ```
 
-Returns the tangent of the radian angle `x`.
+Devuelve la tangente del ángulo en radianes `x`.
 
-Special cases:
+Casos especiales:
+
 ```
 tan(+inf) => NaN
 tan(-inf) => NaN
 tan(NaN)  => NaN
 ```
 
-Example:
+Ejemplo:
+
 ```motoko
 import Float "mo:base/Float";
 
@@ -343,20 +392,23 @@ Float.tan(Float.pi / 4) // => 1.0 (with numerical imprecision)
 ```
 
 ## Function `arcsin`
-``` motoko no-repl
+
+```motoko no-repl
 func arcsin(x : Float) : Float
 ```
 
-Returns the arc sine of `x` in radians.
+Devuleve el seno inverso de `x` en radianes.
 
-Special cases:
+Casos especiales:
+
 ```
 arcsin(x)   => NaN if x > 1.0
 arcsin(x)   => NaN if x < -1.0
 arcsin(NaN) => NaN
 ```
 
-Example:
+Ejemplo:
+
 ```motoko
 import Float "mo:base/Float";
 
@@ -364,20 +416,23 @@ Float.arcsin(1.0) // => Float.pi / 2
 ```
 
 ## Function `arccos`
-``` motoko no-repl
+
+```motoko no-repl
 func arccos(x : Float) : Float
 ```
 
-Returns the arc cosine of `x` in radians.
+Devuelve el coseno inverso de `x` en radianes.
 
-Special cases:
+Casos especiales:
+
 ```
 arccos(x)  => NaN if x > 1.0
 arccos(x)  => NaN if x < -1.0
 arcos(NaN) => NaN
 ```
 
-Example:
+Ejemplo:
+
 ```motoko
 import Float "mo:base/Float";
 
@@ -385,20 +440,23 @@ Float.arccos(1.0) // => 0.0
 ```
 
 ## Function `arctan`
-``` motoko no-repl
+
+```motoko no-repl
 func arctan(x : Float) : Float
 ```
 
-Returns the arc tangent of `x` in radians.
+Devuelve el arcotangente de `x` en radianes.
 
-Special cases:
+Casos especiales:
+
 ```
 arctan(+inf) => pi / 2
 arctan(-inf) => -pi / 2
 arctan(NaN)  => NaN
 ```
 
-Example:
+Ejemplo:
+
 ```motoko
 import Float "mo:base/Float";
 
@@ -406,13 +464,16 @@ Float.arctan(1.0) // => Float.pi / 4
 ```
 
 ## Function `arctan2`
-``` motoko no-repl
+
+```motoko no-repl
 func arctan2(y : Float, x : Float) : Float
 ```
 
-Given `(y,x)`, returns the arc tangent in radians of `y/x` based on the signs of both values to determine the correct quadrant.
+Dado `(y,x)`, devuelve el arcotangente en radianes de `y/x` basado en los signos
+de ambos valores para determinar el cuadrante correcto.
 
-Special cases:
+Casos especiales:
+
 ```
 arctan2(0.0, 0.0)   => 0.0
 arctan2(-0.0, 0.0)  => -0.0
@@ -426,7 +487,8 @@ arctan2(NaN, x)     => NaN for any Float x
 arctan2(y, NaN)     => NaN for any Float y
 ```
 
-Example:
+Ejemplo:
+
 ```motoko
 import Float "mo:base/Float";
 
@@ -435,20 +497,23 @@ Float.arctan2(sqrt2over2, sqrt2over2) // => Float.pi / 4
 ```
 
 ## Function `exp`
-``` motoko no-repl
+
+```motoko no-repl
 func exp(x : Float) : Float
 ```
 
-Returns the value of `e` raised to the `x`-th power.
+Devuelve el valor de `e` elevado a la potencia de `x`.
 
-Special cases:
+Casos especiales:
+
 ```
 exp(+inf) => +inf
 exp(-inf) => 0.0
 exp(NaN)  => NaN
 ```
 
-Example:
+Ejemplo:
+
 ```motoko
 import Float "mo:base/Float";
 
@@ -456,13 +521,15 @@ Float.exp(1.0) // => Float.e
 ```
 
 ## Function `log`
-``` motoko no-repl
+
+```motoko no-repl
 func log(x : Float) : Float
 ```
 
-Returns the natural logarithm (base-`e`) of `x`.
+Devuelve el logaritmo natural (base-`e`) de `x`.
 
-Special cases:
+Casos especiales:
+
 ```
 log(0.0)  => -inf
 log(-0.0) => -inf
@@ -471,35 +538,38 @@ log(+inf) => +inf
 log(NaN)  => NaN
 ```
 
-Example:
+Ejemplo:
+
 ```motoko
 import Float "mo:base/Float";
 
 Float.log(Float.e) // => 1.0
 ```
 
-## Function `format`
-``` motoko no-repl
+## Función `format`
+
+```motoko no-repl
 func format(fmt : {#fix : Nat8; #exp : Nat8; #gen : Nat8; #exact}, x : Float) : Text
 ```
 
-Formatting. `format(fmt, x)` formats `x` to `Text` according to the
-formatting directive `fmt`, which can take one of the following forms:
+Formateo. `format(fmt, x)` formatea `x` a `Text` de acuerdo con la directiva de
+formato `fmt`, que puede tener una de las siguientes formas:
 
-* `#fix prec` as fixed-point format with `prec` digits
-* `#exp prec` as exponential format with `prec` digits
-* `#gen prec` as generic format with `prec` digits
-* `#exact` as exact format that can be decoded without loss.
+- `#fix prec` como formato de punto fijo con `prec` dígitos
+- `#exp prec` como formato exponencial con `prec` dígitos
+- `#gen prec` como formato genérico con `prec` dígitos
+- `#exact` como formato exacto que se puede decodificar sin pérdida.
 
-`-0.0` is formatted with negative sign bit.
-Positive infinity is formatted as "inf".
-Negative infinity is formatted as "-inf".
+`-0.0` se formatea con el bit de signo negativo. El infinito positivo se
+formatea como "inf". El infinito negativo se formatea como "-inf".
 
-Note: The numerical precision and the text format can vary between
-Motoko versions and runtime configuration. Moreover, `NaN` can be printed
-differently, i.e. "NaN" or "nan", potentially omitting the `NaN` sign.
+Nota: La precisión numérica y el formato de texto pueden variar entre las
+versiones de Motoko y la configuración del tiempo de ejecución. Además, `NaN`
+puede imprimirse de manera diferente, es decir, "NaN" o "nan", omitiendo
+potencialmente el signo `NaN`.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Float "mo:base/Float";
 
@@ -507,18 +577,19 @@ Float.format(#exp 3, 123.0) // => "1.230e+02"
 ```
 
 ## Function `toText`
-``` motoko no-repl
+
+```motoko no-repl
 func toText(_ : Float) : Text
 ```
 
-Conversion to Text. Use `format(fmt, x)` for more detailed control.
+Conversión a Text. Utiliza `format(fmt, x)` para un control más detallado.
 
-`-0.0` is formatted with negative sign bit.
-Positive infinity is formatted as `inf`.
-Negative infinity is formatted as `-inf`.
-`NaN` is formatted as `NaN` or `-NaN` depending on its sign bit.
+`-0.0` se formatea con el bit de signo negativo. El infinito positivo se
+formatea como `inf`. El infinito negativo se formatea como `-inf`. `NaN` se
+formatea como `NaN` o `-NaN` dependiendo de su bit de signo.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Float "mo:base/Float";
 
@@ -526,16 +597,19 @@ Float.toText(0.12) // => "0.12"
 ```
 
 ## Function `toInt64`
-``` motoko no-repl
+
+```motoko no-repl
 func toInt64(_ : Float) : Int64
 ```
 
-Conversion to Int64 by truncating Float, equivalent to `toInt64(trunc(f))`
+Conversión a Int64 truncando el Float, equivalente a `toInt64(trunc(f))`
 
-Traps if the floating point number is larger or smaller than the representable Int64.
-Also traps for `inf`, `-inf`, and `NaN`.
+Genera una excepción si el número de punto flotante es más grande o más pequeño
+que el Int64 representable. También genera una excepción para `inf`, `-inf` y
+`NaN`.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Float "mo:base/Float";
 
@@ -543,15 +617,18 @@ Float.toInt64(-12.3) // => -12
 ```
 
 ## Function `fromInt64`
-``` motoko no-repl
+
+```motoko no-repl
 func fromInt64(_ : Int64) : Float
 ```
 
-Conversion from Int64.
+Conversión desde Int64.
 
-Note: The floating point number may be imprecise for large or small Int64.
+Nota: El número de punto flotante puede ser impreciso para Int64 grandes o
+pequeños.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Float "mo:base/Float";
 
@@ -559,15 +636,17 @@ Float.fromInt64(-42) // => -42.0
 ```
 
 ## Function `toInt`
-``` motoko no-repl
+
+```motoko no-repl
 func toInt(_ : Float) : Int
 ```
 
-Conversion to Int.
+Conversión a Int.
 
-Traps for `inf`, `-inf`, and `NaN`.
+Genera un error para `inf`, `-inf` y `NaN`.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Float "mo:base/Float";
 
@@ -575,51 +654,58 @@ Float.toInt(1.2e6) // => +1_200_000
 ```
 
 ## Function `fromInt`
-``` motoko no-repl
+
+```motoko no-repl
 func fromInt(_ : Int) : Float
 ```
 
-Conversion from Int. May result in `Inf`.
+Conversión desde Int. Puede resultar en `Inf`.
 
-Note: The floating point number may be imprecise for large or small Int values.
-Returns `inf` if the integer is greater than the maximum floating point number.
-Returns `-inf` if the integer is less than the minimum floating point number.
+Nota: El número de punto flotante puede ser impreciso para valores Int grandes o
+pequeños. Devuelve `inf` si el entero es mayor que el número de punto flotante
+máximo. Devuelve `-inf` si el entero es menor que el número de punto flotante
+mínimo.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Float "mo:base/Float";
 
 Float.fromInt(-123) // => -123.0
 ```
 
-## Function `equal`
-``` motoko no-repl
+## Función `equal`
+
+```motoko no-repl
 func equal(x : Float, y : Float) : Bool
 ```
 
-Returns `x == y`.
-@deprecated Use `Float.equalWithin()` as this function does not consider numerical errors.
+Devuelve `x == y`. @deprecated Utiliza `Float.equalWithin()` ya que esta función
+no considera errores numéricos.
 
-## Function `notEqual`
-``` motoko no-repl
+## Función `notEqual`
+
+```motoko no-repl
 func notEqual(x : Float, y : Float) : Bool
 ```
 
-Returns `x != y`.
-@deprecated Use `Float.notEqualWithin()` as this function does not consider numerical errors.
+Devuelve `x != y`. @deprecated Utiliza `Float.notEqualWithin()` ya que esta
+función no considera errores numéricos.
 
-## Function `equalWithin`
-``` motoko no-repl
+## Función `equalWithin`
+
+```motoko no-repl
 func equalWithin(x : Float, y : Float, epsilon : Float) : Bool
 ```
 
-Determines whether `x` is equal to `y` within the defined tolerance of `epsilon`.
-The `epsilon` considers numerical erros, see comment above.
-Equivalent to `Float.abs(x - y) <= epsilon` for a non-negative epsilon.
+Determina si `x` es igual a `y` dentro de la tolerancia definida de `epsilon`.
+El `epsilon` considera errores numéricos, ver comentario anterior. Equivalente a
+`Float.abs(x - y) <= epsilon` para un epsilon no negativo.
 
-Traps if `epsilon` is negative or `NaN`.
+Genera un error si `epsilon` es negativo o `NaN`.
 
-Special cases:
+Casos especiales:
+
 ```
 equalWithin(+0.0, -0.0, epsilon) => true for any `epsilon >= 0.0`
 equalWithin(-0.0, +0.0, epsilon) => true for any `epsilon >= 0.0`
@@ -629,7 +715,8 @@ equalWithin(x, NaN, epsilon)     => false for any x and `epsilon >= 0.0`
 equalWithin(NaN, y, epsilon)     => false for any y and `epsilon >= 0.0`
 ```
 
-Example:
+Ejemplo:
+
 ```motoko
 import Float "mo:base/Float";
 
@@ -637,18 +724,20 @@ let epsilon = 1e-6;
 Float.equalWithin(-12.3, -1.23e1, epsilon) // => true
 ```
 
-## Function `notEqualWithin`
-``` motoko no-repl
+## Función `notEqualWithin`
+
+```motoko no-repl
 func notEqualWithin(x : Float, y : Float, epsilon : Float) : Bool
 ```
 
-Determines whether `x` is not equal to `y` within the defined tolerance of `epsilon`.
-The `epsilon` considers numerical erros, see comment above.
-Equivalent to `not equal(x, y, epsilon)`.
+Determina si `x` no es igual a `y` dentro de la tolerancia definida de
+`epsilon`. El `epsilon` considera errores numéricos, ver comentario anterior.
+Equivalente a `not equal(x, y, epsilon)`.
 
-Traps if `epsilon` is negative or `NaN`.
+Genera un error si `epsilon` es negativo o `NaN`.
 
-Special cases:
+Casos especiales:
+
 ```
 notEqualWithin(+0.0, -0.0, epsilon) => false for any `epsilon >= 0.0`
 notEqualWithin(-0.0, +0.0, epsilon) => false for any `epsilon >= 0.0`
@@ -658,7 +747,8 @@ notEqualWithin(x, NaN, epsilon)     => true for any x and `epsilon >= 0.0`
 notEqualWithin(NaN, y, epsilon)     => true for any y and `epsilon >= 0.0`
 ```
 
-Example:
+Ejemplo:
+
 ```motoko
 import Float "mo:base/Float";
 
@@ -666,14 +756,16 @@ let epsilon = 1e-6;
 Float.notEqualWithin(-12.3, -1.23e1, epsilon) // => false
 ```
 
-## Function `less`
-``` motoko no-repl
+## Función `less`
+
+```motoko no-repl
 func less(x : Float, y : Float) : Bool
 ```
 
-Returns `x < y`.
+Devuelve `x < y`.
 
-Special cases:
+Casos especiales:
+
 ```
 less(+0.0, -0.0) => false
 less(-0.0, +0.0) => false
@@ -681,21 +773,24 @@ less(NaN, y)     => false for any Float y
 less(x, NaN)     => false for any Float x
 ```
 
-Example:
+Ejemplo:
+
 ```motoko
 import Float "mo:base/Float";
 
 Float.less(Float.e, Float.pi) // => true
 ```
 
-## Function `lessOrEqual`
-``` motoko no-repl
+## Función `lessOrEqual`
+
+```motoko no-repl
 func lessOrEqual(x : Float, y : Float) : Bool
 ```
 
-Returns `x <= y`.
+Devuelve `x <= y`.
 
-Special cases:
+Casos especiales:
+
 ```
 lessOrEqual(+0.0, -0.0) => true
 lessOrEqual(-0.0, +0.0) => true
@@ -703,21 +798,24 @@ lessOrEqual(NaN, y)     => false for any Float y
 lessOrEqual(x, NaN)     => false for any Float x
 ```
 
-Example:
+Ejemplo:
+
 ```motoko
 import Float "mo:base/Float";
 
 Float.lessOrEqual(0.123, 0.1234) // => true
 ```
 
-## Function `greater`
-``` motoko no-repl
+## Función `greater`
+
+```motoko no-repl
 func greater(x : Float, y : Float) : Bool
 ```
 
-Returns `x > y`.
+Devuelve `x > y`.
 
-Special cases:
+Casos especiales:
+
 ```
 greater(+0.0, -0.0) => false
 greater(-0.0, +0.0) => false
@@ -725,21 +823,24 @@ greater(NaN, y)     => false for any Float y
 greater(x, NaN)     => false for any Float x
 ```
 
-Example:
+Ejemplo:
+
 ```motoko
 import Float "mo:base/Float";
 
 Float.greater(Float.pi, Float.e) // => true
 ```
 
-## Function `greaterOrEqual`
-``` motoko no-repl
+## Función `greaterOrEqual`
+
+```motoko no-repl
 func greaterOrEqual(x : Float, y : Float) : Bool
 ```
 
-Returns `x >= y`.
+Devuelve `x >= y`.
 
-Special cases:
+Casos especiales:
+
 ```
 greaterOrEqual(+0.0, -0.0) => true
 greaterOrEqual(-0.0, +0.0) => true
@@ -747,53 +848,64 @@ greaterOrEqual(NaN, y)     => false for any Float y
 greaterOrEqual(x, NaN)     => false for any Float x
 ```
 
-Example:
+Ejemplo:
+
 ```motoko
 import Float "mo:base/Float";
 
 Float.greaterOrEqual(0.1234, 0.123) // => true
 ```
 
-## Function `compare`
-``` motoko no-repl
+## Función `compare`
+
+```motoko no-repl
 func compare(x : Float, y : Float) : {#less; #equal; #greater}
 ```
 
-Defines a total order of `x` and `y` for use in sorting.
+Define un orden total de `x` e `y` para su uso en la clasificación.
 
-Note: Using this operation to determine equality or inequality is discouraged for two reasons:
-* It does not consider numerical errors, see comment above. Use `equalWithin(x, y, espilon)` or
-  `notEqualWithin(x, y, epsilon)` to test for equality or inequality, respectively.
-* `NaN` are here considered equal if their sign matches, which is different to the standard equality
-   by `==` or when using `equal()` or `notEqual()`.
+Nota: Se desaconseja utilizar esta operación para determinar la igualdad o
+desigualdad por dos razones:
 
-Total order:
-* negative NaN (no distinction between signalling and quiet negative NaN)
-* negative infinity
-* negative numbers (including negative subnormal numbers in standard order)
-* negative zero (`-0.0`)
-* positive zero (`+0.0`)
-* positive numbers (including positive subnormal numbers in standard order)
-* positive infinity
-* positive NaN (no distinction between signalling and quiet positive NaN)
+- No considera errores numéricos, ver comentario anterior. Utilice
+  `equalWithin(x, y, epsilon)` o `notEqualWithin(x, y, epsilon)` para probar la
+  igualdad o desigualdad, respectivamente.
+- Los `NaN` se consideran iguales si su signo coincide, lo cual es diferente a
+  la igualdad estándar por `==` o al usar `equal()` o `notEqual()`.
 
-Example:
+Orden total:
+
+- NaN negativo (sin distinción entre NaN negativo señalizado y silencioso)
+- Infinito negativo
+- Números negativos (incluidos los números subnormales negativos en orden
+  estándar)
+- Cero negativo (`-0.0`)
+- Cero positivo (`+0.0`)
+- Números positivos (incluidos los números subnormales positivos en orden
+  estándar)
+- Infinito positivo
+- NaN positivo (sin distinción entre NaN positivo señalizado y silencioso)
+
+Ejemplo:
+
 ```motoko
 import Float "mo:base/Float";
 
 Float.compare(0.123, 0.1234) // => #less
 ```
 
-## Function `neg`
-``` motoko no-repl
+## Función `neg`
+
+```motoko no-repl
 func neg(x : Float) : Float
 ```
 
-Returns the negation of `x`, `-x` .
+Devuelve la negación de `x`, `-x`.
 
-Changes the sign bit for infinity.
+Cambia el bit de signo para infinito.
 
-Special cases:
+Casos especiales:
+
 ```
 neg(+inf) => -inf
 neg(-inf) => +inf
@@ -803,48 +915,55 @@ neg(+0.0) => -0.0
 neg(-0.0) => +0.0
 ```
 
-Example:
+Ejemplo:
+
 ```motoko
 import Float "mo:base/Float";
 
 Float.neg(1.23) // => -1.23
 ```
 
-## Function `add`
-``` motoko no-repl
+## Función `add`
+
+```motoko no-repl
 func add(x : Float, y : Float) : Float
 ```
 
-Returns the sum of `x` and `y`, `x + y`.
+Devuelve la suma de `x` e `y`, `x + y`.
 
-Note: Numerical errors may occur, see comment above.
+Nota: Pueden ocurrir errores numéricos, ver comentario anterior.
 
-Special cases:
+Casos especiales:
+
 ```
 add(+inf, y)    => +inf if y is any Float except -inf and NaN
 add(-inf, y)    => -inf if y is any Float except +inf and NaN
 add(+inf, -inf) => NaN
 add(NaN, y)     => NaN for any Float y
 ```
-The same cases apply commutatively, i.e. for `add(y, x)`.
 
-Example:
+El mismo caso se aplica conmutativamente, es decir, para `add(y, x)`.
+
+Ejemplo:
+
 ```motoko
 import Float "mo:base/Float";
 
 Float.add(1.23, 0.123) // => 1.353
 ```
 
-## Function `sub`
-``` motoko no-repl
+## Función `sub`
+
+```motoko no-repl
 func sub(x : Float, y : Float) : Float
 ```
 
-Returns the difference of `x` and `y`, `x - y`.
+Devuelve la diferencia de `x` e `y`, `x - y`.
 
-Note: Numerical errors may occur, see comment above.
+Nota: Pueden ocurrir errores numéricos, ver comentario anterior.
 
-Special cases:
+Casos especiales:
+
 ```
 sub(+inf, y)    => +inf if y is any Float except +inf or NaN
 sub(-inf, y)    => -inf if y is any Float except -inf and NaN
@@ -856,23 +975,26 @@ sub(NaN, y)     => NaN for any Float y
 sub(x, NaN)     => NaN for any Float x
 ```
 
-Example:
+Ejemplo:
+
 ```motoko
 import Float "mo:base/Float";
 
 Float.sub(1.23, 0.123) // => 1.107
 ```
 
-## Function `mul`
-``` motoko no-repl
+## Función `mul`
+
+```motoko no-repl
 func mul(x : Float, y : Float) : Float
 ```
 
-Returns the product of `x` and `y`, `x * y`.
+Devuelve el producto de `x` e `y`, `x * y`.
 
-Note: Numerical errors may occur, see comment above.
+Nota: Pueden ocurrir errores numéricos, ver comentario anterior.
 
-Special cases:
+Casos especiales:
+
 ```
 mul(+inf, y) => +inf if y > 0.0
 mul(-inf, y) => -inf if y > 0.0
@@ -882,25 +1004,29 @@ mul(+inf, 0.0) => NaN
 mul(-inf, 0.0) => NaN
 mul(NaN, y) => NaN for any Float y
 ```
-The same cases apply commutatively, i.e. for `mul(y, x)`.
 
-Example:
+El mismo caso se aplica conmutativamente, es decir, para `mul(y, x)`.
+
+Ejemplo:
+
 ```motoko
 import Float "mo:base/Float";
 
 Float.mul(1.23, 1e2) // => 123.0
 ```
 
-## Function `div`
-``` motoko no-repl
+## Función `div`
+
+```motoko no-repl
 func div(x : Float, y : Float) : Float
 ```
 
-Returns the division of `x` by `y`, `x / y`.
+Devuelve la división de `x` por `y`, `x / y`.
 
-Note: Numerical errors may occur, see comment above.
+Nota: Pueden ocurrir errores numéricos, ver comentario anterior.
 
-Special cases:
+Casos especiales:
+
 ```
 div(0.0, 0.0) => NaN
 div(x, 0.0)   => +inf for x > 0.0
@@ -915,24 +1041,27 @@ div(NaN, y)   => NaN for any Float y
 div(x, NaN)   => NaN for any Float x
 ```
 
-Example:
+Ejemplo:
+
 ```motoko
 import Float "mo:base/Float";
 
 Float.div(1.23, 1e2) // => 0.0123
 ```
 
-## Function `rem`
-``` motoko no-repl
+## Función `rem`
+
+```motoko no-repl
 func rem(x : Float, y : Float) : Float
 ```
 
-Returns the floating point division remainder `x % y`,
-which is defined as `x - trunc(x / y) * y`.
+Devuelve el resto de la división de punto flotante `x % y`, que se define como
+`x - trunc(x / y) * y`.
 
-Note: Numerical errors may occur, see comment above.
+Nota: Pueden ocurrir errores numéricos, ver comentario anterior.
 
-Special cases:
+Casos especiales:
+
 ```
 rem(0.0, 0.0) => NaN
 rem(x, y)     => +inf if sign(x) == sign(y) for any x and y not being +inf, -inf, or NaN
@@ -945,23 +1074,26 @@ rem(NaN, y)   => NaN for any Float y
 rem(x, NaN)   => NaN for any Float x
 ```
 
-Example:
+Ejemplo:
+
 ```motoko
 import Float "mo:base/Float";
 
 Float.rem(7.2, 2.3) // => 0.3 (with numerical imprecision)
 ```
 
-## Function `pow`
-``` motoko no-repl
+## Función `pow`
+
+```motoko no-repl
 func pow(x : Float, y : Float) : Float
 ```
 
-Returns `x` to the power of `y`, `x ** y`.
+Devuelve `x` elevado a la potencia de `y`, `x ** y`.
 
-Note: Numerical errors may occur, see comment above.
+Nota: Pueden ocurrir errores numéricos, ver comentario anterior.
 
-Special cases:
+Casos especiales:
+
 ```
 pow(+inf, y)    => +inf for any y > 0.0 including +inf
 pow(+inf, 0.0)  => 1.0
@@ -982,7 +1114,8 @@ pow(NaN, 0.0)   => 1.0
 pow(x, NaN)     => NaN for any Float x
 ```
 
-Example:
+Ejemplo:
+
 ```motoko
 import Float "mo:base/Float";
 

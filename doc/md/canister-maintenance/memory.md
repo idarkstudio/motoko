@@ -2,15 +2,22 @@
 sidebar_position: 5
 ---
 
-# Memory diagnostics
+# Diagnósticos de memoria
 
-## Low memory hook
+## Hook de memoria baja (Low memory hook)
 
-The IC allows to implement a low memory hook, which is a warning trigger when main memory is becoming scarce.
+El IC permite implementar un hook de memoria baja, que es un disparador de
+advertencia cuando la memoria principal se está volviendo escasa.
 
-For this purpose, a Motoko actor or actor class instance can implement the system function `lowmemory()`. This system function is scheduled when canister's free main memory space has fallen below the defined threshold `wasm_memory_threshold`, that is is part of the canister settings. In Motoko, `lowmemory()` implements the `canister_on_low_wasm_memory` hook defined in the IC specification.
+Para este propósito, un actor o instancia de clase de actor en Motoko puede
+implementar la función del sistema `lowmemory()`. Esta función del sistema se
+programa cuando el espacio libre de memoria principal del canister ha caído por
+debajo del umbral definido `wasm_memory_threshold`, que es parte de la
+configuración del canister. En Motoko, `lowmemory()` implementa el hook
+`canister_on_low_wasm_memory` definido en la especificación de IC.
 
-Example of using the low memory hook:
+Ejemplo de uso del hook de memoria baja:
+
 ```
 actor {
     system func lowmemory() : async* () {
@@ -19,8 +26,14 @@ actor {
 }
 ```
 
-The following properties apply to the low memory hook:
-* The execution of `lowmemory` happens with a certain delay, as it is scheduled as a separate asynchronous message that runs after the message in which the threshold was crossed.
-* Once executed, `lowmemory` is only triggered again when the main memory free space first exceeds and then falls below the threshold.
-* Traps or unhandled errors in `lowmemory` are ignored. Traps only revert the changes done in `lowmemory`.
-* Due to its `async*` return type, the `lowmemory` function may send further messages and `await` results.
+Las siguientes propiedades se aplican al hook de memoria baja:
+
+- La ejecución de `lowmemory` ocurre con cierto retraso, ya que se programa como
+  un mensaje asíncrono separado que se ejecuta después del mensaje en el que se
+  cruzó el umbral.
+- Una vez ejecutado, `lowmemory` solo se activa nuevamente cuando el espacio
+  libre de memoria principal primero excede y luego cae por debajo del umbral.
+- Los errores no manejados o las fallas (traps) en `lowmemory` se ignoran. Las
+  fallas solo revierten los cambios realizados en `lowmemory`.
+- Debido a su tipo de retorno `async*`, la función `lowmemory` puede enviar más
+  mensajes y `await` resultados.

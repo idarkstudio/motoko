@@ -1,96 +1,109 @@
 # Error
-Error values and inspection.
 
-The `Error` type is the argument to `throw`, parameter of `catch`.
-The `Error` type is opaque.
+Valores de error e inspección.
 
-## Type `Error`
-``` motoko no-repl
+El tipo `Error` es el argumento de `throw`, parámetro de `catch`. El tipo
+`Error` es opaco.
+
+## Tipo `Error`
+
+```motoko no-repl
 type Error = Prim.Types.Error
 ```
 
-Error value resulting from  `async` computations
+Valor de error resultante de las computaciones `async`
 
-## Type `ErrorCode`
-``` motoko no-repl
+## Tipo `ErrorCode`
+
+```motoko no-repl
 type ErrorCode = Prim.ErrorCode
 ```
 
-Error code to classify different kinds of user and system errors:
+Código de error para clasificar diferentes tipos de errores de usuario y del
+sistema:
+
 ```motoko
 type ErrorCode = {
-  // Fatal error.
+  // Error fatal.
   #system_fatal;
-  // Transient error.
+  // Error transitorio.
   #system_transient;
-  // Response unknown due to missed deadline.
+  // Respuesta desconocida debido a un plazo perdido.
   #system_unknown;
-  // Destination invalid.
+  // Destino no válido.
   #destination_invalid;
-  // Explicit reject by canister code.
+  // Rechazo explícito por parte del código del canister.
   #canister_reject;
-  // Canister trapped.
+  // Canister atrapado.
   #canister_error;
-  // Future error code (with unrecognized numeric code).
+  // Código de error futuro (con código numérico no reconocido).
   #future : Nat32;
-  // Error issuing inter-canister call
-  // (indicating destination queue full or freezing threshold crossed).
+  // Error al emitir una llamada entre canisters
+  // (indicando que la cola de destino está llena o se ha cruzado el umbral de congelación).
   #call_error : { err_code :  Nat32 }
 };
 ```
 
 ## Function `reject`
-``` motoko no-repl
+
+```motoko no-repl
 func reject(message : Text) : Error
 ```
 
-Create an error from the message with the code `#canister_reject`.
+Crea un error a partir del mensaje con el código `#canister_reject`.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Error "mo:base/Error";
 
-Error.reject("Example error") // can be used as throw argument
+Error.reject("Error de ejemplo") // se puede usar como argumento de throw
 ```
 
 ## Function `code`
-``` motoko no-repl
+
+```motoko no-repl
 func code(error : Error) : ErrorCode
 ```
 
-Returns the code of an error.
+Devuelve el código de un error.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Error "mo:base/Error";
 
-let error = Error.reject("Example error");
+let error = Error.reject("Error de ejemplo");
 Error.code(error) // #canister_reject
 ```
 
 ## Function `message`
-``` motoko no-repl
+
+```motoko no-repl
 func message(error : Error) : Text
 ```
 
-Returns the message of an error.
+Devuelve el mensaje de un error.
 
-Example:
+Ejemplo:
+
 ```motoko
 import Error "mo:base/Error";
 
-let error = Error.reject("Example error");
-Error.message(error) // "Example error"
+let error = Error.reject("Error de ejemplo");
+Error.message(error) // "Error de ejemplo"
 ```
 
 ## Function `isRetryPossible`
-``` motoko no-repl
+
+```motoko no-repl
 func isRetryPossible(error : Error) : Bool
 ```
 
 Returns whether retrying to send a message may result in success.
 
 Example:
+
 ```motoko
 import { message; isRetryPossible } "mo:base/Error";
 import { print } "mo:base/Debug";

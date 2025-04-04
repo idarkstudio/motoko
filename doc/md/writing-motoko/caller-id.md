@@ -2,70 +2,95 @@
 sidebar_position: 6
 ---
 
-# Caller identification
+# Identificación del llamador (caller)
 
+Las funciones compartidas (shared functions) de Motoko admiten una forma
+sencilla de identificación del llamador que te permite inspeccionar el
+**principal** de ICP asociado con el llamador de una función. Los principales
+son un valor que identifica a un usuario o canister único.
 
+Puedes utilizar el principal asociado con el llamador de una función para
+implementar una forma básica de control de acceso en tu programa.
 
-Motoko’s shared functions support a simple form of caller identification that allows you to inspect the ICP **principal** associated with the caller of a function. Principals are a value that identifies a unique user or canister.
+## Uso de la identificación del llamador
 
-You can use the principal associated with the caller of a function to implement a basic form of access control in your program.
+En Motoko, la palabra clave `shared` se utiliza para declarar una función
+compartida. La función compartida también puede declarar un parámetro opcional
+de tipo `{caller: Principal}`.
 
-## Using caller identification
+Para ilustrar cómo acceder al llamador de una función compartida, considera el
+siguiente ejemplo:
 
-In Motoko, the `shared` keyword is used to declare a shared function. The shared function can also declare an optional parameter of type `{caller : Principal}`.
-
-To illustrate how to access the caller of a shared function, consider the following:
-
-``` motoko
+```motoko
 shared(msg) func inc() : async () {
   // ... msg.caller ...
 }
 ```
 
-In this example, the shared function `inc()` specifies a `msg` parameter, a record, and the `msg.caller` accesses the principal field of `msg`.
+En este ejemplo, la función compartida `inc()` especifica un parámetro `msg`, un
+registro, y `msg.caller` accede al campo principal de `msg`.
 
-The calls to the `inc()` function do not change. At each call site, the caller’s principal is provided by the system, not the user. The principal cannot be forged or spoofed by a malicious user.
+Las llamadas a la función `inc()` no cambian. En cada sitio de llamada, el
+principal del llamador es proporcionado por el sistema, no por el usuario. El
+principal no puede ser falsificado o suplantado por un usuario malintencionado.
 
-To access the caller of an actor class constructor, you use the same syntax on the actor class declaration. For example:
+Para acceder al llamador de un constructor de una clase de actor, se utiliza la
+misma sintaxis en la declaración de la clase de actor. Por ejemplo:
 
-``` motoko
+```motoko
 shared(msg) persistent actor class Counter(init : Nat) {
   // ... msg.caller ...
 }
 ```
 
-## Adding access control
+## Agregando control de acceso
 
-To extend this example, assume you want to restrict the `Counter` actor so it can only be modified by the installer of the `Counter`. To do this, you can record the principal that installed the actor by binding it to an `owner` variable. You can then check that the caller of each method is equal to `owner` like this:
+Para extender este ejemplo, supongamos que deseas restringir el actor `Counter`
+para que solo pueda ser modificado por el instalador del `Counter`. Para hacer
+esto, puedes registrar el principal que instaló el actor vinculándolo a una
+variable `owner`. Luego puedes verificar que el llamador de cada método sea
+igual a `owner` de la siguiente manera:
 
-``` motoko file=../examples/Counters-caller.mo
+```motoko file=../examples/Counters-caller.mo
+
 ```
 
-In this example, the `assert (owner == msg.caller)` expression causes the functions `inc()` and `bump()` to trap if the call is unauthorized, preventing any modification of the `count` variable while the `read()` function permits any caller.
+En este ejemplo, la expresión `assert (owner == msg.caller)` hace que las
+funciones `inc()` y `bump()` se detengan si la llamada no está autorizada,
+evitando cualquier modificación de la variable `count`, mientras que la función
+`read()` permite cualquier llamador.
 
-The argument to `shared` is just a pattern. You can rewrite the above to use pattern matching:
+El argumento de `shared` es solo un patrón. Puedes reescribir lo anterior
+utilizando coincidencia de patrones:
 
-``` motoko file=../examples/Counters-caller-pat.mo
+```motoko file=../examples/Counters-caller-pat.mo
+
 ```
 
 :::note
 
-Simple actor declarations do not let you access their installer. If you need access to the installer of an actor, rewrite the actor declaration as a zero-argument actor class instead.
+Las declaraciones de actores simples no te permiten acceder a su instalador. Si
+necesitas acceder al instalador de un actor, reescribe la declaración del actor
+como una clase de actor sin argumentos.
 
 :::
 
+## Registro de principals
 
-## Recording principals
+Los principals admiten igualdad, ordenación y hash, por lo que puedes almacenar
+eficientemente principals en contenedores para funciones como mantener una lista
+de permitidos o denegados. Hay más operaciones disponibles en la biblioteca base
+[principal](../base/Principal.md).
 
-Principals support equality, ordering, and hashing, so you can efficiently store principals in containers for functions such as maintaining an allow or deny list. More operations on principals are available in the [principal](../base/Principal.md) base library.
+El tipo de datos `Principal` en Motoko es tanto compartible como estable, lo que
+significa que puedes comparar `Principal` directamente para la igualdad.
 
-The data type of `Principal` in Motoko is both sharable and stable, meaning you can compare `Principal`s for equality directly.
+A continuación se muestra un ejemplo de cómo puedes grabar principals en un
+conjunto.
 
-Below is an example of how you can record principals in a set.
+```motoko file=../examples/RecordPrincipals.mo
 
-``` motoko file=../examples/RecordPrincipals.mo
 ```
-
 
 ```motoko
 import Principal "mo:base/Principal";

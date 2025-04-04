@@ -2,108 +2,174 @@
 sidebar_position: 14
 ---
 
-# Message inspection
+# Inspección de mensajes
 
+En ICP, un canister puede inspeccionar selectivamente y luego elegir aceptar o
+rechazar mensajes de entrada enviados a través de la interfaz HTTP.
 
-
-On ICP, a canister can selectively inspect, then choose to accept or decline ingress messages submitted through the HTTP interface.
-
-> A canister can inspect ingress messages before executing them. When the IC receives an update call from a user, the IC will use the canister method `canister_inspect_message` to determine whether the message shall be accepted. If the canister is empty (i.e. does not have a Wasm module), then the ingress message will be rejected. If the canister is not empty and does not implement `canister_inspect_message`, then the ingress message will be accepted.
+> Un canister puede inspeccionar los mensajes de entrada antes de ejecutarlos.
+> Cuando el IC recibe una llamada de actualización de un usuario, el IC
+> utilizará el método del canister `canister_inspect_message` para determinar si
+> el mensaje debe ser aceptado. Si el canister está vacío (es decir, no tiene un
+> módulo Wasm), entonces el mensaje de entrada será rechazado. Si el canister no
+> está vacío y no implementa `canister_inspect_message`, entonces el mensaje de
+> entrada será aceptado.
 >
-> In `canister_inspect_message`, the canister can accept the message by invoking `ic0.accept_message : () → ()`. This function traps if invoked twice. If the canister traps in `canister_inspect_message` or does not call `ic0.accept_message`, then the access is denied.
+> En `canister_inspect_message`, el canister puede aceptar el mensaje invocando
+> `ic0.accept_message : () → ()`. Esta función genera una trampa si se invoca
+> dos veces. Si el canister genera una trampa en `canister_inspect_message` o no
+> llama a `ic0.accept_message`, entonces se deniega el acceso.
 >
-> The `canister_inspect_message` is not invoked for HTTP query calls, inter-canister calls or calls to the management canister.
+> El método `canister_inspect_message` no se invoca para llamadas de consulta
+> HTTP, llamadas entre canisters o llamadas al canister de gestión.
 >
-> —  [IC Interface Specification](https://internetcomputer.org/docs/current/references/ic-interface-spec/#system-api-inspect-message)
+> —
+> [Especificación de la interfaz de IC](https://internetcomputer.org/docs/current/references/ic-interface-spec/#system-api-inspect-message)
 
-Message inspection mitigates some denial of service attacks that are designed to drain canisters of cycles by placing unsolicited free calls.
+La inspección de mensajes mitiga algunos ataques de denegación de servicio
+diseñados para agotar los ciclos de los canisters mediante llamadas gratuitas no
+solicitadas.
 
-## Message inspection in Motoko
+## Inspección de mensajes en Motoko
 
-In Motoko, actors can elect to inspect and accept or decline ingress messages by declaring a particular `system` function called `inspect`. Given a record of message attributes, this function produces a [`Bool`](../base/Bool.md) that indicates whether to accept or decline the message by returning `true` or `false`.
+En Motoko, los actores pueden optar por inspeccionar y aceptar o rechazar
+mensajes de entrada declarando una función `system` particular llamada
+`inspect`. Dado un registro de atributos del mensaje, esta función produce un
+[`Bool`](../base/Bool.md) que indica si aceptar o rechazar el mensaje
+devolviendo `true` o `false`.
 
-The function is invoked by the system on each ingress message. Similar to a query, any side effects of an invocation are discarded and transient. A call that traps due to some fault has the same result as returning a message declination of `false`.
+La función es invocada por el sistema en cada mensaje de entrada. Similar a una
+consulta, cualquier efecto secundario de una invocación se descarta y es
+transitorio. Una llamada que genera una trampa debido a algún fallo tiene el
+mismo resultado que devolver un rechazo de mensaje con `false`.
 
-Unlike other system functions that have a fixed argument type, the argument type of `inspect` depends on the interface of the enclosing actor. In particular, the formal argument of `inspect` is a record of fields with the following types:
+A diferencia de otras funciones del sistema que tienen un tipo de argumento
+fijo, el tipo de argumento de `inspect` depende de la interfaz del actor que la
+contiene. En particular, el argumento formal de `inspect` es un registro de
+campos con los siguientes tipos:
 
--   `caller : Principal`: The principal of the caller of the message.
+- `caller : Principal`: El principal del llamante del mensaje.
 
--   `arg : Blob`: The raw, binary content of the message argument.
+- `arg : Blob`: El contenido binario crudo del argumento del mensaje.
 
--   `msg : <variant>`: A variant of decoding functions, where `<variant> == {…​; #<id>: () → T; …​}` contains one variant per shared function, `<id>`, of the actor. The variant’s tag identifies the function to be called. The variant’s argument is a function that returns the decoded argument of the call as a value of type `T`.
+- `msg : <variant>`: Una variante de funciones de decodificación, donde
+  `<variant> == {…​; #<id>: () → T; …​}` contiene una variante por cada función
+  compartida, `<id>`, del actor. La etiqueta de la variante identifica la
+  función a la que se va a llamar. El argumento de la variante es una función
+  que devuelve el argumento decodificado de la llamada como un valor de tipo
+  `T`.
 
-Using a variant, tagged with `#<id>`, allows the return type, `T`, of the decoding function to vary with the argument type, also `T`, of the shared function `<id>`.
+El uso de una variante, etiquetada con `#<id>`, permite que el tipo de retorno,
+`T`, de la función de decodificación varíe con el tipo de argumento, también
+`T`, de la función compartida `<id>`.
 
-The variant’s argument is a function so that one can avoid the expense of message decoding.
+El argumento de la variante es una función para evitar el costo de la
+decodificación del mensaje.
 
-By exploiting subtyping, the formal argument can omit record fields it does not require, or selectively ignore the arguments of particular shared functions. For example, to simply dispatch on the name of a function without inspecting its actual argument.
+Al explotar el subtipado, el argumento formal puede omitir campos del registro
+que no requiere, o ignorar selectivamente los argumentos de funciones
+compartidas particulares. Por ejemplo, para simplemente despachar en el nombre
+de una función sin inspeccionar su argumento real.
 
 :::note
 
-A `shared query` function can be called using a regular HTTP update call to obtain a certified response. This is why the variant type also includes `shared query` functions.
+Una función `shared query` puede llamarse utilizando una llamada de
+actualización HTTP regular para obtener una respuesta certificada. Es por eso
+que el tipo de variante también incluye funciones `shared query`.
 
-A `shared composite query` function cannot be called as an update call. It can only be called with the faster, but uncertified, HTTP query call.
+Una función `shared composite query` no puede llamarse como una llamada de
+actualización. Solo puede llamarse con la llamada de consulta HTTP más rápida,
+pero no certificada.
 
-This is why the `inspect` variant type includes `shared query` functions, but not `shared composite query` functions.
+Es por eso que el tipo de variante `inspect` incluye funciones `shared query`,
+pero no funciones `shared composite query`.
 
 :::
 
 :::danger
 
-An actor that fails to declare system field `inspect` will simply accept all ingress messages.
+Un actor que no declare el campo del sistema `inspect` simplemente aceptará
+todos los mensajes de entrada.
 
 :::
 
 :::danger
 
-System function `inspect` should **not** be used for definitive access control. This is because `inspect` is executed by a single replica, without going through full consensus. Its result could be spoofed by a malicious boundary node. Also `inspect` is not invoked for inter-canister calls. Reliable access control checks can only be performed within the `shared` functions guarded by `inspect`. See [canister development security best practices](https://internetcomputer.org/docs/building-apps/security/iam/#do-not-rely-on-ingress-message-inspection) for more information.
+La función del sistema `inspect` **no** debe usarse para un control de acceso
+definitivo. Esto se debe a que `inspect` es ejecutada por una sola réplica, sin
+pasar por un consenso completo. Su resultado podría ser falsificado por un nodo
+límite malicioso. Además, `inspect` no se invoca para llamadas entre canisters.
+Los controles de acceso confiables solo pueden realizarse dentro de las
+funciones `shared` protegidas por `inspect`. Consulta las
+[mejores prácticas de seguridad en el desarrollo de canisters](https://internetcomputer.org/docs/building-apps/security/iam/#do-not-rely-on-ingress-message-inspection)
+para obtener más información.
 
 :::
 
-## Example
+## Ejemplo
 
-A simple example of method inspection is a counter actor that inspects some of its messages in detail, and others only superficially:
+Un ejemplo simple de inspección de métodos es un actor de contador que
+inspecciona algunos de sus mensajes en detalle y otros de manera superficial:
 
-``` motoko file=../examples/InspectFull.mo
+```motoko file=../examples/InspectFull.mo
+
 ```
 
-Due to subtyping, all of the following variations in order of increasing argument specificity, are legal definitions of `inspect`.
+Debido a la subtipificación, todas las siguientes variaciones en orden de
+especificidad creciente de argumentos son definiciones legales de `inspect`.
 
-Blanket denial of all ingress messages, ignoring further information:
+Denegación total de todos los mensajes de ingreso, ignorando más información:
 
-``` motoko no-repl file=../examples/InspectNone.mo#L10-L10
+```motoko no-repl file=../examples/InspectNone.mo#L10-L10
+
 ```
 
-Declining anonymous calls:
+Declinando llamadas anónimas:
 
-``` motoko no-repl file=../examples/InspectCaller.mo#L12-L14
+```motoko no-repl file=../examples/InspectCaller.mo#L12-L14
+
 ```
 
-Declining large messages, based on the raw size in bytes of `arg` prior to any decoding from Candid binary blob to Motoko value:
+Declinando mensajes grandes, basado en el tamaño en bytes sin procesar de `arg`
+antes de cualquier decodificación de un blob binario Candid a un valor Motoko:
 
-``` motoko no-repl file=../examples/InspectArg.mo#L10-L13
+```motoko no-repl file=../examples/InspectArg.mo#L10-L13
+
 ```
 
-Declining messages by name only, ignoring message arguments. Note the use of type `Any` as message argument variants:
+Declinando mensajes solo por nombre, ignorando los argumentos del mensaje. Ten
+en cuenta el uso del tipo `Any` como variantes de argumentos del mensaje:
 
-``` motoko no-repl file=../examples/InspectName.mo#L10-L23
+```motoko no-repl file=../examples/InspectName.mo#L10-L23
+
 ```
 
-A combination of the previous three, specifying the argument types of some variants while ignoring others at type `Any` and using pattern matching to conflate identical cases:
+Una combinación de los tres anteriores, especificando los tipos de argumentos de
+algunas variantes mientras se ignoran otros con el tipo `Any` y utilizando el
+emparejamiento de patrones para fusionar casos idénticos:
 
-``` motoko no-repl file=../examples/InspectMixed.mo#L12-L30
+```motoko no-repl file=../examples/InspectMixed.mo#L12-L30
+
 ```
 
-## Tips on authoring `inspect`
+## Consejos para escribir `inspect`
 
-Implementing `inspect` after the fact once all shared functions of an actor have already been implemented can be tedious. You’ll need to declare a correctly typed variant for each shared function. A simple trick is to first implement the function incorrectly with a `()` argument, compile the code, then use the compiler’s error message to obtain the required argument type.
+Implementar `inspect` después de haber implementado todas las funciones
+compartidas de un actor puede ser tedioso. Deberás declarar una variante con el
+tipo correcto para cada función compartida. Un truco sencillo es implementar
+primero la función de forma incorrecta con un argumento `()`, compilar el código
+y luego utilizar el mensaje de error del compilador para obtener el tipo de
+argumento requerido.
 
-For example, in the actor from the previous section, incorrectly declaring forces the compiler to report the expected type below, which you can then cut-and-paste into your code:
+Por ejemplo, en el actor del apartado anterior, al declarar incorrectamente
+`inspect`, el compilador informará el tipo esperado que se muestra a
+continuación, el cual puedes copiar y pegar en tu código:
 
-``` motoko no-repl file=../examples/InspectTrick.mo#L11-L13
+```motoko no-repl file=../examples/InspectTrick.mo#L11-L13
+
 ```
 
-``` motoko no-repl
+```motoko no-repl
 Inspect.mo:12.4-14.5: type error [M0127], system function inspect is declared with type
   () -> Bool
 instead of expected type

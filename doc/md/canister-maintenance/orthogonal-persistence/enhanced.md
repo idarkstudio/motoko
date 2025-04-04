@@ -2,18 +2,30 @@
 sidebar_position: 2
 ---
 
-# Enhanced orthogonal persistence
+# Persistencia ortogonal mejorada
 
-Enhanced orthogonal persistence implements the vision of efficient and scalable orthogonal persistence in Motoko that combines:
-* **Stable heap**: Persisting the program's main memory across canister upgrades.
-* **64-bit heap**: Extending the main memory to 64-bit for large-scale persistence.
+La persistencia ortogonal mejorada implementa la visión de una persistencia
+ortogonal eficiente y escalable en Motoko que combina:
 
-As a result, the use of secondary storage (explicit stable memory, dedicated stable data structures, DB-like storage abstractions) will no longer be necessary: Motoko developers can directly work on their normal object-oriented program structures that are automatically persisted and retained across program version changes.
+- **Heap estable**: Persistiendo la memoria principal del programa a través de
+  actualizaciones de canisters.
+- **Heap de 64 bits**: Extendiendo la memoria principal a 64 bits para una
+  persistencia a gran escala.
 
-### Activation
-Enhanced orthogonal persistence is currently offered for **beta testing** via the compiler flag `--enhanced-orthogonal-persistence`.
+Como resultado, el uso de almacenamiento secundario (memoria estable explícita,
+estructuras de datos estables dedicadas, abstracciones de almacenamiento tipo
+DB) ya no será necesario: los desarrolladores de Motoko pueden trabajar
+directamente en sus estructuras de programación orientadas a objetos normales
+que se persisten y retienen automáticamente a través de cambios de versión del
+programa.
 
-To activate enhanced orthogonal persistence under `dfx`, the following command-line argument needs to be specified in `dfx.json`:
+### Activación
+
+La persistencia ortogonal mejorada se ofrece actualmente para **pruebas beta** a
+través de la bandera del compilador `--enhanced-orthogonal-persistence`.
+
+Para activar la persistencia ortogonal mejorada en `dfx`, se debe especificar el
+siguiente argumento de línea de comandos en `dfx.json`:
 
 ```
 ...
@@ -23,85 +35,146 @@ To activate enhanced orthogonal persistence under `dfx`, the following command-l
 ...
 ```
 
-:::tip
-Despite the use of enhanced orthogonal persistence, it is strongly recommended to thoroughly test the upgrades of your application.
-Moreover, it is advised to have a backup possibility for rescuing data even when upgrades fail, e.g. by controller-privileged data query calls.
-:::
+:::tip A pesar del uso de la persistencia ortogonal mejorada, se recomienda
+encarecidamente probar exhaustivamente las actualizaciones de tu aplicación.
+Además, se aconseja tener una posibilidad de respaldo para rescatar datos
+incluso cuando las actualizaciones fallen, por ejemplo, mediante llamadas de
+consulta de datos con privilegios de controlador. :::
 
-[Classical orthogonal persistence](classical.md) with 32-bit main memory and Candid stabilization currently remains the default mode.
-See [orthogonal persistence modes](modes.md) for a comparison.
+[La persistencia ortogonal clásica](classical.md) con memoria principal de 32
+bits y estabilización Candid sigue siendo actualmente el modo predeterminado.
+Consulta [modos de persistencia ortogonal](modes.md) para una comparación.
 
-## Design
-Compared to the existing orthogonal persistence in Motoko, this design offers:
-* **Performance**: New program versions directly resume from the existing main memory and have access to the memory-compatible data.
-* **Scalability**: The upgrade mechanism scales with larger heaps and in contrast to serialization, does not hit IC instruction limits.
+## Diseño
 
-Compared to the explicit use of stable memory, this design improves:
-* **Simplicity**: Developers do not need to deal with explicit stable memory.
-* **Performance**: No copying to and from the separate stable memory is necessary.
+En comparación con la persistencia ortogonal existente en Motoko, este diseño
+ofrece:
 
-The enhanced orthogonal persistence is based on the following main properties:
-* Extension of the IC to retain main memory on upgrades.
-* Supporting 64-bit main memory on the IC.
-* A long-term memory layout that is invariant to new compiled program versions.
-* A fast memory compatibility check that is performed on each canister upgrade.
-* Incremental garbage collection using a partitioned heap.
+- **Rendimiento**: Las nuevas versiones del programa se reanudan directamente
+  desde la memoria principal existente y tienen acceso a los datos compatibles
+  con la memoria.
+- **Escalabilidad**: El mecanismo de actualización escala con heaps más grandes
+  y, en contraste con la serialización, no alcanza los límites de instrucciones
+  de IC.
 
-### Compatibility check
-Upgrades are only permitted if the new program version is compatible with the old version, such that the runtime system guarantees a compatible memory structure.
+En comparación con el uso explícito de la memoria estable, este diseño mejora:
 
-Compatible changes for immutable types are largely analogous to the allowed Motoko subtype relation modulo some flexibility for actor fields, i.e.
-* Adding or removing actor fields.
-* Changing mutability of actor fields (`let` to `var` and vice-versa).
-* Removing object fields.
-* Adding variant fields.
-* Changing `Nat` to `Int`.
-* Supporting shared function parameter contravariance and return type covariance.
-* Any other change according to Motoko's subtyping rule.
+- **Simplicidad**: Los desarrolladores no necesitan lidiar con la memoria
+  estable explícita.
+- **Rendimiento**: No es necesario copiar hacia y desde la memoria estable
+  separada.
 
-The runtime system checks migration compatibility on upgrade, and if not fulfilled, rolls back the upgrade. This compatibility check serves as an additional safety measure on top of the `dfx` warning that can be bypassed by users.
+La persistencia ortogonal mejorada se basa en las siguientes propiedades
+principales:
 
-Any more complex change can be performed with programmatic instruction, see [explicit migration](../upgrades.md#explicit-migration).
+- Extensión de IC para retener la memoria principal en las actualizaciones.
+- Soporte de memoria principal de 64 bits en IC.
+- Un diseño de memoria a largo plazo que es invariante a las nuevas versiones
+  compiladas del programa.
+- Una verificación rápida de compatibilidad de memoria que se realiza en cada
+  actualización de canister.
+- Recolección de basura incremental utilizando un heap particionado.
 
-### Migration path
-When migrating from the old serialization-based stabilization to the new persistent heap, the old data is deserialized one last time from stable memory and then placed in the new persistent heap layout. Once operating on the persistent heap, the system should prevent downgrade attempts to the old serialization-based persistence. 
+### Verificación de compatibilidad
 
-#### Graph-copy-based stabilization
-Assuming that the persistent memory layout needs to be changed in the future, the runtime system supports serialization and deserialization to and from stable memory in a defined data format using graph-copy-based stabilization. Arbitrarily large data can be serialized and deserialized beyond the instruction and working set limit of upgrades. Large data serialization and deserialization is split in multiple messages, running before and/or after the IC upgrade to migrate large heaps. Other messages will be blocked during this process and only the canister owner or the canister controllers are permitted to initiate this process. 
+Las actualizaciones solo se permiten si la nueva versión del programa es
+compatible con la versión anterior, de modo que el sistema de tiempo de
+ejecución garantice una estructura de memoria compatible.
 
-This will only be needed in rare situations when Motoko's implementation changes its internal memory layout. Users will then be instructed to explicitly initiate this migration.
+Los cambios compatibles para tipos inmutables son en gran medida análogos a la
+relación de subtipos permitida en Motoko, con cierta flexibilidad para los
+campos de actores, es decir:
 
-#### Usage
-Graph-copy-based stabilization can be performed in three steps:
+- Agregar o eliminar campos de actores.
+- Cambiar la mutabilidad de los campos de actores (`let` a `var` y viceversa).
+- Eliminar campos de objetos.
+- Agregar campos de variantes.
+- Cambiar `Nat` a `Int`.
+- Soporte de contravarianza de parámetros de funciones compartidas y covarianza
+  de tipos de retorno.
+- Cualquier otro cambio según la regla de subtipificación de Motoko.
 
-1. Initiate the explicit stabilization before the upgrade:
-    
+El sistema de tiempo de ejecución verifica la compatibilidad de migración
+durante la actualización y, si no se cumple, revierte la actualización. Esta
+verificación de compatibilidad sirve como una medida de seguridad adicional
+además de la advertencia de `dfx`, que puede ser ignorada por los usuarios.
+
+Cualquier cambio más complejo se puede realizar con instrucciones programáticas,
+consulta [migración explícita](../upgrades.md#explicit-migration).
+
+### Ruta de migración
+
+Al migrar desde la estabilización basada en serialización antigua al nuevo heap
+persistente, los datos antiguos se deserializan una última vez desde la memoria
+estable y luego se colocan en el nuevo diseño de heap persistente. Una vez que
+se opera en el heap persistente, el sistema debe evitar intentos de retroceder a
+la antigua persistencia basada en serialización.
+
+#### Estabilización basada en copia de grafos
+
+Suponiendo que el diseño de memoria persistente necesite cambiarse en el futuro,
+el sistema de tiempo de ejecución admite la serialización y deserialización
+hacia y desde la memoria estable en un formato de datos definido utilizando
+estabilización basada en copia de grafos. Datos arbitrariamente grandes pueden
+serializarse y deserializarse más allá del límite de instrucciones y conjunto de
+trabajo de las actualizaciones. La serialización y deserialización de grandes
+cantidades de datos se divide en múltiples mensajes, ejecutándose antes y/o
+después de la actualización de IC para migrar heaps grandes. Otros mensajes se
+bloquearán durante este proceso y solo el propietario del canister o los
+controladores del canister tienen permitido iniciar este proceso.
+
+Esto solo será necesario en situaciones raras cuando la implementación de Motoko
+cambie su diseño de memoria interno. Los usuarios serán instruidos para iniciar
+explícitamente esta migración.
+
+#### Uso
+
+La estabilización basada en copia de grafos se puede realizar en tres pasos:
+
+1. Iniciar la estabilización explícita antes de la actualización:
+
 ```
 dfx canister call CANISTER_ID __motoko_stabilize_before_upgrade "()"
 ```
 
-2. Run the actual upgrade:
+2. Ejecuta la actualización:
 
 ```
 dfx deploy CANISTER_ID
 ```
 
-3. Complete the explicit destabilization after the upgrade:
+3. Completar la desestabilización explícita después de la actualización:
 
 ```
 dfx canister call CANISTER_ID __motoko_destabilize_after_upgrade "()"
 ```
 
-Remarks:
-* When receiving the `dfx` error "The request timed out." during explicit stabilization, upgrade, or destabilization, one can simply repeat the call until it completes.
-* Step 3 (explicit destabilization) may not be needed if the corresponding operation fits into the upgrade message.
+Observaciones:
 
-### Old stable memory
-The old stable memory remains equally accessible as secondary (legacy) memory with the new support. Therefore, stable regions can be combined with orthogonal persistence.
+- Cuando se recibe el error de `dfx` "The request timed out." durante la
+  estabilización explícita, la actualización o la desestabilización, simplemente
+  se puede repetir la llamada hasta que se complete.
+- El paso 3 (desestabilización explícita) puede no ser necesario si la operación
+  correspondiente cabe en el mensaje de actualización.
 
-## IC main memory retention
+### Memoria estable antigua
 
-The IC introduces a new upgrade option `wasm_memory_persistence` to control the retention of the canister's Wasm main memory.
-* `wasm_memory_persistence = opt keep` retains the Wasm main memory and is required for Motoko's enhanced orthogonal persistence. The IC prevents using this options for canisters with classical persistence.
-* `wasm_memory_persistence = null` uses the classical persistence, replacing the main memory. However, a safety check is implemented to prevent that main memory is not accidentally dropped for enhanced orthogonal persistence.
-* The other option `replace` is not recommended as it drops Wasm main memory, even for enhanced orthogonal persistence, leading to potential data loss.
+La memoria estable antigua sigue siendo igualmente accesible como memoria
+secundaria (legacy) con el nuevo soporte. Por lo tanto, las regiones estables se
+pueden combinar con la persistencia ortogonal.
+
+## Retención de memoria principal en IC
+
+El IC introduce una nueva opción de actualización `wasm_memory_persistence` para
+controlar la retención de la memoria principal Wasm del canister.
+
+- `wasm_memory_persistence = opt keep` retiene la memoria principal Wasm y es
+  requerida para la persistencia ortogonal mejorada de Motoko. El IC impide usar
+  esta opción para canisters con persistencia clásica.
+- `wasm_memory_persistence = null` utiliza la persistencia clásica, reemplazando
+  la memoria principal. Sin embargo, se implementa una verificación de seguridad
+  para evitar que la memoria principal se elimine accidentalmente para la
+  persistencia ortogonal mejorada.
+- La otra opción `replace` no se recomienda, ya que elimina la memoria principal
+  Wasm, incluso para la persistencia ortogonal mejorada, lo que podría provocar
+  la pérdida de datos.

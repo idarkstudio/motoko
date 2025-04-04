@@ -2,51 +2,69 @@
 sidebar_position: 2
 ---
 
-# Data structures
+# Estructuras de datos
 
-## Mops packages for data structures
+## Paquetes Mops para estructuras de datos
 
-[Mops](https://mops.one/) is an onchain package manager for Motoko. Here are some Mops packages for data structure implementations:
+[Mops](https://mops.one/) es un administrador de paquetes en cadena para Motoko.
+Aquí hay algunos paquetes Mops para implementaciones de estructuras de datos:
 
-- [`augmented-btrees`](https://mops.one/augmented-btrees): An implementation of BTree variants, most notable the B+Tree.
+- [`augmented-btrees`](https://mops.one/augmented-btrees): Una implementación de
+  variantes de BTree, especialmente el B+Tree.
 
-- [`buffer-deque`](https://mops.one/buffer-deque): A Buffer with Deque functionality of a Deque for efficient insertion and deletion at both ends.
+- [`buffer-deque`](https://mops.one/buffer-deque): Un búfer con funcionalidad de
+  deque para inserción y eliminación eficientes en ambos extremos.
 
-- [`bitbuffer`](https://mops.one/bitbuffer): Bit level and byte level manipulation.
+- [`bitbuffer`](https://mops.one/bitbuffer): Manipulación a nivel de bits y a
+  nivel de bytes.
 
-- [`circular-buffer`](https://mops.one/circular-buffer): Circular buffer implementation.
+- [`circular-buffer`](https://mops.one/circular-buffer): Implementación de un
+  búfer circular.
 
-- [`enumeration`](https://mops.one/enumeration): Add-only key sets with numbering and two-way lookup.
+- [`enumeration`](https://mops.one/enumeration): Conjuntos de claves de solo
+  adición con numeración y búsqueda bidireccional.
 
-- [`linked-list`](https://mops.one/linked-list): Doubly linked lists, featuring functions for node-level access.
+- [`linked-list`](https://mops.one/linked-list): Listas doblemente enlazadas con
+  funciones de acceso a nivel de nodo.
 
-- [`map`](https://mops.one/map): Stable hash maps.
+- [`map`](https://mops.one/map): Mapas hash estables.
 
-- [`memory-buffer`](https://mops.one/memory-buffer): Persistent buffer implementations.
+- [`memory-buffer`](https://mops.one/memory-buffer): Implementaciones
+  persistentes de búferes.
 
-- [`memory-hashlist`](https://mops.one/memory-hashlist): Storing and accessing blobs into memory associated with blob-key.
+- [`memory-hashlist`](https://mops.one/memory-hashlist): Almacenamiento y acceso
+  de blobs en memoria asociados con una clave de blob.
 
-- [`memory-hashtable`](https://mops.one/memory-hashtable): Storing, updating, deleting, and retrieving a single blob-value per key.
+- [`memory-hashtable`](https://mops.one/memory-hashtable): Almacenamiento,
+  actualización, eliminación y recuperación de un solo valor de blob por clave.
 
-- [`merkle-patricia-trie`](https://mops.one/merkle-patricia-trie): A Merkle Patricia Trie implementation following the Ethereum specification
+- [`merkle-patricia-trie`](https://mops.one/merkle-patricia-trie): Una
+  implementación de Merkle Patricia Trie siguiendo la especificación de
+  Ethereum.
 
-- [`splay`](https://mops.one/splay): A library for splay trees.
+- [`splay`](https://mops.one/splay): Una biblioteca para árboles splay.
 
-- [`stable-buffer`](https://mops.one/stable-buffer): Buffers implemented in stable regions.
+- [`stable-buffer`](https://mops.one/stable-buffer): Búferes implementados en
+  regiones estables.
 
-- [`stable-enum`](https://mops.one/stable-enum): Enumerations implemented in stable regions.
+- [`stable-enum`](https://mops.one/stable-enum): Enumeraciones implementadas en
+  regiones estables.
 
-- [`stableheapbtreemap`](https://mops.one/stableheapbtreemap): BTreeMaps that can persist across upgrades via a stable variable in heap memory.
+- [`stableheapbtreemap`](https://mops.one/stableheapbtreemap): BTreeMaps que
+  pueden persistir a través de actualizaciones mediante una variable estable en
+  la memoria del montón.
 
-- [`stable-rbtree`](https://mops.one/stable-rbtree): Stable RBtree.
+- [`stable-rbtree`](https://mops.one/stable-rbtree): RBtree estable.
 
-- [`stable-trie`](https://mops.one/stable-trie): Stable trie.
+- [`stable-trie`](https://mops.one/stable-trie): Trie estable.
 
-- [`swb`](https://mops.one/swb): Sliding window buffers featuring random access functionalities.
+- [`swb`](https://mops.one/swb): Búferes de ventana deslizante con
+  funcionalidades de acceso aleatorio.
 
-- [`swbstable`](https://mops.one/swbstable): Stable sliding window buffer with random access.
+- [`swbstable`](https://mops.one/swbstable): Búfer de ventana deslizante estable
+  con acceso aleatorio.
 
-- [`vector`](https://mops.one/vector): Memory-efficient resizable array. Can be used as a replacement for `Buffer`.
-
+- [`vector`](https://mops.one/vector): Array redimensionable eficiente en
+  memoria. Puede usarse como reemplazo de `Buffer`.
 
 <img src="https://github.com/user-attachments/assets/844ca364-4d71-42b3-aaec-4a6c3509ee2e" alt="Logo" width="150" height="150" />

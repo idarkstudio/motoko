@@ -2,74 +2,78 @@
 sidebar_position: 2
 ---
 
-# Compiler reference
+# Referencia del compilador
 
+El compilador de Motoko (`moc`) es la herramienta principal para compilar
+programas de Motoko en módulos ejecutables de WebAssembly (Wasm). El compilador
+se ejecuta en segundo plano cuando construyes proyectos utilizando el
+[IC SDK](https://internetcomputer.org/docs/current/developer-docs/setup/install).
+Si invocas el compilador directamente en la línea de comandos, puedes presionar
+CTRL-C para salir.
 
-
-The Motoko compiler (`moc`) is the primary tool for compiling Motoko programs into executable WebAssembly (Wasm) modules. The compiler runs in the background when you build projects using the [IC SDK](https://internetcomputer.org/docs/current/developer-docs/setup/install). If you invoke the compiler directly on the command-line, you can press CTRL-C to exit.
-
-This section provides compiler command-line reference information.
+Esta sección proporciona información de referencia sobre los comandos del
+compilador.
 
 ## moc
 
-Use the Motoko compiler (`moc`) to compile Motoko programs into executable WebAssembly (Wasm) modules.
+Utiliza el compilador de Motoko (`moc`) para compilar programas de Motoko en
+módulos ejecutables de WebAssembly (Wasm).
 
-### Basic usage
+### Uso básico
 
-``` bash
+```bash
 moc [option] [file ...]
 ```
 
-### Options
+### Opciones
 
-You can use the following options with the `moc` command.
+Puedes usar las siguientes opciones con el comando `moc`.
 
-| Option                                    | Description                                                                                                                                           |
-|-------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `--ai-errors`                             | Emit AI tailored error messages.                                                                                                                      |
-| `--actor-idl <idl-path>`                  | Specifies a path to actor IDL (Candid) files.                                                                                                         |
-| `--actor-alias <alias> <principal>`       | Specifies an actor import alias.                                                                                                                      |
-| `--args <file>`                           | Read additional newline separated command line arguments from `<file>`.                                                                               |
-| `--args0 <file>`                          | Read additional `NUL` separated command line arguments from `<file>`.                                                                                 |
-| `-c`                                      | Compile to WebAssembly.                                                                                                                               |
-| `--check`                                 | Performs type checking only.                                                                                                                          |
-| `--compacting-gc`                         | Use compacting GC (not supported with enhanced orthogonal persistence).                                                                               |
-| `--copying-gc`                            | Use copying GC (default with classical persistence, not supported with enhanced orthogonal persistence).                                              |
-| `--debug`                                 | Respects debug expressions in the source (the default).                                                                                               |
-| `--enhanced-orthogonal-persistence`       | Use enhanced orthogonal persistence (experimental): Scalable and fast upgrades using a persistent 64-bit main memory.                                 |
-| `--error-detail <n>`                      | Set level of error message detail for syntax errors, n in \[0..3\] (default 2).                                                                       |
-| `--experimental-stable-memory <n>`        | Select support for the deprecated `ExperimentalStableMemory.mo` library (n < 0: error, n = 0: warn, n > 0: allow) (default 0).                        |
-| `-fno-shared-code`                        | Do not share low-level utility code: larger code size but decreased cycle consumption (default).                                                      |
-| `--generational-gc`                       | Use generational GC (not supported with enhanced orthogonal persistence).                                                                             |
-| `-fshared-code`                           | Do share low-level utility code: smaller code size but increased cycle consumption.                                                                   |
-| `-help`,`--help`                          | Displays usage information.                                                                                                                           |
-| `--hide-warnings`                         | Hides compiler warnings.                                                                                                                              |
-| `-Werror`                                 | Treat warnings as errors.                                                                                                                             |
-| `--incremental-gc`                        | Use incremental GC (default of enhanced orthogonal persistence, also available for classical persistence).                                            |
-| `--idl`                                   | Compile binary and emit Candid IDL specification to `.did` file.                                                                                      |
-| `-i`                                      | Runs the compiler in an interactive read–eval–print loop (REPL) shell so you can evaluate program execution (implies -r).                             |
-| `--map`                                   | Outputs a JavaScript source map.                                                                                                                      |
-| `--max-stable-pages <n>`                  | Set maximum number of pages available for library `ExperimentStableMemory.mo` (default 65536).                                                        |
-| `-no-system-api`                          | Disables system API imports.                                                                                                                          |
-| `-no-timer`                               | Disables timer API imports and hides timer primitives.                                                                                                |
-| `-o <file>`                               | Specifies the output file.                                                                                                                            |
-| `-p <n>`                                  | Sets the print depth.                                                                                                                                 |
-| `--package <package-name> <package-path>` | Specifies a `<package-name>` `<package-path>` pair, separated by a space.                                                                             |
-| `--public-metadata <name>`                | Emit ICP custom section `<name>` (`candid:args` or `candid:service` or `motoko:stable-types` or `motoko:compiler`) as `public` (default is `private`).|
-| `--omit-metadata <name>`                  | Omit ICP custom section `<name>` (`candid:args` or `candid:service` or `motoko:stable-types` or `motoko:compiler`).                                   |
-| `--print-deps`                            | Prints the dependencies for a given source file.                                                                                                      |
-| `-r`                                      | Interprets programs.                                                                                                                                  |
-| `--release`                               | Ignores debug expressions in the source.                                                                                                              |
-| `--stable-regions`                        | Force eager initialization of stable regions metadata (for testing purposes); consumes between 386KiB or 8MiB of additional physical stable memory, depending on current use of ExperimentalStableMemory. |
-| `--stable-types`                          | Compile binary and emit signature of stable types to `.most` file.                                                                                    |
-| `--stable-compatible <pre> <post>`        | Test upgrade compatibility between stable-type signatures `<pre>` and `<post>`.                                                                       |
-| `--rts-stack-pages <n>`                   | Set maximum number of pages available for runtime system stack (only supported with classical persistence, default 32).                               |
-| `--trap-on-call-error`                    | Trap, don't throw an [`Error`](../base/Error.md), when an IC call fails due to destination queue full or freezing threshold is crossed.               |
-|                                           | Emulates behaviour of moc versions < 0.8.0.                                                                                                           |
-| `-t`                                      | Activates tracing in interpreter.                                                                                                                     |
-| `-v`                                      | Generates verbose output.                                                                                                                             |
-| `--version`                               | Displays version information.                                                                                                                         |
-| `-wasi-system-api`                        | Uses the WASI system API (`wasmtime`).                                                                                                                |
-
+| Opción                                    | Descripción                                                                                                                                                                                                              |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `--ai-errors`                             | Emite mensajes de error adaptados para IA.                                                                                                                                                                               |
+| `--actor-idl <idl-path>`                  | Especifica una ruta a los archivos IDL (Candid) del actor.                                                                                                                                                               |
+| `--actor-alias <alias> <principal>`       | Especifica un alias de importación para el actor.                                                                                                                                                                        |
+| `--args <file>`                           | Lee argumentos adicionales separados por nuevas líneas desde `<file>`.                                                                                                                                                   |
+| `--args0 <file>`                          | Lee argumentos adicionales separados por `NUL` desde `<file>`.                                                                                                                                                           |
+| `-c`                                      | Compila a WebAssembly.                                                                                                                                                                                                   |
+| `--check`                                 | Realiza solo la verificación de tipos.                                                                                                                                                                                   |
+| `--compacting-gc`                         | Usa el recolector de basura compactador (no compatible con la persistencia ortogonal mejorada).                                                                                                                          |
+| `--copying-gc`                            | Usa el recolector de basura copiador (predeterminado con persistencia clásica, no compatible con la persistencia ortogonal mejorada).                                                                                    |
+| `--debug`                                 | Respeta las expresiones de depuración en el código fuente (predeterminado).                                                                                                                                              |
+| `--enhanced-orthogonal-persistence`       | Usa persistencia ortogonal mejorada (experimental): Actualizaciones escalables y rápidas utilizando una memoria principal persistente de 64 bits.                                                                        |
+| `--error-detail <n>`                      | Establece el nivel de detalle de los mensajes de error para errores de sintaxis, n en \[0..3\] (predeterminado 2).                                                                                                       |
+| `--experimental-stable-memory <n>`        | Selecciona el soporte para la biblioteca obsoleta `ExperimentalStableMemory.mo` (n < 0: error, n = 0: advertencia, n > 0: permitir) (predeterminado 0).                                                                  |
+| `-fno-shared-code`                        | No comparte código de utilidad de bajo nivel: mayor tamaño de código pero menor consumo de ciclos (predeterminado).                                                                                                      |
+| `--generational-gc`                       | Usa el recolector de basura generacional (no compatible con la persistencia ortogonal mejorada).                                                                                                                         |
+| `-fshared-code`                           | Comparte código de utilidad de bajo nivel: menor tamaño de código pero mayor consumo de ciclos.                                                                                                                          |
+| `-help`,`--help`                          | Muestra información de uso.                                                                                                                                                                                              |
+| `--hide-warnings`                         | Oculta las advertencias del compilador.                                                                                                                                                                                  |
+| `-Werror`                                 | Trata las advertencias como errores.                                                                                                                                                                                     |
+| `--incremental-gc`                        | Usa el recolector de basura incremental (predeterminado de la persistencia ortogonal mejorada, también disponible para la persistencia clásica).                                                                         |
+| `--idl`                                   | Compila el binario y emite la especificación IDL (Candid) en un archivo `.did`.                                                                                                                                          |
+| `-i`                                      | Ejecuta el compilador en un bucle interactivo de lectura-evaluación-impresión (REPL) para evaluar la ejecución del programa (implica -r).                                                                                |
+| `--map`                                   | Genera un mapa de fuentes JavaScript.                                                                                                                                                                                    |
+| `--max-stable-pages <n>`                  | Establece el número máximo de páginas disponibles para la biblioteca `ExperimentStableMemory.mo` (predeterminado 65536).                                                                                                 |
+| `-no-system-api`                          | Desactiva las importaciones de la API del sistema.                                                                                                                                                                       |
+| `-no-timer`                               | Desactiva las importaciones de la API del temporizador y oculta las primitivas del temporizador.                                                                                                                         |
+| `-o <file>`                               | Especifica el archivo de salida.                                                                                                                                                                                         |
+| `-p <n>`                                  | Establece la profundidad de impresión.                                                                                                                                                                                   |
+| `--package <package-name> <package-path>` | Especifica un par `<package-name>` `<package-path>`, separados por un espacio.                                                                                                                                           |
+| `--public-metadata <name>`                | Emite la sección personalizada ICP `<name>` (`candid:args` o `candid:service` o `motoko:stable-types` o `motoko:compiler`) como `public` (predeterminado es `private`).                                                  |
+| `--omit-metadata <name>`                  | Omite la sección personalizada ICP `<name>` (`candid:args` o `candid:service` o `motoko:stable-types` o `motoko:compiler`).                                                                                              |
+| `--print-deps`                            | Imprime las dependencias para un archivo fuente dado.                                                                                                                                                                    |
+| `-r`                                      | Interpreta programas.                                                                                                                                                                                                    |
+| `--release`                               | Ignora las expresiones de depuración en el código fuente.                                                                                                                                                                |
+| `--stable-regions`                        | Fuerza la inicialización temprana de los metadatos de regiones estables (para fines de prueba); consume entre 386KiB o 8MiB de memoria estable física adicional, dependiendo del uso actual de ExperimentalStableMemory. |
+| `--stable-types`                          | Compila el binario y emite la firma de tipos estables en un archivo `.most`.                                                                                                                                             |
+| `--stable-compatible <pre> <post>`        | Prueba la compatibilidad de actualización entre las firmas de tipos estables `<pre>` y `<post>`.                                                                                                                         |
+| `--rts-stack-pages <n>`                   | Establece el número máximo de páginas disponibles para la pila del sistema en tiempo de ejecución (solo compatible con la persistencia clásica, predeterminado 32).                                                      |
+| `--trap-on-call-error`                    | Entra en trampa, no lanza un [`Error`](../base/Error.md), cuando una llamada IC falla debido a que la cola de destino está llena o se cruza el umbral de congelación.                                                    |
+|                                           | Emula el comportamiento de las versiones de moc < 0.8.0.                                                                                                                                                                 |
+| `-t`                                      | Activa el seguimiento en el intérprete.                                                                                                                                                                                  |
+| `-v`                                      | Genera salida detallada.                                                                                                                                                                                                 |
+| `--version`                               | Muestra información de la versión.                                                                                                                                                                                       |
+| `-wasi-system-api`                        | Usa la API del sistema WASI (`wasmtime`).                                                                                                                                                                                |
 
 <img src="https://github.com/user-attachments/assets/844ca364-4d71-42b3-aaec-4a6c3509ee2e" alt="Logo" width="150" height="150" />

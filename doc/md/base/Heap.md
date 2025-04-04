@@ -1,16 +1,19 @@
 # Heap
-Class `Heap<X>` provides a priority queue of elements of type `X`.
 
-The class wraps a purely-functional implementation based on a leftist heap.
+La clase `Heap<X>` proporciona una cola de prioridad de elementos de tipo `X`.
 
-Note on the constructor:
-The constructor takes in a comparison function `compare` that defines the
-ordering between elements of type `X`. Most primitive types have a default
-version of this comparison function defined in their modules (e.g. `Nat.compare`).
-The runtime analysis in this documentation assumes that the `compare` function
-runs in `O(1)` time and space.
+La clase envuelve una implementación puramente funcional basada en un heap
+izquierdo.
 
-Example:
+Nota sobre el constructor: El constructor recibe una función de comparación
+`compare` que define el orden entre elementos de tipo `X`. La mayoría de los
+tipos primitivos tienen una versión predeterminada de esta función de
+comparación definida en sus módulos (por ejemplo, `Nat.compare`). El análisis de
+tiempo de ejecución en esta documentación asume que la función `compare` se
+ejecuta en tiempo y espacio `O(1)`.
+
+Ejemplo:
+
 ```motoko name=initialize
 import Heap "mo:base/Heap";
 import Text "mo:base/Text";
@@ -18,173 +21,183 @@ import Text "mo:base/Text";
 let heap = Heap.Heap<Text>(Text.compare);
 ```
 
-Runtime: `O(1)`
+Tiempo de ejecución: `O(1)`
 
-Space: `O(1)`
+Espacio: `O(1)`
 
-## Type `Tree`
-``` motoko no-repl
+## Tipo `Tree`
+
+```motoko no-repl
 type Tree<X> = ?(Int, X, Tree<X>, Tree<X>)
 ```
 
+## Clase `Heap<X>`
 
-## Class `Heap<X>`
-
-``` motoko no-repl
+```motoko no-repl
 class Heap<X>(compare : (X, X) -> O.Order)
 ```
 
+### Función `put`
 
-### Function `put`
-``` motoko no-repl
+```motoko no-repl
 func put(x : X)
 ```
 
-Inserts an element into the heap.
+Inserta un elemento en el heap.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 
-heap.put("apple");
-heap.peekMin() // => ?"apple"
+heap.put("manzana");
+heap.peekMin() // => ?"manzana"
 ```
 
-Runtime: `O(log(n))`
+Tiempo de ejecución: `O(log(n))`
 
-Space: `O(log(n))`
+Espacio: `O(log(n))`
 
+### Función `peekMin`
 
-### Function `peekMin`
-``` motoko no-repl
+```motoko no-repl
 func peekMin() : ?X
 ```
 
-Return the minimal element in the heap, or `null` if the heap is empty.
+Devuelve el elemento mínimo en el heap, o `null` si el heap está vacío.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 
-heap.put("apple");
-heap.put("banana");
-heap.put("cantaloupe");
-heap.peekMin() // => ?"apple"
+heap.put("manzana");
+heap.put("plátano");
+heap.put("melón");
+heap.peekMin() // => ?"manzana"
 ```
 
-Runtime: `O(1)`
+Tiempo de ejecución: `O(1)`
 
-Space: `O(1)`
+Espacio: `O(1)`
 
+### Función `deleteMin`
 
-### Function `deleteMin`
-``` motoko no-repl
+```motoko no-repl
 func deleteMin()
 ```
 
-Delete the minimal element in the heap, if it exists.
+Elimina el elemento mínimo en el heap, si existe.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 
-heap.put("apple");
-heap.put("banana");
-heap.put("cantaloupe");
+heap.put("manzana");
+heap.put("plátano");
+heap.put("melón");
 heap.deleteMin();
-heap.peekMin(); // => ?"banana"
+heap.peekMin(); // => ?"plátano"
 ```
 
-Runtime: `O(log(n))`
+Tiempo de ejecución: `O(log(n))`
 
-Space: `O(log(n))`
+Espacio: `O(log(n))`
 
+### Función `removeMin`
 
-### Function `removeMin`
-``` motoko no-repl
+```motoko no-repl
 func removeMin() : (minElement : ?X)
 ```
 
-Delete and return the minimal element in the heap, if it exists.
+Elimina y devuelve el elemento mínimo en el heap, si existe.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 
-heap.put("apple");
-heap.put("banana");
-heap.put("cantaloupe");
-heap.removeMin(); // => ?"apple"
+heap.put("manzana");
+heap.put("plátano");
+heap.put("melón");
+heap.removeMin(); // => ?"manzana"
 ```
 
-Runtime: `O(log(n))`
+Tiempo de ejecución: `O(log(n))`
 
-Space: `O(log(n))`
+Espacio: `O(log(n))`
 
+### Función `share`
 
-### Function `share`
-``` motoko no-repl
+```motoko no-repl
 func share() : Tree<X>
 ```
 
-Return a snapshot of the internal functional tree representation as sharable data.
-The returned tree representation is not affected by subsequent changes of the `Heap` instance.
+Devuelve una instantánea de la representación interna del árbol funcional como
+datos compartibles. La representación del árbol devuelto no se ve afectada por
+cambios posteriores en la instancia de `Heap`.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 
-heap.put("banana");
+heap.put("plátano");
 heap.share();
 ```
 
-Useful for storing the heap as a stable variable, pretty-printing, and sharing it across async function calls,
-i.e. passing it in async arguments or async results.
+Útil para almacenar el heap como una variable estable, imprimirlo de forma
+legible y compartirlo en llamadas de función asíncronas, es decir, pasándolo en
+argumentos asíncronos o resultados asíncronos.
 
-Runtime: `O(1)`
+Tiempo de ejecución: `O(1)`
 
-Space: `O(1)`
+Espacio: `O(1)`
 
+### Función `unsafeUnshare`
 
-### Function `unsafeUnshare`
-``` motoko no-repl
+```motoko no-repl
 func unsafeUnshare(tree : Tree<X>)
 ```
 
-Rewraps a snapshot of a heap (obtained by `share()`) in a `Heap` instance.
-The wrapping instance must be initialized with the same `compare`
-function that created the snapshot.
+Vuelve a envolver una instantánea de un heap (obtenida mediante `share()`) en
+una instancia de `Heap`. La instancia de envoltura debe inicializarse con la
+misma función de `compare` que creó la instantánea.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
 
-heap.put("apple");
-heap.put("banana");
+heap.put("manzana");
+heap.put("plátano");
 let snapshot = heap.share();
 let heapCopy = Heap.Heap<Text>(Text.compare);
 heapCopy.unsafeUnshare(snapshot);
-heapCopy.peekMin() // => ?"apple"
+heapCopy.peekMin() // => ?"manzana"
 ```
 
-Useful for loading a stored heap from a stable variable or accesing a heap
-snapshot passed from an async function call.
+Útil para cargar un heap almacenado desde una variable estable o acceder a una
+instantánea de heap pasada desde una llamada de función asíncrona.
 
-Runtime: `O(1)`.
+Tiempo de ejecución: `O(1)`.
 
-Space: `O(1)`.
+Espacio: `O(1)`.
 
-## Function `fromIter`
-``` motoko no-repl
+## Función `fromIter`
+
+```motoko no-repl
 func fromIter<X>(iter : I.Iter<X>, compare : (X, X) -> O.Order) : Heap<X>
 ```
 
-Returns a new `Heap`, containing all entries given by the iterator `iter`.
-The new map is initialized with the provided `compare` function.
+Devuelve un nuevo `Heap`, que contiene todas las entradas dadas por el iterador
+`iter`. El nuevo heap se inicializa con la función de `compare` proporcionada.
 
-Example:
+Ejemplo:
+
 ```motoko include=initialize
-let entries = ["banana", "apple", "cantaloupe"];
+let entries = ["plátano", "manzana", "melón"];
 let iter = entries.vals();
 
 let newHeap = Heap.fromIter<Text>(iter, Text.compare);
-newHeap.peekMin() // => ?"apple"
+newHeap.peekMin() // => ?"manzana"
 ```
 
-Runtime: `O(size)`
+Tiempo de ejecución: `O(size)`
 
-Space: `O(size)`
+Espacio: `O(size)`

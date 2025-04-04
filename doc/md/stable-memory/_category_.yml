@@ -1,4 +1,4 @@
 position: 4
-label: 'Persistent data'
+label: "Datos persistentes"
 collapsible: true # make the category collapsible
-collapsed: true 
+collapsed: true

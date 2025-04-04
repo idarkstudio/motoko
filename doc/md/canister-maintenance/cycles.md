@@ -2,113 +2,213 @@
 sidebar_position: 1
 ---
 
+# Ciclos (Cycles)
 
-# Cycles
+El uso de los recursos de un canister en ICP se mide y se paga en
+[ciclos](https://internetcomputer.org/docs/current/developer-docs/defi/cycles/converting_icp_tokens_into_cycles).
 
+En los programas de Motoko desplegados en ICP, cada actor representa un canister
+y tiene un saldo asociado de ciclos. La propiedad de los ciclos puede
+transferirse entre actores. Los ciclos se envían y reciben selectivamente a
+través de llamadas a funciones compartidas. Un llamador puede elegir transferir
+ciclos con una llamada, y un receptor puede elegir aceptar los ciclos que el
+llamador pone a disposición. A menos que se indique explícitamente, no se
+transfieren ciclos por parte de los llamadores ni se aceptan por parte de los
+receptores.
 
+Los receptores pueden aceptar todos, algunos o ninguno de los ciclos
+disponibles, hasta un límite determinado por el saldo actual de su actor.
+Cualquier ciclo restante se reembolsa al llamador. Si una llamada falla (trap),
+todos los ciclos que la acompañan se reembolsan automáticamente al llamador sin
+pérdida.
 
-Usage of a canister's resources on ICP is measured and paid for in [cycles](https://internetcomputer.org/docs/current/developer-docs/defi/cycles/converting_icp_tokens_into_cycles).
+Motoko está adoptando una sintaxis y tipos dedicados para apoyar una
+programación más segura con ciclos. Los usuarios ahora pueden adjuntar
+`(where cycles = <cantidad>)` como prefijo a los envíos de mensajes y
+expresiones asíncronas. Esta nueva sintaxis eventualmente hará obsoleto el uso
+de `ExperimentalCycles.add<system>(ciclos)` en los ejemplos que siguen.
 
-In Motoko programs deployed on ICP, each actor represents a canister and has an associated balance of cycles. The ownership of cycles can be transferred between actors. Cycles are selectively sent and received through shared function calls. A caller can choose to transfer cycles with a call, and a callee can choose to accept cycles that are made available by the caller. Unless explicitly instructed, no cycles are transferred by callers or accepted by callees.
-
-Callees can accept all, some, or none of the available cycles up to limit determined by their actor’s current balance. Any remaining cycles are refunded to the caller. If a call traps, all its accompanying cycles are automatically refunded to the caller without loss.
-
-Motoko is adopting dedicated syntax and types to support safer programming with cycles. Users can now attach `(where cycles = <amount>)` as a prefix to message sends and async expressions.
-This new syntax will eventually obsolete the use of `ExperimentalCycles.add<system>(cycles)` in the examples that follow.
-
-For now (and until officially deprecating it), we provide a temporary way to manage cycles through a low-level imperative API provided by the [ExperimentalCycles](../base/ExperimentalCycles.md) library in package `base`.
-
-:::note
-
-This library is subject to change and likely to be replaced by more high-level support for cycles in later versions of Motoko. See [Async data](../writing-motoko/async-data.md) for further usage information about parentheticals (such as attaching cycles) on message sends.
-
-:::
-
-## The [`ExperimentalCycles`](../base/ExperimentalCycles.md) Library
-
-The [`ExperimentalCycles`](../base/ExperimentalCycles.md) library provides imperative operations for observing an actor’s current balance of cycles, transferring cycles and observing refunds.
-
-The library provides the following operations:
-
-- `func balance() : (amount : Nat)`: Returns the actor’s current balance of cycles as `amount`. Function `balance()` is stateful and may return different values after calls to `accept(n)`, calling a function after `add`ing cycles, or resuming from `await` which reflects a refund.
-
-- `func available() : (amount : Nat)`: Returns the currently available `amount` of cycles. This is the amount received from the current caller, minus the cumulative amount `accept`ed so far by this call. On exit from the current shared function or `async` expression via `return` or `throw` any remaining available amount is automatically refunded to the caller.
-
-- `func accept<system>(amount : Nat) : (accepted : Nat)`: Transfers `amount` from `available()` to `balance()`. It returns the amount actually transferred, which may be less than requested, for example, if less is available, or if canister balance limits are reached. Requires `system` capability.
-
-- `func add<system>(amount : Nat) : ()`: Indicates the additional amount of cycles to be transferred in the next remote call, i.e. evaluation of a shared function call or `async` expression. Upon the call, but not before, the total amount of units `add`ed since the last call is deducted from `balance()`. If this total exceeds `balance()`, the caller traps, aborting the call. Requires `system` capability.
-
-- `func refunded() : (amount : Nat)`: Reports the `amount` of cycles refunded in the last `await` of the current context, or zero if no await has occurred yet. Calling `refunded()` is solely informational and does not affect `balance()`. Instead, refunds are automatically added to the current balance, whether or not `refunded` is used to observe them.
-
-:::danger
-
-Since cycles measure computational resources spent, the value of `balance()` generally decreases from one shared function call to the next.
-
-The implicit register of added amounts, incremented on each `add`, is reset to zero on entry to a shared function, and after each shared function call or on resume from an await.
-
-:::
-
-### Example
-
-To illustrate, we will now use the [`ExperimentalCycles`](../base/ExperimentalCycles.md) library to implement a simple piggy bank program for saving cycles.
-
-Our piggy bank has an implicit owner, a `benefit` callback and a fixed `capacity`, all supplied at time of construction. The callback is used to transfer withdrawn amounts.
-
-``` motoko name=PiggyBank file=../examples/PiggyBank.mo
-```
-
-The owner of the bank is identified with the implicit caller of constructor `PiggyBank()`, using the shared pattern, `shared(msg)`. Field `msg.caller` is a [`Principal`](../base/Principal.md) and is stored in private variable `owner` for future reference. See [principals and caller identification](../writing-motoko/caller-id.md) for more explanation of this syntax.
-
-The piggy bank is initially empty, with zero current `savings`.
-
-Only calls from `owner` may:
-
--   Query the current `savings` of the piggy bank (function `getSavings()`), or
-
--   Withdraw amounts from the savings (function `withdraw(amount)`).
-
-The restriction on the caller is enforced by the statements `assert (msg.caller == owner)`, whose failure causes the enclosing function to trap without revealing the balance or moving any cycles.
-
-Any caller may `deposit` an amount of cycles, provided the savings will not exceed `capacity`, breaking the piggy bank. Because the deposit function only accepts a portion of the available amount, a caller whose deposit exceeds the limit will receive an implicit refund of any unaccepted cycles. Refunds are automatic and ensured by the ICP infrastructure.
-
-Since the transfer of cycles is unidirectional from caller to callee, retrieving cycles requires the use of an explicit callback using the `benefit` function, taken by the constructor as an argument. Here, `benefit` is called by the `withdraw` function, but only after authenticating the caller as `owner`. Invoking `benefit` in `withdraw` inverts the caller/caller relationship, allowing cycles to flow upstream.
-
-Note that the owner of the `PiggyBank` could supply a callback that rewards a beneficiary distinct from `owner`.
-
-Here’s how an owner, `Alice`, might use an instance of `PiggyBank`:
-
-``` motoko include=PiggyBank file=../examples/Alice.mo
-```
-
-`Alice` imports the `PiggyBank` actor class as a library so she can create a new `PiggyBank` actor on demand.
-
-Most of the action occurs in `Alice`'s `test()` function:
-
-- Alice dedicates `10_000_000_000_000` of her own cycles for running the piggy bank by calling `Cycles.add(10_000_000_000_000)` just before creating a new instance, `porky`, of the `PiggyBank`, passing callback `Alice.credit` and capacity (`1_000_000_000`). Passing `Alice.credit` nominates `Alice` as the beneficiary of withdrawals. The `10_000_000_000_000` cycles, minus a small installation fee, are credited to `porky`'s balance without any further action by the program's initialization code. You can think of this as an electric piggy bank that consumes its own resources as its used. Since constructing a `PiggyBank` is asynchronous, `Alice` needs to `await` the result.
-
-- After creating `porky`, she first verifies that the `porky.getSavings()` is zero using an `assert`.
-
-- `Alice` dedicates `1_000_000` of her cycles (`Cycles.add<system>(1_000_000)`) to transfer to `porky` with the next call to `porky.deposit()`. The cycles are only consumed from Alice’s balance if the call to `porky.deposit()` succeeds.
-
-- `Alice` now withdraws half the amount, `500_000`, and verifies that `porky`'s savings have halved. `Alice` eventually receives the cycles via a callback to `Alice.credit()`, initiated in `porky.withdraw()`. Note the received cycles are precisely the cycles `add`ed in `porky.withdraw()`, before it invokes its `benefit` callback `Alice.credit`.
-
-- `Alice` withdraws another `500_000` cycles to wipe out her savings.
-
-- `Alice` tries to deposit `2_000_000_000` cycles into `porky` but this exceeds `porky`'s capacity by half, so `porky` accepts `1_000_000_000` and refunds the remaining `1_000_000_000` to `Alice`. `Alice` verifies the refund amount (`Cycles.refunded()`), which has been automatically restored to her balance. She also verifies `porky`'s adjusted savings.
-
-- `Alice`'s `credit()` function simply accepts all available cycles by calling `Cycles.accept<system>(available)`, checking the actually `accepted` amount with an assert.
+Por ahora (y hasta que se deprecie oficialmente), proporcionamos una forma
+temporal de gestionar ciclos a través de una API imperativa de bajo nivel
+proporcionada por la biblioteca
+[ExperimentalCycles](../base/ExperimentalCycles.md) en el paquete `base`.
 
 :::note
 
-For this example, Alice is using her readily available cycles that she already owns.
+Esta biblioteca está sujeta a cambios y es probable que sea reemplazada por un
+soporte de más alto nivel para ciclos en versiones posteriores de Motoko.
+Consulta [Datos asíncronos](../writing-motoko/async-data.md) para obtener más
+información sobre el uso de paréntesis (como adjuntar ciclos) en el envío de
+mensajes.
+
+:::
+
+## La biblioteca [`ExperimentalCycles`](../base/ExperimentalCycles.md)
+
+La biblioteca [`ExperimentalCycles`](../base/ExperimentalCycles.md) proporciona
+operaciones imperativas para observar el saldo actual de ciclos de un actor,
+transferir ciclos y observar reembolsos.
+
+La biblioteca ofrece las siguientes operaciones:
+
+- `func balance() : (amount : Nat)`: Devuelve el saldo actual de ciclos del
+  actor como `amount`. La función `balance()` es con estado y puede devolver
+  valores diferentes después de llamadas a `accept(n)`, llamar a una función
+  después de `add` ciclos, o reanudar desde `await`, lo que refleja un
+  reembolso.
+
+- `func available() : (amount : Nat)`: Devuelve la cantidad actualmente
+  disponible de ciclos como `amount`. Esta es la cantidad recibida del llamador
+  actual, menos la cantidad acumulada `accept`ada hasta ahora por esta llamada.
+  Al salir de la función compartida actual o de la expresión `async` mediante
+  `return` o `throw`, cualquier cantidad disponible restante se reembolsa
+  automáticamente al llamador.
+
+- `func accept<system>(amount : Nat) : (accepted : Nat)`: Transfiere `amount`
+  desde `available()` a `balance()`. Devuelve la cantidad realmente transferida,
+  que puede ser menor que la solicitada, por ejemplo, si hay menos disponible o
+  si se alcanzan los límites de saldo del canister. Requiere la capacidad
+  `system`.
+
+- `func add<system>(amount : Nat) : ()`: Indica la cantidad adicional de ciclos
+  que se transferirán en la próxima llamada remota, es decir, la evaluación de
+  una llamada a una función compartida o una expresión `async`. En el momento de
+  la llamada, pero no antes, la cantidad total de unidades `add`ed desde la
+  última llamada se deduce de `balance()`. Si este total excede `balance()`, el
+  llamador falla (trap), abortando la llamada. Requiere la capacidad `system`.
+
+- `func refunded() : (amount : Nat)`: Informa la `amount` de ciclos reembolsados
+  en el último `await` del contexto actual, o cero si aún no ha ocurrido ningún
+  `await`. Llamar a `refunded()` es únicamente informativo y no afecta a
+  `balance()`. En cambio, los reembolsos se agregan automáticamente al saldo
+  actual, ya sea que se use `refunded` para observarlos o no.
+
+:::danger
+
+Dado que los ciclos miden los recursos computacionales gastados, el valor de
+`balance()` generalmente disminuye de una llamada a una función compartida a la
+siguiente.
+
+El registro implícito de cantidades agregadas, incrementado en cada `add`, se
+restablece a cero al entrar en una función compartida, y después de cada llamada
+a una función compartida o al reanudar desde un `await`.
+
+:::
+
+### Ejemplo
+
+Para ilustrar, ahora usaremos la biblioteca
+[`ExperimentalCycles`](../base/ExperimentalCycles.md) para implementar un
+programa simple de alcancía (piggy bank) para ahorrar ciclos.
+
+Nuestra alcancía tiene un propietario implícito, una devolución de llamada
+`benefit` y una `capacity` fija, todo proporcionado en el momento de la
+construcción. La devolución de llamada se utiliza para transferir cantidades
+retiradas.
+
+```motoko name=PiggyBank file=../examples/PiggyBank.mo
+
+```
+
+El propietario de la alcancía se identifica con el llamador implícito del
+constructor `PiggyBank()`, utilizando el patrón compartido, `shared(msg)`. El
+campo `msg.caller` es un [`Principal`](../base/Principal.md) y se almacena en la
+variable privada `owner` para referencia futura. Consulta
+[principales e identificación del llamador](../writing-motoko/caller-id.md) para
+obtener más explicación sobre esta sintaxis.
+
+La alcancía está inicialmente vacía, con `savings` (ahorros) actuales en cero.
+
+Solo las llamadas del `owner` pueden:
+
+- Consultar los `savings` actuales de la alcancía (función `getSavings()`), o
+
+- Retirar cantidades de los ahorros (función `withdraw(amount)`).
+
+La restricción sobre el llamador se aplica mediante las declaraciones
+`assert (msg.caller == owner)`, cuyo fallo hace que la función que la contiene
+falle (trap) sin revelar el saldo ni mover ningún ciclo.
+
+Cualquier llamador puede `depositar` una cantidad de ciclos, siempre que los
+ahorros no excedan la `capacity`, rompiendo la alcancía. Debido a que la función
+de depósito solo acepta una porción de la cantidad disponible, un llamador cuyo
+depósito exceda el límite recibirá un reembolso implícito de cualquier ciclo no
+aceptado. Los reembolsos son automáticos y están garantizados por la
+infraestructura de ICP.
+
+Dado que la transferencia de ciclos es unidireccional del llamador al receptor,
+recuperar ciclos requiere el uso de una devolución de llamada explícita
+utilizando la función `benefit`, que se toma como argumento en el constructor.
+Aquí, `benefit` es llamada por la función `withdraw`, pero solo después de
+autenticar al llamador como `owner`. Invocar `benefit` en `withdraw` invierte la
+relación llamador/receptor, permitiendo que los ciclos fluyan en sentido
+contrario.
+
+Ten en cuenta que el propietario de `PiggyBank` podría proporcionar una
+devolución de llamada que recompense a un beneficiario distinto de `owner`.
+
+Aquí se muestra cómo una propietaria, `Alice`, podría usar una instancia de
+`PiggyBank`:
+
+```motoko include=PiggyBank file=../examples/Alice.mo
+
+```
+
+`Alice` importa la clase de actor `PiggyBank` como una biblioteca para poder
+crear un nuevo actor `PiggyBank` bajo demanda.
+
+La mayor parte de la acción ocurre en la función `test()` de `Alice`:
+
+- Alice dedica `10_000_000_000_000` de sus propios ciclos para operar la
+  alcancía llamando a `Cycles.add(10_000_000_000_000)` justo antes de crear una
+  nueva instancia, `porky`, de `PiggyBank`, pasando la devolución de llamada
+  `Alice.credit` y la capacidad (`1_000_000_000`). Al pasar `Alice.credit`, se
+  nombra a `Alice` como la beneficiaria de los retiros. Los `10_000_000_000_000`
+  ciclos, menos una pequeña tarifa de instalación, se acreditan en el saldo de
+  `porky` sin ninguna acción adicional por parte del código de inicialización
+  del programa. Puedes pensar en esto como una alcancía eléctrica que consume
+  sus propios recursos a medida que se usa. Dado que la construcción de un
+  `PiggyBank` es asíncrona, `Alice` necesita `await` el resultado.
+
+- Después de crear `porky`, primero verifica que `porky.getSavings()` sea cero
+  usando un `assert`.
+
+- `Alice` dedica `1_000_000` de sus ciclos (`Cycles.add<system>(1_000_000)`)
+  para transferir a `porky` con la próxima llamada a `porky.deposit()`. Los
+  ciclos solo se consumen del saldo de Alice si la llamada a `porky.deposit()`
+  tiene éxito.
+
+- `Alice` ahora retira la mitad de la cantidad, `500_000`, y verifica que los
+  ahorros de `porky` se hayan reducido a la mitad. `Alice` eventualmente recibe
+  los ciclos a través de una devolución de llamada a `Alice.credit()`, iniciada
+  en `porky.withdraw()`. Ten en cuenta que los ciclos recibidos son precisamente
+  los ciclos `add`ed en `porky.withdraw()`, antes de invocar su devolución de
+  llamada `benefit`, `Alice.credit`.
+
+- `Alice` retira otros `500_000` ciclos para agotar sus ahorros.
+
+- `Alice` intenta depositar `2_000_000_000` ciclos en `porky`, pero esto excede
+  la capacidad de `porky` a la mitad, por lo que `porky` acepta `1_000_000_000`
+  y reembolsa los `1_000_000_000` restantes a `Alice`. `Alice` verifica la
+  cantidad reembolsada (`Cycles.refunded()`), que se ha restaurado
+  automáticamente a su saldo. También verifica los ahorros ajustados de `porky`.
+
+- La función `credit()` de `Alice` simplemente acepta todos los ciclos
+  disponibles llamando a `Cycles.accept<system>(available)`, verificando la
+  cantidad realmente `aceptada` con un `assert`.
+
+:::note
+
+Para este ejemplo, Alice está utilizando los ciclos que ya tiene disponibles.
 
 :::
 
 :::danger
 
-Because `porky` consumes cycles in its operation, it is possible for `porky` to spend some or even all of Alice’s cycle savings before she has a chance to retrieve them.
+Debido a que `porky` consume ciclos en su operación, es posible que `porky`
+gaste parte o incluso todos los ahorros de ciclos de Alice antes de que ella
+tenga la oportunidad de recuperarlos.
 
 :::
 
 <img src="https://github.com/user-attachments/assets/844ca364-4d71-42b3-aaec-4a6c3509ee2e" alt="Logo" width="150" height="150" />
-

@@ -1,116 +1,134 @@
 # Char
-Characters
 
-## Type `Char`
-``` motoko no-repl
+Caracteres
+
+## Tipo `Char`
+
+```motoko no-repl
 type Char = Prim.Types.Char
 ```
 
-Characters represented as Unicode code points.
+Caracteres representados como puntos de código Unicode.
 
 ## Function `toNat32`
-``` motoko no-repl
+
+```motoko no-repl
 func toNat32(c : Char) : Nat32
 ```
 
-Convert character `c` to a word containing its Unicode scalar value.
+Convierte el carácter `c` en una palabra que contiene su valor escalar Unicode.
 
 ## Function `fromNat32`
-``` motoko no-repl
+
+```motoko no-repl
 func fromNat32(w : Nat32) : Char
 ```
 
-Convert `w` to a character.
-Traps if `w` is not a valid Unicode scalar value.
-Value `w` is valid if, and only if, `w < 0xD800 or (0xE000 <= w and w <= 0x10FFFF)`.
+Convierte `w` en un carácter. Genera una excepción si `w` no es un valor escalar
+Unicode válido. El valor `w` es válido si, y solo si,
+`w < 0xD800 or (0xE000 <= w and w <= 0x10FFFF)`.
 
 ## Function `toText`
-``` motoko no-repl
+
+```motoko no-repl
 func toText(c : Char) : Text
 ```
 
-Convert character `c` to single character text.
+Convierte el carácter `c` en un texto de un solo carácter.
 
-## Function `isDigit`
-``` motoko no-repl
+## Función `isDigit`
+
+```motoko no-repl
 func isDigit(c : Char) : Bool
 ```
 
-Returns `true` when `c` is a decimal digit between `0` and `9`, otherwise `false`.
+Devuelve `true` cuando `c` es un dígito decimal entre `0` y `9`, de lo contrario
+`false`.
 
 ## Function `isWhitespace`
-``` motoko no-repl
+
+```motoko no-repl
 func isWhitespace(c : Char) : Bool
 ```
 
-Returns the Unicode _White_Space_ property of `c`.
+Devuelve la propiedad _White_Space_ Unicode de `c`.
 
 ## Function `isLowercase`
-``` motoko no-repl
+
+```motoko no-repl
 func isLowercase(c : Char) : Bool
 ```
 
-Returns the Unicode _Lowercase_ property of `c`.
+Devuelve la propiedad _Lowercase_ Unicode de `c`.
 
 ## Function `isUppercase`
-``` motoko no-repl
+
+```motoko no-repl
 func isUppercase(c : Char) : Bool
 ```
 
-Returns the Unicode _Uppercase_ property of `c`.
+Devuelve la propiedad _Uppercase_ Unicode de `c`.
 
 ## Function `isAlphabetic`
-``` motoko no-repl
+
+```motoko no-repl
 func isAlphabetic(c : Char) : Bool
 ```
 
-Returns the Unicode _Alphabetic_ property of `c`.
+Devuelve la propiedad _Alphabetic_ Unicode de `c`.
 
-## Function `equal`
-``` motoko no-repl
+## Función `equal`
+
+```motoko no-repl
 func equal(x : Char, y : Char) : Bool
 ```
 
-Returns `x == y`.
+Devuelve `x == y`.
 
-## Function `notEqual`
-``` motoko no-repl
+## Función `notEqual`
+
+```motoko no-repl
 func notEqual(x : Char, y : Char) : Bool
 ```
 
-Returns `x != y`.
+Devuelve `x != y`.
 
-## Function `less`
-``` motoko no-repl
+## Función `less`
+
+```motoko no-repl
 func less(x : Char, y : Char) : Bool
 ```
 
-Returns `x < y`.
+Devuelve `x < y`.
 
-## Function `lessOrEqual`
-``` motoko no-repl
+## Función `lessOrEqual`
+
+```motoko no-repl
 func lessOrEqual(x : Char, y : Char) : Bool
 ```
 
-Returns `x <= y`.
+Devuelve `x <= y`.
 
-## Function `greater`
-``` motoko no-repl
+## Función `greater`
+
+```motoko no-repl
 func greater(x : Char, y : Char) : Bool
 ```
 
-Returns `x > y`.
+Devuelve `x > y`.
 
-## Function `greaterOrEqual`
-``` motoko no-repl
+## Función `greaterOrEqual`
+
+```motoko no-repl
 func greaterOrEqual(x : Char, y : Char) : Bool
 ```
 
-Returns `x >= y`.
+Devuelve `x >= y`.
 
-## Function `compare`
-``` motoko no-repl
+## Función `compare`
+
+```motoko no-repl
 func compare(x : Char, y : Char) : {#less; #equal; #greater}
 ```
 
-Returns the order of `x` and `y`.
+Devuelve el orden de `x` e `y`.
